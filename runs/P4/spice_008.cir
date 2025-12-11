@@ -1,0 +1,9 @@
+.D1
+Vin in 0 SIN (0 2)
+R 1 in out
+D 2 out 0
+DC 1
+DCLIP out
+.TRAN 5ms 1uS
+.PRINT TRAN V(out)
+.END

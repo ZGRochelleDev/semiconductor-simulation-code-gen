@@ -1,0 +1,17 @@
+plaintext
+# High-Pass Filter Netlist
+# Created by ngspice-netlist-generator on 2024-09-26
+# Author: Your Name <your.email@example.com>
+
+# Define the components
+V1 in 1 AC 1
+R2 out 1k
+C1 out -10n
+
+# Perform the AC analysis
+.ac dec 100 10 500e6
+
+# Print the output voltage
+.print ac V(out)
+
+.end

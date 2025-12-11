@@ -1,0 +1,8 @@
+* div_subckt
+DIV in out gnd
+.R1 1k
+.R2 1k
+.subckt DIV in out gND
+.VIN vin
+.OUT vOUT
+.END
