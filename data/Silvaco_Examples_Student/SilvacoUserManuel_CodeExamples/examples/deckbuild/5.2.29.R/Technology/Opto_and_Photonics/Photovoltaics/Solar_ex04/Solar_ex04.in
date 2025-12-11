@@ -1,0 +1,106 @@
+# (c) Silvaco Inc., 2024
+
+# 3D MESH and Device Simulation of a Curved Lens
+
+# Required Modules
+#  Victory Mesh
+#   -2D Meshing
+#   -2D Solid Modeling
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -2D Simulator
+#   -3D Simulator
+
+# Example Name
+SET name=“Solar_ex04” 
+
+#### STRUCTURE SPECIFICATION ####
+GO victorymesh simflags="-P 2"
+
+# create lens
+SPHERE center="0,0" radius="0.5" height="0.5" out="lens" material="sio2"
+ROTATE angle=180 point.a="0,0"
+
+# create substrate
+CUBOID from="-0.5,0.0" to="0.5,1.5" material="silicon" out="cube"
+
+# connect lens and substrate
+JOIN in.a="cube" in.b="lens" out="lens_2d"
+
+# create device mesh
+REMESH delaunay unified out="lens_2d_delaunay"
+REFINE max.size=0.05
+
+# constant donor (n-type)
+FIELD constant regions="silicon" name="arsenic" value="1e16"
+
+SAVE out="$'name'_VM_0"
+
+# create lens
+SPHERE center="0,0,0" radius="0.5" height="0.5" out="lens" material="sio2"
+ROTATE angle=180 point.a="0,0,0" point.b="1,0,0"
+
+# create substrate
+CUBOID from="-0.5,-0.5,0.0" to="0.5,0.5,1.5" material="silicon" out="cube"
+
+# connect lens and substrate
+JOIN in.a="cube" in.b="lens" out="lens_3d"
+
+# create device mesh
+REMESH delaunay unified out="lens_3d_delaunay"
+REFINE max.size=0.05
+
+# constant donor (n-type)
+FIELD constant regions="silicon" name="arsenic" value="1e16"
+
+SAVE out="$'name'_VM_1"
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+# 2D
+MESH infile="$'name'_VM_0.str" delaunay
+
+REGION num=2 modify material=poly name=substrate
+
+ELECTRODE num=1 name=cathode bottom
+ELECTRODE num=2 name=anode x.min=-0.5 y.min=0.25 x.max=-0.5 y.max=0.5
+ELECTRODE num=2 name=anode x.min=0.5 y.min=0.25 x.max=0.5 y.max=0.5
+
+MODELS srh
+
+OUTPUT recomb u.srh
+
+SOLVE init
+SOLVE prev
+SAVE outfile=$'name'_VD_0.str
+
+SOLVE vanode=0 vstep=0.01 vfinal=1 name=anode
+SAVE outfile=$'name'_VD_1.str
+
+# 3D
+MESH infile="$'name'_VM_1.str" delaunay
+
+REGION num=2 modify material=poly name=substrate
+
+ELECTRODE num=1 name=cathode bottom
+ELECTRODE num=2 name=anode x.min=-0.5 y.min=-0.5 z.min=0.25 x.max=-0.5 y.max=-0.5 z.max=0.5
+ELECTRODE num=2 name=anode x.min=0.5 y.min=-0.5 z.min=0.25 x.max=0.5 y.max=-0.5 z.max=0.5
+
+MODELS srh
+
+OUTPUT recomb u.srh
+
+SOLVE init
+SOLVE prev
+SAVE outfile=$'name'_VD_2.str
+
+SOLVE vanode=0 vstep=0.01 vfinal=1 name=anode
+SAVE outfile=$'name'_VD_3.str
+
+victoryvisual $'name'_VD_1.str $'name'_VD_3.str \
+$'name'_VD_1.str:$'name'_EField2D.set \
+$'name'_VD_3.str:$'name'_EField3D.set
+
+QUIT

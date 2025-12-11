@@ -1,0 +1,136 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Simulation of Field Emission Triode
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+SET name=“Other_Power_ex09” 
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 2"
+
+# Create sacrificial sphere for remeshing the tip
+# The mesh will have a density that increases inversely proportional 
+# to the distance to the sphere
+SPHERE center="0,0,0.007" radius="0.005" out="tip_remesh"
+
+# Create surface mesh domain as vacuum
+# 3D
+CUBOID from="-0.05,-0.015,-0.04" to="0.05,0.015,0.2" material="vacuum" out="box"
+# 2D
+#cuboid from="-0.05,-0.04" to="0.05,0.2" material="vacuum" out="box"
+SKELETON
+
+# Create the emission tip
+# 3D
+CONE radius.a="0.014" radius.b=0 point.a= "0,0, 0.02" point.b="0,0,0.007" material="silicon" out="cone"
+# 2D
+#cone radius.a="0.014" radius.b=0 point.a= "0, 0.02" point.b="0,0" material="silicon" out="cone"
+SKELETON
+
+# Duplicate the silicon surfaces into vacuum
+SPLICE regions="silicon" material="vacuum"
+
+# Insert the cone into the box
+COMBINE in.a="box" in.b="cone"
+
+# Slice interfaces to partition the surfaces for the various rings
+
+# gate ring
+SLICE from="-0.05,-0.015, 0.0" to="0.05,0.015, -0.0013"
+
+# silicon ring
+SLICE from="-0.05,-0.015, -0.0013" to="0.05,0.015,-0.0044" 
+
+# collector
+SLICE from="-0.05,-0.015,-0.0243" to="0.05,0.015,-0.04" 
+
+# bottom silicon
+SLICE from="-0.05,-0.015, 0.02" to="0.05,0.015,0.2"
+
+# tip vacuum
+SLICE from="-0.0135,-0.015, -0.0243" to="0.0135,0.015,0.02"
+
+# Add user defined tags to the separate partitioned regions
+# and change their material
+TAG point="-0.04,-0.014, -0.035" value="to_Al"
+TAG point="-0.04,-0.014, -0.0005" value="to_Al"
+TAG point="0.04,-0.014, -0.0005" value="to_Al"
+MATERIAL regions="to_Al" value="aluminum"
+
+TAG point="-0.04,-0.014,-0.003" value="to_si"
+TAG point="0.04,-0.014,-0.003" value="to_si"
+TAG point="0.04,-0.014,0.08" value="to_si"
+MATERIAL regions="to_si" value="silicon"
+
+TAG point="-0.04,-0.014,-0.01" value="to_sio2"
+TAG point="0.04,-0.014,-0.01" value="to_sio2"
+TAG point="-0.04,-0.014,0.01" value="to_sio2"
+TAG point="0.04,-0.014,0.01" value="to_sio2"
+MATERIAL regions="to_sio2" value="oxide"
+
+# Merge adjacent regions of same material
+MERGE
+
+# Add additional tags for electrode regions
+TAG point="-0.04,-0.014,-0.035" value="to_collector"
+TAG point="-0.04,-0.014,-0.0005" value="to_gate"
+TAG point="0.04,-0.014,-0.0005" value="to_gate"
+
+# Save a surface mesh for visual inspection
+SAVE out="$'name'_VM_1"
+
+# Generate a Delaunay mesh for device simulation
+# note that the sacrifical sphere is used to do shape based refinement
+REMESH delaunay strict out="$'name'_VM_2"
+REFINE max.size=0.01 regions="*"
+REFINE max.size=0.0025 region="vacuum"
+REFINE regions="silicon,vacuum" shape="tip_remesh" max.shape.size=0.0005 grading="quadratic"
+REFINE regions="silicon" interface.regions="silicon" \
+       other.interface.regions="aluminum" max.interface.size=0.001 grading="quadratic"
+
+# Add the electrode labels
+ELECTRODE regions="to_gate" name="gate"
+ELECTRODE regions="to_collector" name="collector"
+
+# Add a constant doping field
+FIELD constant regions="silicon" name="arsenic" value="1e20"
+SAVE
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4 -128"
+
+MESH infile=$'name'_VM_2.str
+
+ELECTRODE name=substrate bottom
+
+MATERIAL material=vacuum affinity=0 permittivity=1.0
+MODELS sc.zaidman srh 
+METHOD pas climit=1e-6 cx.tol=1e-20 px.tol=1e-20 cr.tol=1e-30 pr.tol=1e-40
+
+# Simulate "I off" Curve with Vgate=0
+SOLVE init
+SOLVE previous
+LOG outfile=$'name'_1.log
+SOLVE vstep=0.5 vfinal=20 name=collector
+LOG off
+
+# Simulate Gate Voltage Ramp on Conduction Current
+LOG outfile=$'name'_2.log
+SOLVE vgate=0 vstep=0.5 vfinal=20 name=gate
+SAVE outfile=$'name'_VD.str
+
+victoryvisual \
+$'name'_VM_2.str:$'name'_VM.set \
+$'name'_VD.str:$'name'_VD.set \
+$'name'_2.log:$'name'_2.set
+
+QUIT
+
+
+

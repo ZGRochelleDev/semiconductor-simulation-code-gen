@@ -1,0 +1,107 @@
+# (c) Silvaco Inc., 2024
+#### STRUCTURE SPECIFICATION ####
+
+# Species definition
+SPECIES formula="Si:Ox" charge=+0 name="SiOx"
+SPECIES formula="Si"    charge=+0 name="Vo"
+SPECIES formula="Ox"    charge=-2 name="Ox-"
+SPECIES formula="Ti"    charge=+0 name="If"
+SPECIES formula="Ti:Ox" charge=-0 name="IfOx"
+
+# Doping
+DOPING material=silicon uniform n.type conc=2.e13
+
+# Species doping in the oxide
+DOPING material=silicon species.name="SiOx" gaussian concentration=2.0e+22 x.min=0.0 x.max=$rfila x.char=$xchar y.min=0.0 y.max=$tox y.char=1e-4
+DOPING material=silicon species.name="Vo"   gaussian concentration=1.2e+18 x.min=0.0 x.max=$rfila x.char=$xchar y.min=0.0 y.max=$tox y.char=1e-4
+DOPING material=silicon species.name="Ox-"  gaussian concentration=1.2e+18 x.min=0.0 x.max=$rfila x.char=$xchar y.min=0.0 y.max=$tox y.char=1e-4
+
+# Species doping at the interface to the active electrode
+INTERFACE s.m region=3 species.name="If"    concentration=1e14
+INTERFACE s.m region=3 species.name="IfOx" concentration=1e12
+
+
+#### MATERIAL/PHYSICAL MODELS ###
+
+# Material properties of the oxide
+MATERIAL material=silicon affinity=2.4 eg300=6.0 permittivity=21
+
+# Species properties
+MATERIAL material=silicon species.name="SiOx" species.ea=4.0 species.af=1e-4  species.hop=2e-8 species.max.conc=2e+22
+MATERIAL material=silicon species.name="Ox-"  species.ea=0.2 species.af=1e+15 species.hop=2e-8 species.max.conc=2e+22
+MATERIAL material=silicon species.name="Vo"   species.ea=4.0 species.af=1e-4  species.hop=2e-8 species.max.conc=2e+22
+
+MATERIAL material=silicon species.name="If"   species.ea=4.0 species.af=1e-4  species.hop=2e-8
+MATERIAL material=silicon species.name="IfOx" species.ea=4.0 species.af=1e-4  species.hop=2e-8
+
+MOBILITY material=silicon species.name="Ox-" species.hopping
+
+# Species reactions
+REACTION formula="SiOx + 2e- <=> Vo + Ox-" forward.rate=2.5e-13 forward.ea=2 reverse.rate=1e-11  reverse.ea=0.5 dipole.moment=8e-8 dipole.orientation=(0.0,-1.0,0.0) dipole.fraction=0.5 dipole.permittivity=21
+REACTION formula="IfOx + 2e- <=> If + Ox-" forward.rate=6.6e-13 forward.ea=2 reverse.rate=3e-11 reverse.ea=1.15 dipole.moment=7e-8 dipole.orientation=(0.0,+1.0,0.0) dipole.fraction=0.5 dipole.permittivity=21
+
+# Conductivity of the conductive filament
+MOBILITY region=1 F.CONMUN=functions.c
+OPTIONS cint.param=MUN_X0   cint.double=1e-3
+OPTIONS cint.param=MUN_DX   cint.double=1e-4
+OPTIONS cint.param=MUN_YMIN cint.double=2.0e+2
+OPTIONS cint.param=MUN_YMAX cint.double=5.0e+5
+
+MOBILITY material=silicon bridging.species="Vo" \
+                          bridging.conductivity=3.0e5 \
+                          bridging.min.fraction=0.40 \
+                          bridging.delta = 0.11 
+
+MATERIAL material=silicon nc300=2.0e+11
+MODELS ^species.charge.neutrality fermi
+
+# Conductivity of the electrodes
+MATERIAL region=2 resistivity=8e2
+MATERIAL region=3 resistivity=8e2
+
+# Thermal properties
+MODELS lat.temp joule.heat
+THERMCONTACT num=1 y.max=-0.11 temp=$temp
+THERMCONTACT num=2 y.min=+0.01 temp=$temp
+
+INTERFACE r1number=1 r2number=2 ihtc.rounded ihtc.t.low=600 ihtc.h.low=1e+4 ihtc.t.high=1200 ihtc.h.high=8e6
+INTERFACE r1number=1 r2number=3 ihtc.rounded ihtc.t.low=600 ihtc.h.low=1e+4 ihtc.t.high=1200 ihtc.h.high=8e6
+
+MATERIAL material=silicon hc.std hc.a=2.4 hc.b=0 hc.c=0 hc.d=0
+MATERIAL material=silicon F.TCOND=functions.c
+OPTIONS cint.param=HC_COND   cint.double=3.2e-2
+OPTIONS cint.param=HC_DCONDDT cint.double=3.2e-4
+
+MATERIAL region=2 tcon.const tc.const=0.11e0
+MATERIAL region=3 tcon.const tc.const=0.11e0
+
+# Probed and saved quantities
+PROBE  average  species.name="SiOx" x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="SiOx_ave"
+PROBE  average  species.name="Vo"   x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="Vo_ave"
+PROBE  average  species.name="Ox-"  x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="Ox-_ave"
+PROBE  integrated species.name="Ox-"  name="Ox-_int"
+PROBE  integrated species.name="If"   name="If_int"
+PROBE  integrated species.name="IfOx" name="IfOx_int"
+
+PROBE  average  lat.temp      x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="T_avg"
+PROBE  average  conductivity  x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="C_avg"
+PROBE  average  field v.mag   x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="E_avg"
+PROBE  average  n.conc        x.min=0.0 x.max=0.004 y.min=0.0 y.max=$tox  name="n_avg"
+
+OUTPUT e.mobility charge ions ion.mobility conductivity
+
+
+#### NUMERICAL METHODS ####
+METHOD norm.factor=1e-4 cx.log.norm carriers=1 electrons rxnorm weak=1 dt.max=1e+9 ^parallel.species
+
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE prev freezespecies
+
+
+#### NUMERICAL METHODS ####
+METHOD pam.gmres parallel.species
+
+SAVE outfile=$'name'_init.str
+

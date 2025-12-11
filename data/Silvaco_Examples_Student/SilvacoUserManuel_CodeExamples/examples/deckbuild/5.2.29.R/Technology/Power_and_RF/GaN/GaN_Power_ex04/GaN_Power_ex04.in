@@ -1,0 +1,251 @@
+# (c) Silvaco Inc., 2024
+
+# A Normally-off AlGaN/GaN Transistor with Conductivity Modulation
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+set name=GaN_Power_ex04
+
+GO victoryd simflags="-P 4 -80"
+
+###structure specification###
+
+MESH width=1000 space.mult=1.5
+
+X.MESH location=-2   spacing=0.5
+X.MESH location=-1   spacing=0.5
+X.MESH location=0    spacing=0.1
+X.MESH location=1  spacing=0.2
+X.MESH location=2  spacing=0.1
+X.MESH location=5.5  spacing=0.5
+X.MESH location=9.5  spacing=0.1
+X.MESH location=10.5  spacing=0.1
+
+Y.MESH location=-0.31  spacing=0.05
+Y.MESH location=-0.2  spacing=0.05
+Y.MESH location=-0.05  spacing=0.01
+Y.MESH location=0      spacing=0.0001
+Y.MESH location=0.0125 spacing=0.0025
+Y.MESH location=0.025  spacing=0.0001
+Y.MESH location=2      spacing=0.25
+
+REGION number=1 material=GaN x.comp=0.05 y.min=0.025 substrate 
+REGION number=2 material=nitride y.max=0
+REGION number=3 material=AlGaN x.comp=0.15  y.min=0 y.max=0.025 
+REGION number=4 material=AlGaN x.comp=0.15 x.min=0 x.max=2 y.min=-0.2 y.max=0 
+
+ELECTRODE name=source x.min=-2 x.max=-1 y.min=-0.15 y.max=0.0
+ELECTRODE name=gate x.min=0 x.max=2 y.min=-0.31 y.max=-0.2
+ELECTRODE name=drain x.min=9.5 x.max=10.5 y.min=-0.15 y.max=0.0
+ELECTRODE name=substrate bottom
+
+DOPING region=4 concentration=4e18 p.type uniform
+
+DOPING  trap acceptor e.level=1.0 concentration=4e18 gaussian peak=1 \
+        characteristic=0.455 degen.fac=1 sign=1e-15 sigp=1e-15
+
+###material/physical models###
+MODELS srh auger fermi print temp=300
+MODELS lat.temp ni.fermi
+MOBILITY gansat.n albrct.n bn.albrct=5e-04 an.albrct=5e-04 
+MOBILITY region=4 albrct.p bp.albrct=1e04 ap.albrct=1e04 
+MODELS POLARIZATION psp.scale=0.6 piezo.scale=0.6 calc.strain 
+
+CONTACT name=source workfunc=4.04
+CONTACT name=drain  workfunc=4.04
+
+THERMCONTACT num=1 name=substrate alpha=800
+###numerical methods###
+METHOD newton climit=1e-4 maxtraps=8 itlimit=30  
+
+OUTPUT band.param con.band val.band charge polar.charge qss
+###solution solving###
+
+#idvg#
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_ini.str
+
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+LOG outfile=$'name'_VD_idvg.log
+
+SOLVE previous
+
+SOLVE vstep=0.1 vfinal=1 name=gate
+SAVE outf=$'name'_vg2v.str
+
+SOLVE vstep=0.1 vfinal=4 name=gate
+SAVE outf=$'name'_vg4v.str
+
+SOLVE vstep=0.2 vfinal=6 name=gate
+SAVE outf=$'name'_vg6v.str
+
+LOG off
+
+#idvd#
+SOLVE init
+SOLVE previous
+
+SOLVE vstep=0.1 vfinal=1 name=gate
+SAVE  outf=$'name'_vg1v.str
+
+SOLVE vstep=0.1 vfinal=2 name=gate
+SAVE  outf=$'name'_vg2v.str
+
+SOLVE vstep=0.1 vfinal=3 name=gate
+SAVE outf=$'name'_vg3v.str
+
+SOLVE vstep=0.1 vfinal=4 name=gate
+SAVE  outf=$'name'_vg4v.str
+
+SOLVE vstep=0.1 vfinal=5 name=gate
+SAVE outf=$'name'_vg5v.str
+
+LOAD inf=$'name'_vg1v.str master
+LOG outf=$'name'_idvd_vg1v.log
+SOLVE previous
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=10 name=drain
+
+LOAD inf=$'name'_vg2v.str master
+LOG outf=$'name'_idvd_vg2v.log
+SOLVE previous
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=10 name=drain
+
+load inf=$'name'_vg3v.str master
+LOG outf=$'name'_idvd_vg3v.log
+SOLVE previous
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=10 name=drain
+
+load inf=$'name'_vg4v.str master
+LOG outf=$'name'_idvd_vg4v.log
+SOLVE previous
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=10 name=drain
+
+
+LOAD inf=$'name'_vg5v.str master
+LOG outf=$'name'_idvd_vg5v.log
+SOLVE previous
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=10 name=drain
+
+
+#bvds#
+go victoryd simflags="-P 4 -160"
+
+###structure specification###
+MESH width=1000 space.mult=1.5
+
+X.MESH location=-2   spacing=0.5
+X.MESH location=-1   spacing=0.5
+X.MESH location=0    spacing=0.1
+X.MESH location=1  spacing=0.2
+X.MESH location=2  spacing=0.1
+X.MESH location=5.5  spacing=0.5
+X.MESH location=9.5  spacing=0.1
+X.MESH location=10.5  spacing=0.1
+
+Y.MESH location=-0.31  spacing=0.05
+Y.MESH location=-0.2  spacing=0.05
+Y.MESH location=-0.05  spacing=0.01
+Y.MESH location=0      spacing=0.0001
+Y.MESH location=0.0125 spacing=0.0025
+Y.MESH location=0.025  spacing=0.0001
+Y.MESH location=2      spacing=0.25
+
+REGION number=1 material=GaN x.comp=0.05 y.min=0.025 substrate 
+REGION number=2 material=nitride y.max=0
+REGION number=3 material=AlGaN x.comp=0.15  y.min=0 y.max=0.025 
+REGION number=4 material=AlGaN x.comp=0.15 x.min=0 x.max=2 y.min=-0.05 y.max=0 
+
+ELECTRODE name=source x.min=-2 x.max=-1 y.min=-0.11 y.max=0.0
+ELECTRODE name=gate x.min=0 x.max=2 y.min=-0.16 y.max=-0.05
+ELECTRODE name=drain x.min=9.5 x.max=10.5 y.min=-0.11 y.max=0.0
+ELECTRODE name=substrate bottom
+
+DOPING region=4 concentration=4e18 p.type uniform
+
+DOPING trap acceptor e.level=1.0 concentration=4e18 gaussian peak=1 \
+        characteristic=0.455 degen.fac=1 sign=1e-15 sigp=1e-15
+###material/physical models###
+MODELS srh auger fermi print temp=300
+MODELS lat.temp ni.fermi
+MOBILITY gansat.n albrct.n bn.albrct=7e-04 an.albrct=7e-04 
+MOBILITY region=4 albrct.p bp.albrct=1e04 ap.albrct=1e04 
+MODELS POLARIZATION psp.scale=0.6 piezo.scale=0.6 calc.strain 
+
+CONTACT name=source workfunc=4.04
+CONTACT name=drain  workfunc=4.04
+
+THERMCONTACT num=1 name=substrate alpha=800
+
+# from Oguzman paper.
+IMPACT selb material=GaN an1=2.98e8*3.7 an2=2.98e8*3.7 bn1=3.44e7 bn2=3.44e7 \
+            ap1=2.23e7 ap2=2.23e7 bp1=2.7e8 bp2=2.7e8 
+
+CONTACT name=source workfunc=4.04
+CONTACT name=drain  workfunc=4.04
+###numerical methods###
+METHOD block climit=1e-10 maxtraps=8 itlimit=50 \
+		ir.tol=1.e-45 ix.tol=1.e-45 \
+		cx.tol=1.e-20 cr.tol=1.e-28 \
+		px.tol=1.e-20 pr.tol=1.e-35 
+
+OUTPUT band.param con.band val.band charge polar.charge
+###solution solving###
+SOLVE init
+SOLVE previous
+SOLVE vdrain=0.001
+LOG outfile=$'name'_VD_bv.log
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1 
+SOLVE vdrain=0.5
+SOLVE vdrain=1
+SOLVE vdrain=2
+SOLVE vstep=2 vfinal=100 name=drain prev
+SOLVE vstep=5 vfinal=580 name=drain prev
+
+GO victoryextract
+LOAD in="$'name'_VD_idvg.log"
+CURVE name=IV x="Gate Voltage" y="Drain Current"
+CURVE name="max_dydx" expression="derivative(curve.IV)"
+EXTRACT.CSV in=max_dydx csvfile="$'name'_VD_idvg.csv"
+
+LOAD in="$'name'_idvd_vg5v.log"
+EXTRACT.LOG name=idsmaxmAcm2 expression="max(abs(Drain Current))*1000"
+
+LOAD in="$'name'_VD_bv.log"
+CURVE name=BV x="abs(Drain Int. Voltage)" y="abs(Drain Current)"
+EXTRACT.CURVE name="bvdss" expression="intercept(y=5e-13, curve.BV)"
+
+victoryvisual \
+$'name'_VD_idvg.log \
+$'name'_idvd_vg1v.log+$'name'_idvd_vg2v.log+\
+$'name'_idvd_vg3v.log+$'name'_idvd_vg4v.log+\
+$'name'_idvd_vg5v.log \
+$'name'_VD_bv.log
+
+victoryvisual  \
+$'name'_vg2v.str:$'name'_elc.set \
+$'name'_vg4v.str:$'name'_elc.set \
+$'name'_vg6v.str:$'name'_elc.set
+
+victoryvisual  \
+$'name'_vg2v.str:$'name'_hole.set \
+$'name'_vg4v.str:$'name'_hole.set \
+$'name'_vg6v.str:$'name'_hole.set
+
+QUIT

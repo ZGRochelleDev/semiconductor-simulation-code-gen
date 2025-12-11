@@ -1,0 +1,19 @@
+*NETLIST:
+.vcc 12V
+.rc 4.7K
+.re 1K
+.b1 100K
+.b2 20K
+.q1 NPN1
+.out 0
+.base 0
+.emit 0
+.print V(out)
+.print V(base)
+
+*ANALYSIS:
+.op
+.ac 1MHz 10mHz
+.dc 1mA 10mA
+.tran 1s
+.end

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "spice_001",
+    "category": "dc_resistive",
+    "spec": "Create an ngspice-compatible netlist for a DC voltage divider: V1 supplies 10V DC from node in to ground (0). R1 is 1k from in to out. R2 is 2k from out to 0. Run an operating point analysis and print the DC voltage at node out.",
+    "must_contain": ["V1 in 0 DC 10", "R1 in out 1k", "R2 out 0 2k", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Basic structure + .op + output directive."
+  },
+  {
+    "id": "spice_002",
+    "category": "tran_rc",
+    "spec": "Generate an ngspice netlist for an RC step response: V1 is a PULSE source from 0V to 5V with 1ns rise/fall, 100ns on-time, 200ns period, connected to node in (to ground 0). R1 is 1k from in to out. C1 is 10n from out to 0. Run transient analysis for 1us with 1ns step and print V(out).",
+    "must_contain": ["V1 in 0 PULSE(0 5", "R1 in out 1k", "C1 out 0 10n", ".tran 1n 1u", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Checks PULSE + .tran + RC topology."
+  },
+  {
+    "id": "spice_003",
+    "category": "tran_rlc",
+    "spec": "Create an ngspice netlist for a series RLC driven by a sine source: V1 is SIN(0 1 1k) from node in to 0. R1=10 ohm from in to n1. L1=10mH from n1 to n2. C1=1uF from n2 to 0. Run transient for 10ms and print V(n2).",
+    "must_contain": ["V1 in 0 SIN(0 1 1k)", "R1 in n1 10", "L1 n1 n2 10m", "C1 n2 0 1u", ".tran", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Ensures element syntax + node chain."
+  },
+  {
+    "id": "spice_004",
+    "category": "ac_lowpass",
+    "spec": "Write an ngspice netlist for an RC low-pass filter: V1 is an AC source of 1V from in to 0. R1=1k from in to out. C1=100n from out to 0. Perform an AC analysis from 10 Hz to 1 MHz with 100 points/decade and print the magnitude of V(out).",
+    "must_contain": ["V1 in 0 AC 1", "R1 in out 1k", "C1 out 0 100n", ".ac dec 100 10 1Meg", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "AC sweep + magnitude output."
+  },
+  {
+    "id": "spice_005",
+    "category": "ac_highpass",
+    "spec": "Create an ngspice netlist for an RC high-pass filter: V1 AC 1V from in to 0. C1=10n from in to out. R1=1k from out to 0. AC analysis dec 100 from 10 Hz to 1 MHz. Print V(out).",
+    "must_contain": ["V1 in 0 AC 1", "C1 in out 10n", "R1 out 0 1k", ".ac dec 100 10 1Meg", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "High-pass topology check."
+  },
+  {
+    "id": "spice_006",
+    "category": "ac_bandpass_rlc",
+    "spec": "Generate an ngspice netlist for an RLC band-pass: V1 AC 1V from in to 0. Series R1=50 from in to n1, L1=10mH from n1 to out, C1=10n from out to 0. AC sweep dec 200 from 10 Hz to 1 MHz. Print V(out).",
+    "must_contain": ["V1 in 0 AC 1", "R1 in n1 50", "L1 n1 out 10m", "C1 out 0 10n", ".ac dec 200 10 1Meg", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Band-pass style RLC."
+  },
+  {
+    "id": "spice_007",
+    "category": "diode_rectifier_halfwave",
+    "spec": "Write an ngspice netlist for a half-wave rectifier: V1 is SIN(0 10 60) from in to 0. D1 from in to out (anode at in, cathode at out). Rload=1k from out to 0. Use a diode model named DIODE1. Run transient for 0.1s with step 10us and print V(out).",
+    "must_contain": ["V1 in 0 SIN(0 10 60)", "D1 in out DIODE1", "Rload out 0 1k", ".model DIODE1 D", ".tran 10u 0.1", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Diode element + .model + tran."
+  },
+  {
+    "id": "spice_008",
+    "category": "diode_clipper",
+    "spec": "Create an ngspice netlist for a diode clipper: V1 SIN(0 2 1k) from in to 0. R1=1k from in to out. Put two diodes to ground at out: D1 from out to 0 and D2 from 0 to out (anti-parallel). Use diode model DCLIP. Run transient 5ms with 1us step and print V(out).",
+    "must_contain": ["V1 in 0 SIN(0 2 1k)", "R1 in out 1k", "D1 out 0 DCLIP", "D2 0 out DCLIP", ".model DCLIP D", ".tran 1u 5m", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Anti-parallel diode clipper."
+  },
+  {
+    "id": "spice_009",
+    "category": "zener_regulator",
+    "spec": "Generate an ngspice netlist for a simple zener regulator: V1 DC 12V from in to 0. R1=220 from in to out. Zener diode DZ from out to 0 using model ZD5V6 (approx 5.6V breakdown). Load resistor Rload=1k from out to 0. Run .op and print V(out).",
+    "must_contain": ["V1 in 0 DC 12", "R1 in out 220", "DZ out 0 ZD5V6", "Rload out 0 1k", ".model ZD5V6 D", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Zener modeled as diode model; your model params can vary, but name must match."
+  },
+  {
+    "id": "spice_010",
+    "category": "bjt_op",
+    "spec": "Write an ngspice netlist for an NPN BJT biased in common-emitter: VCC is 12V DC from vcc to 0. Rc=4.7k from vcc to out (collector). Re=1k from emit to 0. Base divider: Rb1=100k from vcc to base, Rb2=20k from base to 0. Q1 is NPN with collector=out, base=base, emitter=emit using model NPN1. Run .op and print V(out) and V(base).",
+    "must_contain": ["VCC vcc 0 DC 12", "Rc vcc out 4.7k", "Re emit 0 1k", "Rb1 vcc base 100k", "Rb2 base 0 20k", "Q1 out base emit NPN1", ".model NPN1 NPN", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "BJT pin order: C B E."
+  },
+  {
+    "id": "spice_011",
+    "category": "bjt_ac_gain",
+    "spec": "Create an ngspice netlist for a small-signal BJT amplifier AC gain: Use VCC 12V. Bias as common-emitter with Rc=2.2k, Re=470, base bias Rb1=100k to vcc and Rb2=18k to ground. Add Cin=1u from vin to base. Use a signal source Vin with AC 1V (and DC 0) from vin to 0. AC analysis dec 100 from 10 Hz to 1 MHz. Print V(out).",
+    "must_contain": ["VCC vcc 0 DC 12", "Vin vin 0 AC 1", "Cin vin base 1u", "Rc vcc out 2.2k", "Re emit 0 470", "Q1 out base emit", ".ac dec 100 10 1Meg", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Allow either inline .model or .include; but AC sweep + topology must exist."
+  },
+  {
+    "id": "spice_012",
+    "category": "mosfet_inverter_tran",
+    "spec": "Generate an ngspice netlist for a CMOS inverter transient: VDD is 1.8V DC from vdd to 0. Input is a pulse source VIN from in to 0: PULSE(0 1.8 0 1n 1n 50n 100n). PMOS M1 from out to vdd with gate=in and body=vdd. NMOS M2 from out to 0 with gate=in and body=0. Use models PMOS1 and NMOS1. Run .tran 1n 200n and print V(out).",
+    "must_contain": ["VDD vdd 0 DC 1.8", "VIN in 0 PULSE(0 1.8", "M1 out in vdd vdd PMOS1", "M2 out in 0 0 NMOS1", ".model PMOS1 PMOS", ".model NMOS1 NMOS", ".tran 1n 200n", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "CMOS inverter; enforce 4-terminal MOS syntax."
+  },
+  {
+    "id": "spice_013",
+    "category": "mosfet_dc_transfer",
+    "spec": "Write an ngspice netlist for an NMOS with resistive load and DC transfer sweep: VDD is 5V DC from vdd to 0. RD=1k from vdd to out. NMOS M1 has drain=out, gate=in, source=0, body=0 using model NMOS1. Input source VIN is DC 0 from in to 0. Run a DC sweep of VIN from 0 to 5 in 0.1V steps and print V(out).",
+    "must_contain": ["VDD vdd 0 DC 5", "RD vdd out 1k", "VIN in 0 DC 0", "M1 out in 0 0 NMOS1", ".model NMOS1 NMOS", ".dc VIN 0 5 0.1", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "DC sweep syntax check."
+  },
+  {
+    "id": "spice_014",
+    "category": "subckt_use",
+    "spec": "Create an ngspice netlist that defines a subcircuit for a voltage divider and then instantiates it: .subckt DIV in out gnd with R1=1k from in to out and R2=1k from out to gnd, then .ends. Top-level: V1 DC 10 from vin to 0, instantiate X1 vin vout 0 DIV, run .op and print V(vout).",
+    "must_contain": [".subckt DIV in out gnd", "R1 in out 1k", "R2 out gnd 1k", ".ends", "V1 vin 0 DC 10", "X1 vin vout 0 DIV", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Tests subckt syntax + instance line."
+  },
+  {
+    "id": "spice_015",
+    "category": "current_source",
+    "spec": "Generate an ngspice netlist using a current source: I1 supplies 2mA DC from node in to node out. R1=1k from out to 0. Run .op and print V(out).",
+    "must_contain": ["I1 in out DC 2m", "R1 out 0 1k", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Current source syntax + polarity."
+  },
+  {
+    "id": "spice_016",
+    "category": "dependent_source_vcv",
+    "spec": "Write an ngspice netlist that uses a voltage-controlled voltage source (E source): V1 DC 1V from in to 0. Use E1 out 0 in 0 10 to create a gain of 10 from V(in) to V(out). Place Rload=10k from out to 0. Run .op and print V(out).",
+    "must_contain": ["V1 in 0 DC 1", "E1 out 0 in 0 10", "Rload out 0 10k", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Dependent source syntax check."
+  },
+  {
+    "id": "spice_017",
+    "category": "tran_rl",
+    "spec": "Create an ngspice netlist for an RL step response: V1 is PULSE(0 5 0 1n 1n 1u 2u) from in to 0. R1=10 from in to out. L1=1mH from out to 0. Run .tran 1n 5u and print I(L1).",
+    "must_contain": ["V1 in 0 PULSE(0 5", "R1 in out 10", "L1 out 0 1m", ".tran 1n 5u", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Inductor current output."
+  },
+  {
+    "id": "spice_018",
+    "category": "tran_diode_rc",
+    "spec": "Generate an ngspice netlist for a diode + RC envelope detector: V1 SIN(0 5 1k) from in to 0. Diode D1 from in to out using model DENV. Capacitor C1=1u from out to 0. Resistor R1=10k from out to 0. Run transient 10ms with 1us step and print V(out).",
+    "must_contain": ["V1 in 0 SIN(0 5 1k)", "D1 in out DENV", "C1 out 0 1u", "R1 out 0 10k", ".model DENV D", ".tran 1u 10m", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Envelope detector completeness."
+  },
+  {
+    "id": "spice_019",
+    "category": "ac_two_stage",
+    "spec": "Write an ngspice netlist for a two-stage RC low-pass: V1 AC 1V from in to 0. Stage1: R1=1k in to n1, C1=100n n1 to 0. Stage2: R2=1k n1 to out, C2=100n out to 0. AC dec 100 10 Hz to 1 MHz. Print V(out).",
+    "must_contain": ["V1 in 0 AC 1", "R1 in n1 1k", "C1 n1 0 100n", "R2 n1 out 1k", "C2 out 0 100n", ".ac dec 100 10 1Meg", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Multi-node, multi-stage filter."
+  },
+  {
+    "id": "spice_020",
+    "category": "mosfet_current_mirror",
+    "spec": "Generate an ngspice netlist for a simple NMOS current mirror (conceptual): Use VDD 5V from vdd to 0. Use two NMOS devices M1 and M2 with model NMOS1. M1 is diode-connected: drain=gate=node bias, source=0, body=0. M2 has gate=bias, source=0, body=0, drain=out. Provide a reference current by placing Rref from vdd to bias with value 10k. Place a load resistor Rload from vdd to out with value 10k. Run .op and print I(Rload) or V(out).",
+    "must_contain": ["VDD vdd 0 DC 5", "Rref vdd bias 10k", "M1 bias bias 0 0 NMOS1", "M2 out bias 0 0 NMOS1", ".model NMOS1 NMOS", "Rload vdd out 10k", ".op", ".end"],
+    "must_contain_any": [[".print", ".plot", ".meas"]],
+    "notes": "Checks diode-connected MOS + mirror topology."
+  }
+]

@@ -1,0 +1,17 @@
+* Gateway 2.12.13.A Spice Netlist Generator
+* Workspace name:       L:\examples\harmony\web\source\mixed_signal\adc_sar\adc_sar.workspace
+* Simulation name:      L:\examples\harmony\web\source\mixed_signal\adc_sar\adc_sar.schlr
+* Simulation timestamp: 06-Oct-2010 15:14:59
+
+* Schematic name: adc_sar
+.options nomod nodeck
+.tran 1ns 1100ns
+Vresetn resetn GND PWL(0 5 10ns 5 11ns 0 20ns 0 21ns 5 )
+Vain ain GND SIN(2.5 2.4 0.2e6 )
+Vclk clk GND PULSE(0 5 0 1ns 1ns 5ns 10ns)
+Xtoplevel1 eoc ain clk resetn TOPLEVEL
+
+* Global Nodes Declarations
+.GLOBAL GND VDD
+
+* End of the netlist

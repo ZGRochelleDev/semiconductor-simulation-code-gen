@@ -1,0 +1,121 @@
+# (c) Silvaco Inc., 2024
+
+# Reach Through APD (RTAPD)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+Set name=“Photodiode_ex10” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH auto
+ 
+X.MESH location=0.0 spacing=10
+X.MESH location=40.0 spacing=10
+
+REGION material=InGaAs bottom thick=0.25 acceptors=5e17 ny=20 x.comp=0.41
+REGION material=InGaAs bottom thick=1.00 donors=1e15 ny=20 x.comp=0.41
+REGION material=silicon bottom thick=1.00 acceptors=5e16 ny=20 
+REGION material=silicon bottom thick=4.2500 donors=1e19 ny=20 
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+#### MATERIAL/PHYSICAL MODELS ####
+MATERIAL material=InGaAs sopra=Ingaas.nk
+MODELS fermi srh fldmob conmob optr print
+IMPACT selb
+
+METHOD climit=1e-8
+
+### Dark ###
+SOLVE init
+
+LOG outf=$'name'_Dark.log
+
+SOLVE vanode=-0.01
+SOLVE vanode=-0.1
+SOLVE vanode=-1 vstep=-1 vfinal=-20 name=anode
+SOLVE vstep=-0.1 vfinal=-22 name=anode
+
+SAVE outf=$'name'_Dark.str
+
+SOLVE vstep=-0.1 vfinal=-30 name=anode
+
+LOG off
+
+### Light ###
+BEAM num=1 wavelength=1 angle=270 x.ori=20 y.ori=7 
+
+SOLVE init
+
+SOLVE b1=1e-03
+SOLVE b1=1e-02
+SOLVE b1=1e-01
+
+SAVE outfile=$'name'_Light_Init.str 
+
+LOG outf=$'name'_Light.log
+
+SOLVE vanode=-0.001
+SOLVE vanode=-0.01
+SOLVE vanode=-0.1
+SOLVE vanode=-1 vstep=-1 vfinal=-20 name=anode
+SOLVE vstep=-0.1 vfinal=-30 name=anode
+
+LOG off
+
+### Geiger Mode Simulation ###
+PROBE name=pe1 x=30.0 y=1.5 PE.AVALANCHE filename=$'name'_Prob
+
+MODELS geiger selb
+
+SOLVE init
+
+SOLVE vanode=-0.01
+SOLVE vanode=-0.1
+SOLVE vanode=-1 vstep=-1 vfinal=-20 name=anode
+
+LOG outf=$'name'_Geiger.log
+
+OUTPUT geiger 
+
+SOLVE vstep=-1 vfinal=-30 name=anode
+
+SAVE outfile=$'name'_Geiger_BV.str 
+
+go victoryextract
+LOAD in="$'name'_Dark.str"
+EXTRACT.PROFILE fields="Net Doping" regions=* x.val=10 csvfile="$'name'_NetDop"
+EXTRACT.PROFILE fields="Electric field" regions=* x.val=10 csvfile="$'name'_EField"
+LOAD in="$'name'_Geiger_BV.str"
+EXTRACT.PROFILE fields="Prob. of Avalanche by Elec." regions=* x.val=10 csvfile="$'name'_Prob_E"
+
+
+victoryvisual \
+$'name'_Dark.str \
+$'name'_Dark.str:$'name'_EField.set \
+$'name'_NetDop.csv:$'name'_NetDop.set  \
+$'name'_EField.csv
+
+victoryvisual \
+$'name'_Light_Init.str:$'name'_Photo.set \
+$'name'_Dark.log:$'name'_BV.set+\
+$'name'_Light.log:$'name'_BV.set \
+$'name'_Prob_9.log:$'name'_Prob.set \
+$'name'_Geiger.log:$'name'_Geiger.set
+
+victoryvisual \
+$'name'_Geiger_BV.str:$'name'_Geiger_BV.set \
+$'name'_Prob_E.csv
+
+
+
+
+QUIT

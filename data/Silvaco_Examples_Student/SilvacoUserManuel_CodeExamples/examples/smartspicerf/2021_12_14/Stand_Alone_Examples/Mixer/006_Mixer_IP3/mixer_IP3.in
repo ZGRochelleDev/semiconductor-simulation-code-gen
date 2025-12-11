@@ -1,0 +1,36 @@
+* IP3 meas
+.include HBT_ne600p.inc
+
+.param prf=-30_dBm
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf gnd  acmag=prf
++          MTS1 (prf 0 23)
+Vlo lo gnd MTS1 (vlo 0 25)
+
+*---------- calculation IP3 ----------------
+
+.param fin=921Meg 
+.param fund_freq=40meg
+.param sb1=-21   sb2=-25
+.param f1='fin+sb2*fund_freq'
+.param f3='fin+sb1*fund_freq'
+
+.HAC
++ LIN 1 fin fin
++ FUND='fund_freq'
++ SB=(sb1, sb2)
++ FAXIS=ABS
++ annotate=3
++ waves
++ SWEEP prf -24 -2 2
+
+.LET HAC POUT=r(@Pif[POUT])
+
+.MEASURE HAC POUT_1 FIND POUT AT='abs(f1)'; AT=79Meg
+.MEASURE HAC POUT_3 FIND POUT AT=f3       ; AT=81Meg
+
+.MEASURE MEAS resIP3 IP3 POUT_1 POUT_3 EP=-15 GAIN=2
+
+.END

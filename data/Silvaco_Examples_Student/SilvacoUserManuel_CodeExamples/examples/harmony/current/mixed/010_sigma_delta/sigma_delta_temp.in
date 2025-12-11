@@ -1,0 +1,25 @@
+.TITLE Harmony project "sigma_delta"
+
+
+* Module "BiElec"
+.verilog "SilvacoVLG/sigma_delta_temp0.v"
+
+* Module "MODULATOR"
+.verilog "SilvacoVLG/sigma_delta_temp1.v"
+
+
+
+* FILTER1.BiElecOnPort1
+*	RESET_N <--> FILTER1.BiElecOnPort1.aP
+YVLGFILTER1.xBiElecOnPort1 RESET_N BiElec 
+
+* FILTER1.BiElecOnPort2
+*	CLK <--> FILTER1.BiElecOnPort2.aP
+YVLGFILTER1.xBiElecOnPort2 CLK BiElec 
+
+* FILTER1.BiElecOnPort3
+*	OUT <--> FILTER1.BiElecOnPort3.aP
+YVLGFILTER1.xBiElecOnPort3 OUT BiElec 
+
+
+.INCLUDE "main.in"

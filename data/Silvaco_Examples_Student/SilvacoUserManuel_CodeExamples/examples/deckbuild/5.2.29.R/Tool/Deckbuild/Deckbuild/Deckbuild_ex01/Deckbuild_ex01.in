@@ -1,0 +1,64 @@
+# (c) Silvaco Inc., 2024
+
+# Defining Variables in a simulation (SET)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Inserting variable into the simulation.
+# Variable also used in file name and extract variable.
+# Variables can be used anywhere, for anything.
+# Further operations can be done on variables.
+
+# Example Name
+SET name=“Deckbuild_ex01” 
+
+# Define variable name and value
+SET Temper=300
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'.str
+
+#### MATERIAL/PHYSICAL MODELS ####
+
+# Variable substituted here  
+MODELS cvt srh temperature=$Temper print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD newton
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE prev
+
+# Bias the drain 
+SOLVE vdrain=0.05 vstep=0.05 vfinal=0.1 name=drain
+
+# save IV data to file
+LOG outf=$'name'_VD_$"Temper"K.log master
+
+SOLVE vgate=0 vstep=0.1 vfinal=3.0 name=gate
+
+SAVE outf=$'name'_VD_$"Temper"K.str
+
+victoryvisual $'name'_VD_$'Temper'K.log
+
+# extract device parameters
+go victoryextract
+LOAD  in=$'name'_VD_$"Temper"K.log
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.MAXSLOPE.XINTERCEPT IN=IV NAME=intercept
+EXTRACT.LOG name=mean expression="abs(ave(DRAIN VOLTAGE))/2.0"
+EXTRACT.VDOE name="nvt_T_$'Temper'K_[V]" expression=$intercept-$mean
+  
+QUIT
+

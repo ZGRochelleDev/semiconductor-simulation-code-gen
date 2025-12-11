@@ -1,0 +1,281 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Cylindrical Nanowire
+
+# Required Modules
+#  Victory Process
+#   -Core
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Fin_GAA_ex03” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# build everything on a substrate that we can erase at the end
+INIT material="substrate" from=0,0 to= "0.02,0.02" depth=0.001 gasheight=1
+
+LINE x loc=0 spac=0.002
+LINE x loc=0.01 spac=0.0005
+LINE x loc=0.02 spac=0.002
+
+LINE y loc=0 spac=0.002
+LINE y loc=0.01 spac=0.0005
+LINE y loc=0.02 spac=0.002
+
+LINE z loc=0 spac=0.001
+LINE z loc=-0.007 spac=0.0001
+LINE z loc=-0.0105 spac=0.001
+LINE z loc=-0.014 spac=0.0001
+LINE z loc=-0.021 spac=0.001
+
+SPECIFYMASKPOLY mask=wire circle npoints=30 center="0.01,0.01" radius=0.002
+SPECIFYMASKPOLY mask=gateox circle npoints=30 center="0.01,0.01" radius=0.003
+SPECIFYMASKPOLY mask=gatepoly circle npoints=30 center="0.01,0.01" \
+ radius=0.004 electrode=gate
+
+DEPOSIT material="aluminum" thick=0.001 max
+
+DEPOSIT material="silicon" thick=0.007 max dopants=phos dopingvalues=1e20
+DEPOSIT material="silicon" thick=0.007 max dopants=boron dopingvalues=1e15
+DEPOSIT material="silicon" thick=0.007 max dopants=phos dopingvalues=1e20
+
+MASK wire 
+ETCH material="silicon" max 
+STRIP "resist"
+
+MASK gatepoly 
+ETCH material="aluminum" max 
+STRIP "resist"
+
+DEPOSIT material="oxide" thickness=0 max
+MASK gateox 
+ETCH material="oxide" max
+STRIP "resist"
+
+DEPOSIT material="oxide" thickness=0.008 min
+MASK gatepoly
+ETCH material="oxide" max
+STRIP "resist"
+
+DEPOSIT material="polysilicon" thickness=0.015 min
+MASK gatepoly
+ETCH material="polysilicon" max
+STRIP "resist"
+ELECTRODE mask="gatepoly" material="polysilicon"
+
+DEPOSIT material="oxide" thickness=0.022 min
+MASK gatepoly
+ETCH material="oxide" max
+STRIP "resist"
+
+DEPOSIT material="air" thick=0 max 
+DEPOSIT material="aluminum" thick=0.001 max 
+
+MASK gatepoly 
+ETCH material="aluminum" max 
+STRIP "resist"
+
+ELECTRODE name="drain" material="aluminum" X=0.01 Y=0.01 Z=-0.0205 
+ELECTRODE name="source" material="aluminum" X=0.01 Y=0.01 Z=-0.0005
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH delaunay
+REFINE max.size=0.005 regions="*" 
+REFINE max.interface.size=0.00025 grading="quadratic" 
+REFINE max.junction.size=0.00025 grading="quadratic"
+
+# erase the sacrificial substrate
+ERASE regions="substrate"
+
+SAVE out=$'name'_VM_del.str
+
+####### DEVICE SIMULATION #######
+# Drift Diffusion (DD) - IdVg and IdVd
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate workfunc=4.65
+MODEL consrh cvt fermi print 
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres maxtrap=6 itlimit=150 dvmax=1.0 norm.scaling.local 
+
+#### SOLUTION SOLVING ####
+# IdVg
+SOLVE init 
+SOLVE prev
+
+SOLVE vdrain=0.01
+SOLVE vstep=0.01 vfinal=0.05 name=drain previous
+
+LOG outfile=$'name'_VD_IdVg_DD.log
+
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate previous
+LOG off
+
+# Reset/restart for IdVd
+SOLVE init 
+SOLVE prev
+SOLVE vstep=0.05 vfinal=1 name=gate
+
+LOG outfile=$'name'_VD_IdVd_DD.log
+
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vstep=0.05 vfinal=1 name=drain
+LOG off
+
+
+####### DEVICE SIMULATION #######
+# Bohm Quantum Potential (BQP) - IdVg and IdVd
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate workfunc=4.65
+
+MODEL consrh cvt fermi print
+MODEL bqp.n bqp.ngamma=1.4 bqp.nalpha=0.3 
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres maxtrap=6 itlimit=150 dvmax=1.0 norm.scaling.local 
+
+#### SOLUTION SOLVING #### 
+# IdVg
+SOLVE init bqp.sc
+SOLVE prev
+
+SOLVE vdrain=0.01
+SOLVE vstep=0.01 vfinal=0.05 name=drain previous
+
+LOG outfile=$'name'_VD_IdVg_BQP.log
+
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate previous
+LOG off
+
+# Reset/restart for IdVd
+SOLVE init bqp.sc
+SOLVE prev
+SOLVE vstep=0.05 vfinal=1 name=gate
+
+LOG outfile=$'name'_VD_IdVd_BQP.log
+
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vstep=0.05 vfinal=1 name=drain
+LOG off
+
+####### DEVICE SIMULATION #######
+# Energy Balance (EB) - IdVg and IdVd
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate workfunc=4.65
+
+MODEL consrh cvt fermi print
+MODEL hcte.el
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres maxtrap=6 itlimit=150 dvmax=1.0 norm.scaling.local 
+
+#### SOLUTION SOLVING #### 
+# IdVg
+SOLVE init 
+SOLVE prev
+
+SOLVE vdrain=0.01
+SOLVE vstep=0.01 vfinal=0.05 name=drain previous
+
+LOG outfile=$'name'_VD_IdVg_EB.log
+
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate previous
+LOG off
+
+SOLVE init 
+SOLVE prev
+SOLVE vstep=0.05 vfinal=1 name=gate
+
+LOG outfile=$'name'_VD_IdVd_EB.log
+
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vstep=0.05 vfinal=1 name=drain
+LOG off
+
+####### DEVICE SIMULATION #######
+# Energy Balance + BQP (EB_BQP) - IdVg and IdVd
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate workfunc=4.65
+
+MODEL consrh cvt fermi print
+MODEL bqp.n bqp.ngamma=1.4 bqp.nalpha=0.3 
+MODEL hcte.el
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres maxtrap=6 itlimit=150 dvmax=1.0 norm.scaling.local 
+
+#### SOLUTION SOLVING #### 
+# IdVg
+SOLVE init bqp.sc
+SOLVE prev
+
+SOLVE vdrain=0.01
+SOLVE vstep=0.01 vfinal=0.05 name=drain previous
+
+LOG outfile=$'name'_VD_IdVg_EB_BQP.log
+
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate previous
+LOG off
+
+# Reset/restart for IdVd
+SOLVE init bqp.sc
+SOLVE prev
+SOLVE vstep=0.05 vfinal=1 name=gate
+
+LOG outfile=$'name'_VD_IdVd_EB_BQP.log
+
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vstep=0.05 vfinal=1 name=drain
+LOG off
+
+victoryvisual $'name'_VM_del.str \
+ $'name'_VD_IdVg_DD.log+$'name'_VD_IdVg_BQP.log+$'name'_VD_IdVg_EB.log+$'name'_VD_IdVg_EB_BQP.log \
+ $'name'_VD_IdVd_DD.log+$'name'_VD_IdVd_BQP.log+$'name'_VD_IdVd_EB.log+$'name'_VD_IdVd_EB_BQP.log
+
+QUIT
+

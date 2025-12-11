@@ -1,0 +1,17 @@
+source n55.var
+source n0c55.var
+GO internal
+
+extract init inf = n55_idvg_vd01.log
+extract name = "vt_01" x.val from curve( v."gate", abs(i."drain") ) where y.val = $i_vt datafile = "n127.result"
+extract name = "ss_01" y.val from deriv( log10( abs(i."drain") ), v."gate" ) where x.val = log10($i_vt) datafile = "n127.result"
+extract name = "ion_01" y.val from curve( v."gate", abs(i."drain") ) where x.val = 20 datafile = "n127.result"
+extract name = "mul_01" y.val from deriv( v."gate", abs(i."drain")/($wsz*1.73e-8*0.1/$lsz) ) where x.val = 20 datafile = "n127.result"
+extract name = "id" curve(v."gate", abs(i."drain")/($wsz/$lsz)) outf = "normalized_idvg.dat" datafile = "n127.result"
+system sh variable.sh n127 vt_01 $"vt_01"
+system sh variable.sh n127 ss_01 $"ss_01"
+system sh variable.sh n127 ion_01 $"ion_01"
+system sh variable.sh n127 mul_01 $"mul_01"
+
+#quit
+system echo finished

@@ -1,0 +1,12 @@
+
+vreset_n reset_n 0 pwl   0   5   10ns 5 11ns 0 15ns 0 16ns 5
+vclk   clk       0 pulse 0   5   0   1ns 1ns 5ns 10ns
+vin    in        0 sin   2.5 2.5 100k
+
+xmodulator1 clk     in  out MODULATOR
+xfilter1    reset_n clk out FILTER
+
+
+.tran 10ns 20000ns
+
+.end

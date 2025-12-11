@@ -1,0 +1,5 @@
+* main spice file
+
+.TRAN 1n 20u
+
+.END

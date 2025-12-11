@@ -1,0 +1,19 @@
+Answer:
+**Given:**
+
+- Supply voltage $V_{CC}=12\mathrm{~V}$;
+- Resistance of collector resistor $R_C=2.2\mathrm{~k\Omega}$;
+- Resistance of emitter resistor $R_E=470\mathrm{~\Omega}$;
+- Base resistance $R_B1=100\mathrm{~k}\Omega$;
+- Base resistance $B_R2=18\mathrm{~k} \Omega$;
+- Capacitance of input capacitor $C_{in}=1\mathrm{~\mu F}$;
+- Signal source $v_i(t)=1\mathrm{~V}, t>0$.
+
+**Required:**
+
+We need to write an ngspice net list that represents the given circuit.
+**Introduction:**
+
+In this problem, we are required to write an ngspce net list that represents the following circuit:
+
+!['slader'](https://slader

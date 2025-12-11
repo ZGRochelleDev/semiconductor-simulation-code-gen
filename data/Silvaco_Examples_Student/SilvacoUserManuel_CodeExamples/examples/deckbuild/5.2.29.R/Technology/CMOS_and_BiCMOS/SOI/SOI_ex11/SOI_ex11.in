@@ -1,0 +1,378 @@
+# (c) Silvaco Inc., 2024
+
+# 2D Analysis of PD-SOI MOSFET and FET-Stack for RF CMOS Applications
+
+# Required Modules
+#  Victory Process
+#   -2D Implantation & Diffusion
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“SOI_ex11” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+# Position of the 2D cut on the layout:
+set Ycut=0.63
+
+INIT material=silicon layout=$'name'.lay depth=2 gasheight=1 resolution=0.01 \
+  dopants=boron dopingvalues=1e15 from=0 to=1.26 at=$Ycut
+ 
+LINE x location=0 spacing=0.09
+LINE x location=0.09 spacing=0.09
+LINE x location=0.27 spacing=0.09
+LINE x location=0.54 spacing=0.01
+LINE x location=0.63 spacing=0.02
+LINE x location=0.72 spacing=0.01
+LINE x location=0.99 spacing=0.09
+LINE x location=1.17 spacing=0.09
+LINE x location=1.26 spacing=0.09
+
+LINE y location=0 spacing=0.09
+LINE y location=0.18 spacing=0.09
+LINE y location=0.27 spacing=0.09
+LINE y location=0.36 spacing=0.09
+LINE y location=0.54 spacing=0.09
+LINE y location=0.72 spacing=0.09
+LINE y location=0.9  spacing=0.09
+LINE y location=1.08 spacing=0.09
+LINE y location=1.26 spacing=0.09
+
+LINE z location=-0.4038 spacing=0.01
+LINE z location=-0.3838 spacing=0.01
+LINE z location=-0.2938 spacing=0.02
+LINE z location=-0.2038 spacing=0.00095
+LINE z location=-0.2 spacing=0.00095
+LINE z location=-0.15   spacing=0.02
+LINE z location=-0.1 spacing=0.01
+LINE z location=-0.05   spacing=0.02
+LINE z location=0 spacing=0.01
+LINE z location=0.2  spacing=0.05
+LINE z location=2 spacing=0.5
+
+# Create Buried Oxide
+DEPOSIT material=oxide thickness=0.1 max
+
+# Create Active Silicon Film
+DEPOSIT material=silicon thickness=0.1 max
+
+# Trench Etch
+ETCH material=silicon thickness=0.15 max mask=ACTIVE
+ETCH material=oxide   thickness=0.15 max mask=ACTIVE
+ETCH material=silicon thickness=0.2  dry mask=ACTIVE angle=86 deltacd=0.0002
+
+# Grow Gate Oxide (Tox=3.8nm) - No point in doing real oxidation
+DEPOSIT material=oxide thickness=0.0038 max
+
+####==========================================================
+#### IMPLANTATION - for more accurate (but slower) simulation
+#### uncomment the " # bca n.ion=..." lines below
+####==========================================================
+
+# Vt Adjust Implant
+set vt_dose=9e12
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=27 
+
+extract name="Vt-adjust implant dose [1/cm2] " $vt_dose
+
+DIFFUSE time=2 temperature=1000 
+
+# Poly Gate
+DEPOSIT material=polysilicon thickness=0.09 max
+ETCH material=polysilicon thickness=0.1 max mask=GATE
+
+# LDD Implant
+IMPLANT arsenic energy=10 dose=5.2e12 tilt=7 rotation=27 
+  #  bca n.ion=1e4
+IMPLANT arsenic energy=10 dose=5.2e12 tilt=7 rotation=207 
+  #  bca n.ion=1e4
+
+DIFFUSE time=2 temperature=1000
+
+# Spacer
+DEPOSIT material=nitride thick=0.09 conformal curved
+
+# Spacer around Poly Gate
+ETCH material=nitride thickness=0.1 max mask=GATE deltacd=0.09
+ETCH material=nitride thickness=0.1 max mask=GATE reverse
+DEPOSIT material=polysilicon thickness=0 max
+ETCH material=polysilicon mask=GATE thick=0.3 max
+
+# SD Implant
+IMPLANT arsenic energy=20 dose=1e15 tilt=0 rotation=0
+  #   bca n.ion=4e5
+DIFFUSE time=2 temperature=1000
+
+# Etch Polysilicon
+ETCH material=polysilicon thickness=0.3 max mask=P_PLUS
+ETCH material=nitride thickness=0.3 max mask=P_PLUS
+
+# P well Contact Implant
+MASK mask=P_PLUS deltacd=0.09
+# implant boron energy=5 dose=1e14 tilt=0 rotation=0 bca n.ion=4e5
+STRIP material=barrier
+DIFFUSE time=0.417 temperature=1000
+
+# Contact Etch
+MASK mask=CONT reverse
+ETCH material=oxide thickness=0.0538 min
+DEPOSIT material=aluminum thickness=0.2038 min
+STRIP material=barrier
+Electrodes mask=CONT material=aluminum
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+remesh conformal
+
+SAVE out=$'name'_conf.str
+
+### Creating Stack of FETs - by using MIRROR statement
+# Stack of 4 MOSFETs:
+MIRROR axes="+3x" electrode="separate"
+
+SAVE out=$'name'_conf_stack4.str
+
+# Stack of 8 MOSFETs:
+MIRROR axes="+1x" electrode="separate"
+
+SAVE out=$'name'_conf_stack8.str
+
+#######  Single PD-SOI MOSFET - Device Simulation
+
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+
+# Using total gate width = 192 um 
+
+MESH infile=$'name'_conf.str  width=192
+
+ELECTRODE name=substrate bottom
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+MODELS fermi  print
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+IMPACT selb  bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+
+#### NUMERICAL METHODS #### 
+METHOD norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000
+
+#### SOLUTION SOLVING #### 
+# IDLIN simulation@Vd=50mV
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+
+LOG outfile=$'name'_IDLIN.log
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 
+SOLVE name=gate vstep=0.05 vfinal=2
+
+extract name="Vt_@_Vd=50mV " \
+  (xintercept(maxslope(curve(abs(v."gate"),abs(i."drain")))) \
+  - abs(ave(v."drain"))/2)
+extract name="Id_lin " max(abs(i."drain"))
+extract name="Vt_lin " x.val from curve ((v."gate"), abs(i."drain")) where y.val=1e-4
+extract name="Ron_@_Vd50mV [ohm] " 0.05/(max(abs(i."drain")))
+LOG off
+
+# IDSAT simulation@Vd=2V
+SOLVE init
+SOLVE previous
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE name=drain vstep=0.1 vfinal=2
+
+LOG outfile=$'name'_IDSAT.log
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 
+SOLVE name=gate vstep=0.05 vfinal=2
+
+extract name="Id_sat " max(abs(i."drain"))
+extract name="Vt_sat " x.val from curve ((v."gate"), abs(i."drain")) where y.val=1e-4
+extract name="Ron_@_Vd2V [ohm] " 2.0/(max(abs(i."drain")))
+LOG off
+
+
+#######################  BREAKDOWN Id-Vd  #####################
+
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+
+LOG outfile=$'name'_BV.log
+SOLVE vdrain=0.1
+SOLVE name=drain vstep=0.1 vfinal=10  compl=1e-3 cname=drain
+
+SAVE outfile=$'name'_BV.str
+
+
+extract name="BV [V] " max(abs(v."drain"))
+LOG off
+
+####  Small-signal (AC) Analysis for Capacitance-Voltage (C-V) Char.
+
+# Extract CAPACITANCES to determine C_off  
+ 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_AC.log 
+SOLVE vgate=0 vstep=0.05 vfinal=0.4 name=gate AC freq=1e6 aname=drain
+
+extract name="Cds " y.val from curve(abs(v."gate"),(c."drain""source")) where x.val=0
+extract name="Cgs " y.val from curve(abs(v."gate"),(c."gate""source")) where x.val=0
+extract name="Cgd " y.val from curve(abs(v."gate"),(c."gate""drain")) where x.val=0
+extract name="Cgsub " y.val from curve(abs(v."gate"),(c."gate""substrate")) where x.val=0
+extract name="Cdsub " y.val from curve(abs(v."gate"),(c."drain""substrate")) where x.val=0
+LOG off
+
+############  Body-Tie Effects on Id-Vd Characteristics  ########
+
+# MOSFET with Floating Body
+
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_conf.str   width=192
+
+ELECTRODE name=substrate bottom
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+MODELS fermi  print
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+IMPACT selb  bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+METHOD norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000
+
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_floating_0V.str
+
+# Id-Vd calculation
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 
+SOLVE name=gate vstep=0.05 vfinal=0.7
+
+LOG outfile=$'name'_floating_Vg0.7.log
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE name=drain vstep=0.1 vfinal=0.4
+SOLVE name=drain vstep=0.1 vfinal=2.0
+LOG off
+
+# MOSFET with Body Tie (Contact):
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_conf.str   width=192
+# Body contact
+ELECTRODE name=bodyTie x.min=0.57 x.max=0.7 y.min=-0.12 y.max=-0.1
+ELECTRODE name=substrate bottom
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+MODELS fermi  print
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+IMPACT selb  bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+METHOD norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000
+
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_bodyTie_0V.str
+
+# Id-Vd calculation
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 
+SOLVE name=gate vstep=0.05 vfinal=0.7
+
+LOG outfile=$'name'_bodyTie_Vg0.7.log
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE name=drain vstep=0.1 vfinal=0.4
+SOLVE name=drain vstep=0.1 vfinal=2.0
+LOG off
+
+
+###  STACK of 4 FETs - Device Simulation
+
+
+GO victorydevice simflags="-P 4"
+# Defining gate width = 192 um 
+
+MESH infile=$'name'_conf_stack4.str width=192
+ELECTRODE name=substrate bottom
+
+# Defining "zero current" boundary conditions on selected contacts
+CONTACT name=drain current
+CONTACT name=source_1 current
+CONTACT name=drain_2  current
+
+# Series resistances to Gate contacts
+# (50 kohm)
+CONTACT name=gate   RESISTANCE=5e4 ohms
+CONTACT name=gate_1 RESISTANCE=5e4 ohms
+CONTACT name=gate_2 RESISTANCE=5e4 ohms
+CONTACT name=gate_3 RESISTANCE=5e4 ohms
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+
+MODELS fermi
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+
+IMPACT selb  bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+
+# Sinusoidal waveform
+WAVEFORM num=1 elec.name=source_3 sinusoid amplit=1.0 freq=1e9  
+
+METHOD norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000 
+
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_stack4_0V.str
+
+
+METHOD  dt.max=2.5e-12
+
+LOG outfile=$'name'_stack_tran.log
+SOLVE wave1 tstep=1e-13 tstop=2.5e-10
+LOG off
+
+SAVE outfile=$'name'_stack_tran_final.str
+
+victoryvisual \
+ $'name'_IDLIN.log+$'name'_IDSAT.log \
+ $'name'_BV.log:$'name'_BV.set \
+ $'name'_bodyTie_Vg0.7.log+$'name'_floating_Vg0.7.log \
+ $'name'_AC.log:$'name'_AC.set \
+ $'name'_stack_tran_final.str:$'name'_stack_tran_final.set
+
+QUIT

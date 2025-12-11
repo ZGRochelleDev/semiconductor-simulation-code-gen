@@ -1,0 +1,50 @@
+# (c) Silvaco Inc., 2024
+
+# Metal Elbows with Etch and Lithography Models
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex04” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+## Process Description ##
+
+INIT Layout=$'name'.lay material=silicon depth=1
+
+DEPOSIT material=oxide thickness=0.5 max
+
+DEPOSIT material=aluminum thickness=0.5 max
+
+## Define Lithography Parameters
+
+LITHOGRAPHY mask=MET1 standardwl=DUVLINE
+
+ETCH material=aluminum thickness=0.5 max mask=MET1_LITHO \
+     angle=87 deltacd=-0.027
+
+ELECTRODES mask=MET1 material=aluminum
+
+DEPOSIT material=oxide thickness=1 max
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv.str"
+
+MATERIAL silicon inherit(oxide)
+
+INTERCONNECT capacitance adaptc=0.02
+
+SAVE spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

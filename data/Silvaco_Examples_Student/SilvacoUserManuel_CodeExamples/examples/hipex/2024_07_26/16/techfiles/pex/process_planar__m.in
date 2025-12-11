@@ -1,0 +1,70 @@
+go victoryp
+init depth=10 oxide GasHeight=10 separate.layers
+
+# Metal gate
+deposit material=Mmaluminum thickness=0.12 max
+mask "Gate"
+etch material=Mmaluminum thickness=0.12 max
+strip resist
+electrodes "Gate"  material=Mmaluminum
+
+# Gate Oxide
+deposit material=MmSiN thickness=0.15 max
+
+# Active Amorphous Silicon
+deposit material=MmaSi thickness=0.033 max
+mask "aSi"
+etch material=MmaSi max
+strip resist
+
+
+# Nitride Hard Mask
+deposit material=MmSiN thickness=0.135 max
+##mask "tft_rec" reverse
+##etch material=MmSiN max
+##strip resist
+
+# Source-Drain Contacts
+deposit material=MmCr thickness=0.12 max
+mask "SD"
+etch material=MmCr max
+strip resist
+electrodes "SD"  material=MmCr
+
+# NIP
+deposit material=Mmsilicon thickness=1.8 max
+mask "NIP"
+etch material=Mmsilicon max
+strip resist
+
+# ITO
+deposit material=MmITO thickness=0.06 max
+mask "ITO"
+etch material=MmITO max
+strip resist
+electrodes "ITO"  material=MmITO
+
+## IMDx
+deposit material=MmSiON thickness=2.072 max
+mask "IMDx"
+etch material=MmSiON max 
+strip resist
+
+
+## Top Metal
+deposit material=MmM4aluminum thickness=0.646 max
+mask "M4"
+etch material=MmM4aluminum max
+strip resist
+electrodes "M4" material=MmM4aluminum
+
+# Passivation
+deposit material=MmPassiv thickness=2.25 max
+
+
+# Via
+##mask "Via" reverse
+##etch material("MmPassiv") max
+##strip resist
+
+save name=""

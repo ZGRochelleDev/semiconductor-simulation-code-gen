@@ -1,0 +1,43 @@
+   MOSFET   M E Y E R    CAPACITANCES
+*
+*THIS FILE IS USED TO PLOT MEYER GATE CAPACITANCES
+*CALCULATED DURING TRANSIENT ANALYSIS
+*
+V_G   G 0   PULSE( 0 5V  0 5S )
+*  The derivative of the input signal V_G is equal to 1.0.
+*  The parameters KP and GMIN of the MOSFET model are
+*  very small(in order to remove DC currents). 
+*  For this reason the currents i(V_D), i(V_B) and i(V_S)
+*  represent Meyer capacitances cgd, cgb and cgs respectively.
+V_D  D 0   DC 0 
+V_B  B 0   DC 0 
+V_S  S 0   DC 0
+M1 D G S B   NM L=5e-6 W=20e-6
+*
+.MODEL  NM  NMOS( LEVEL=3  CAPMOD=2  
++               KP=1.0e-19
++               IS=0  VTO=1.0  TOX=9.77e-8  GAMMA=1.4 
++               NSUB=7.20e15  UO=817  PHI=0.6  VMAX=4.59e5
++               CJ=0 CJSW=0  JS=0) 
+*
+.TRAN  0.05  5S  0.01 0.025    
+*
+*  Using the .MODIF statement SmartSpice performs the
+*  transient analysis four times for the following sets
+*  of parameters:
+*   1. V_D(DC) = 0     V_B(DC) =0     NM(CF4)=50
+*   2. V_D(DC) = 0.11V V_B(DC) =0     NM(CF4)=50
+*   3. V_D(DC) = 0.09V V_B(DC) =0     NM(CF4)=50
+*   4. V_D(DC) = 0.8V  V_B(DC) =0     NM(CF4)=50
+*   5. V_D(DC) = 0.8V  V_B(DC) =-0.5v NM(CF4)=50
+*   6. V_D(DC) = 0.8V  V_B(DC) =-0.5v NM(CF4)=500
+.MODIF   V_D(DC)=0
++MODIF   V_D(DC)=0.11V
++MODIF   V_D(DC)=0.09V
++MODIF   V_D(DC)=0.8V
++MODIF   V_B(DC)=-0.5V
++MODIF   NM(CF4)=500
+*
+.IPLOT i(V_D) i(V_S) i(V_B)
+.OPTIONS  GMIN=1.0e-19   
+.END

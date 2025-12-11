@@ -1,0 +1,196 @@
+# (c) Silvaco Inc., 2024
+
+# 7nm pFinFET With SiGe Source-Drain Stressors 
+
+# Required Modules
+#  Victory Process
+#   -3D Diffusion & Implantation
+#   -3D Stress
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Fin_GAA_ex02” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT layout=$'name'.lay depth=0.105 gasheight=0.56 material=Silicon \
+ dopants=arsenic dopingvalues=5e18
+
+LINE x location=0
+LINE x location=0.0175
+LINE x location=0.0245
+LINE x location=0.0253
+LINE x location=0.0269
+LINE x location=0.033
+LINE x location=0.035
+LINE x location=0.037
+LINE x location=0.0431
+LINE x location=0.0447
+LINE x location=0.0455
+LINE x location=0.0525
+LINE x location=0.07
+
+LINE y location=0
+LINE y location=0.0035
+LINE y location=0.0151
+LINE y location=0.0167
+LINE y location=0.0175
+LINE y location=0.0245
+LINE y location=0.0253
+LINE y location=0.0269
+LINE y location=0.0385
+LINE y location=0.042
+
+LINE z location=-0.56
+LINE z location=-0.063
+LINE z location=-0.042
+LINE z location=-0.028
+LINE z location=-0.0234
+LINE z location=-0.0218
+LINE z location=-0.021
+LINE z location=-0.0024
+LINE z location=-0.0008
+LINE z location=0
+LINE z location=0.035
+LINE z location=0.105
+
+METHOD stress.latticemismatch=true
+
+# Create Fin and Vt Adjust Implant
+ETCH material=silicon thickness=0.035 dry mask=FIN angle=87
+DEPOSIT material=oxide thickness=0 max
+DEPOSIT material=silicon thickness=0.021 max dopants=boron dopingvalues=1e15
+DEPOSIT material=oxide thickness=0.007 max
+ETCH material=oxide thickness=0.014 dry mask=FIN
+ETCH material=silicon thickness=0.021 dry mask=FIN
+
+# Poly Gate and Spacer
+DEPOSIT material=polysilicon thickness=0.063 min 
+ETCH material=polysilicon thickness=0.07 max mask=GATE
+DEPOSIT material=nitride thickness=0 max 
+ETCH material=nitride thickness=0.07 max mask=SPACER
+
+# Source-Drain Epitaxy
+ETCH material=oxide thickness=-0.007 min mask=SPACER
+ETCH material=silicon thickness=0.021 max
+DEPOSIT material=SiGe thickness=0.021 min dopants=boron dopingvalues=1e20 \
+ x.comp=0.5 comp.doping=off
+ETCH material=SiGe thickness=0.021 min mask=SD_EPI angle=120
+DEPOSIT material=BPSG thickness=0.021 min
+DEPOSIT material=SiGe thickness=0.021 min dopants=boron dopingvalues=1e20 \
+ x.comp=0.5 comp.doping=off
+ETCH material=SiGe thickness=0.021 min mask=FIN angle=60 deltacd=0.002
+
+# Initial Stress Calculation
+STRESS exposed transfer.results
+
+# Remove Sacrificial Polysilicon and Fabricate Metal Gate
+ETCH material=polysilicon thickness=0.07 max
+DEPOSIT material=oxide thickness=0.0008 conformal 
+ETCH material=oxide thickness=0.056 max mask=GATE
+ETCH material=oxide thickness=0.0008 max
+DEPOSIT material=hfo2 thickness=0.0016 conformal 
+ETCH material=hfo2 thickness=0.056 max mask=GATE
+ETCH material=hfo2 thickness=0.0016 max
+strip material=BPSG
+
+# Thermal Budget
+DIFFUSE time=0.1 temperature=935
+
+# Contact Metal
+DEPOSIT material=aluminum thickness=0.063 min
+
+# Rebalance Stess Calculation
+STRESS exposed rebalance transfer.results
+
+# Electrode Labels
+ELECTRODES mask=GATE material=aluminum
+ELECTRODES mask=SD material=aluminum
+ELECTRODES substrate 
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE REMESHING ####### 
+# Generate conformal device mesh
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH conformal
+
+SAVE out=$'name'_VM_Conf.str
+
+
+####### DEVICE SIMULATION #######
+# Un-Saturated Vt WITHOUT Strain Inudced Mobility Enhancement
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=hfo2 permittivity=20
+MATERIAL material=silicon align=1
+MODELS material=silicon consrh cvt
+MODELS material=SiGe consrh conmob
+CONTACT name=gate workfunc=4.8
+
+#### NUMERICAL METHODS #### 
+METHOD pas pas.minpivot=0 dvmax=0.05 px.tol=1e-10 cx.tol=1e-10
+OUTPUT con.band val.band band.param u.srh h.mobility
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SOLVE vdrain=-0.001
+SOLVE vdrain=-0.01
+SOLVE vdrain=-0.05
+
+LOG outfile=$'name'_VD_IdVg_WithoutStrain.log
+
+SOLVE vgate=-0.01
+SOLVE vgate=-0.05 vstep=-0.05 vfinal=-0.8 name=gate
+LOG off
+
+
+# Un-Saturated Vt WITH Strain Inudced Mobility Enhancement
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=hfo2 permittivity=20
+MATERIAL material=silicon align=1
+mobility material=silicon model.iso=4 nhance phance
+MODELS material=silicon consrh cvt
+MODELS material=SiGe consrh conmob
+CONTACT name=gate workfunc=4.8
+
+#### NUMERICAL METHODS #### 
+METHOD pas pas.minpivot=0 dvmax=0.05 px.tol=1e-10 cx.tol=1e-10
+OUTPUT con.band val.band band.param u.srh h.mobility
+
+SOLVE init
+SOLVE previous
+SOLVE vdrain=-0.001
+SOLVE vdrain=-0.01
+SOLVE vdrain=-0.05
+
+LOG outfile=$'name'_VD_IdVg_WithStrain.log
+
+SOLVE vgate=-0.01
+SOLVE vgate=-0.05 vstep=-0.05 vfinal=-0.8 name=gate
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual $'name'_VM_Conf.str \
+ $'name'_VD_IdVg_WithoutStrain.log+$'name'_VD_IdVg_WithStrain.log
+
+QUIT

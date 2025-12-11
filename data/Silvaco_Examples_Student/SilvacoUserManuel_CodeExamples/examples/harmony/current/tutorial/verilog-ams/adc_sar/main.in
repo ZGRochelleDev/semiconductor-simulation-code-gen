@@ -1,0 +1,10 @@
+
+vreset  resetn 0 pwl 0 5 10ns 5 11ns 0 20ns 0 21ns 5
+vclk    clk    0 pulse(0 5 0 1ns 1ns 5n 10n)
+vain    ain    0 sin(2.5 2.4 0.2e6)
+
+Xtoplevel1 resetn clk ain eoc TOPLEVEL
+
+.tran 1ns 1100ns
+
+.end

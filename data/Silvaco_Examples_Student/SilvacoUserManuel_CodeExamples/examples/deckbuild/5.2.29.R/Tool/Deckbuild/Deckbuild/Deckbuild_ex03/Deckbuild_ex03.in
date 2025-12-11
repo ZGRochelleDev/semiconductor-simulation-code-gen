@@ -1,0 +1,70 @@
+# (c) Silvaco Inc., 2024
+
+# Using loops in decks (LOOP)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=“Deckbuild_ex03” 
+
+# Define variable name and value
+# temperature sweep - start / step / stop
+SET Tstart=300
+SET Tstop=400
+SET Tstep=50
+
+# calculate number of loops from sweep values
+SET nSteps=((($Tstop-$Tstart)/$Tstep)+1)
+
+LOOP steps = $nSteps
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh temperature=$Tstart print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD newton
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE prev
+
+# Bias the drain 
+SOLVE vdrain=0.05 vstep=0.05 vfinal=0.1 name=drain
+
+# save IV data to file
+LOG outf=$'name'_VD_$"Tstart"K.log master
+
+SOLVE vgate=0 vstep=0.1 vfinal=3.0 name=gate
+
+SAVE outf=$'name'_VD_$"Tstart"K.str
+
+# extract device parameters
+go victoryextract
+LOAD  in=$'name'_VD_$"Tstart"K.log
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.MAXSLOPE.XINTERCEPT IN=IV NAME=intercept
+EXTRACT.LOG name=mean expression="abs(ave(DRAIN VOLTAGE))/2.0"
+EXTRACT.VDOE name="nvt_T_$'Tstart'K_[V]" expression=$intercept-$mean
+
+# increment temperature value
+set Tstart=$Tstart+$Tstep
+
+l.end
+
+victoryvisual '($'name'_VD_300K.log+$'name'_VD_350K.log+$'name'_VD_400K.log)'
+
+QUIT
+

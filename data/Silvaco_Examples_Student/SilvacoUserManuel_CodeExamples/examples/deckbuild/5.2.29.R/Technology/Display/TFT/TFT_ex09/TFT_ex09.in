@@ -1,0 +1,223 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Bottom-Gate Amorphous IGZO TFT Simulation
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D TFT
+
+# Example Name
+SET name="TFT_ex09"
+
+##### PROCESS SIMULATION ######
+# 3D Process simulation of Bottom Gate Amorphous InGaZnO thin-film transistors 
+GO victoryprocess simflags="-P 4" 
+
+# initialize glass substrate with mask
+INIT material=SiO2 layout="${name}.lay" depth=5 gasheight=2 \
+ from="1,0" to="11,5"
+
+# default meshing from mask information
+CARTESIAN mask="ACT" ondomain all.point spacing=0.5
+CARTESIAN mask="SD" ondomain all.point spacing=0.5
+CARTESIAN mask="GATE" ondomain all.point spacing=0.5
+
+# volume mesh generation
+LINE x location=1 spacing=0.5
+LINE x location=11 spacing=0.5
+
+LINE y location=0 spacing=0.5
+LINE y location=5 spacing=0.5
+
+LINE z location=-1.15 spacing=0.025
+LINE z location=-1.0 spacing=0.025
+LINE z location=-0.95 spacing=0.01
+LINE z location=-0.9 spacing=0.01
+LINE z location=-0.5 spacing=0.1
+LINE z location=0 spacing=0.1
+LINE z location=5 spacing=0.5
+
+# Gate metal
+DEPOSIT material=Aluminum thickness=0.5 max
+
+# Gate Pattern
+MASK "GATE"
+ETCH material=Aluminum thickness=0.5 angle=45 max
+STRIP
+ELECTRODES "GATE" material="aluminum"
+
+# double Gate insulator depo with uniform deposition
+DEPOSIT material=Si3N4 thickness=0.4 conformal
+DEPOSIT material=SiO2 thickness=0.05 conformal
+
+# active a-IGZO : 50nm
+DEPOSIT material=Silicon thickness=0.05 conformal
+
+# active pattern
+MASK "ACT" 
+ETCH material=Silicon thickness=0.05 min
+STRIP
+
+# oxide Etch stopper 50nm
+Deposit material=SiO2 thickness=0.05 conformal
+
+# use source/drain mask for ES
+MASK "SD" reverse
+ETCH material=SiO2 thick=0.051 dry 
+STRIP
+
+# S/D metal depo
+DEPOSIT material=Aluminum thickness=0.2 conformal
+
+# Source/Drain pattern
+MASK "SD" 
+ETCH material=Aluminum thickness=0.2 min
+STRIP
+ELECTRODES "SD" material=aluminum
+#
+
+#passivation
+DEPOSIT material=SiO2 thickness=0.1 conformal
+DEPOSIT material=Si3N4 thickness=0.1 conformal
+
+SAVE name=${name}_VP
+
+##### DEVICE REMESHING #####
+GO victorymesh simflags="-P 4"
+
+LOAD in=${name}_VP
+
+LINE x location=1 spacing=0.5
+LINE x location=3 spacing=0.25
+LINE x location=6 spacing=0.5
+LINE x location=9 spacing=0.25
+LINE x location=11 spacing=0.5
+
+LINE y location=0 spacing=0.5
+LINE y location=5 spacing=0.5
+
+LINE z location=-1.15 spacing=0.05
+LINE z location=-1 spacing=0.01
+LINE z location=-0.96 spacing=0.01
+LINE z location=-9 spacing=0.01
+
+REMESH conformal
+
+SAVE out=${name}_VM
+
+##### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 4"
+  
+TITLE amorphous InGaZnO TFT device IDVG simulation
+
+#### STRUCTURE SPECIFICATION ####
+#loading 3D process structure
+MESH infile=${name}_VM.str delaunay hybridx
+
+# modify IGZO to have a name "channel"
+# and Gate insulator to GI & add n-type doping to IGZO channel
+REGION coord.region="6,2.5,-0.975" modify material=IGZO name=channel \
+ donor=2.5e16
+REGION coord.region="6,2.5,-0.92" modify material=SiO2 name=GI
+REGION coord.region="6,2.5,-1.1" modify material=SiO2 name=ES
+
+#### MATERIAL/PHYSICAL MODELS ####
+# finite insulator/IGZO fixed charge
+INTERFACE qf=3e10 s.i  
+
+# actual gate metal workfunction
+CONTACT name=gate workfunction=4.53
+
+# S/D metal WF.
+CONTACT name=source workfunction=4.16 + 0.36*0.5
+CONTACT name=drain workfunction=4.16 + 0.36*0.5
+
+# S/D contact resistance
+CONTACT name=source con.resist=2e-4
+CONTACT name=drain con.resist=2e-4
+
+# GI and passivation insulator epsilon
+MATERIAL material=Si3N4 permit=7
+MATERIAL material=SiO2 permit=3.9
+
+# a-IGZO bandgap, density of states, and affinity
+MATERIAL material=IGZO nc300=5e18 nv300=4.5e21 eg300=3.0 affinity=4.16 \
+ mun=10 mup=0.1 mc=0.34
+
+# DOS in sub-band gap
+DEFECTS continuous numa=24 numd=24 nta=5e18 wta=0.03 nga=0 wga=1.5 ega=0 \
+ tfile=${name}_subband_DOS.dat \
+ ntd=4.5e21 wtd=0.1 ngd=0 egd=1.0 wgd=0.1 \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14  
+
+# shallow donor below Ec at equilibrium is lower than tails state of gA(E)
+DEFECTS continuous numa=24 numd=24  nta=4e16 wta=1.5 ntd=0 \
+ nga=0 ngd=1e16 wgd=0.1 egd=2.9 tfile=${name}_shallowdonor_DOS.dat \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14  
+
+# between AOS(Amorphous Oxide Semiconductor) and gate insulator
+# nta deep state also effect on not only IDVG Vth shift but also SS 
+INTDEFECTS r1name=channel r2name=GI continuous tfile=${name}_interface_DOS.dat \
+ numa=24 numd=24 \
+ nta=2.38e12 ntd=2.25e16 wta=0.19 wtd=0.1 \
+ nga=0 ngd=0 ega=0.62 egd=0.78 wga=0.15 wgd=0.15 \
+ sigtae=5e-14 sigtah=5e-14 sigtde=5e-14 sigtdh=5e-14 \  
+ siggae=5e-14 siggah=5e-14 siggde=5e-14 siggdh=5e-14  
+
+# device models
+MODELS fldmob temperature=300 fermidirac
+
+#### NUMERICAL METHODS ###
+METHOD maxtrap=10 norm.scaling.local pam.gmres climit=1e-6
+
+# save some additional quantities to structure during save statement
+OUTPUT con.band val.band u.trap
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SOLVE previous
+
+SOLVE vdrain=0.1
+SAVE outfile=${name}_vd0p1V.str
+
+SOLVE vdrain=10.1 
+SAVE outfile=${name}_vd10p1V.str
+
+# IDVG at Vds=0.1
+LOAD infile=${name}_vd0p1V.str master
+LOG outfile=${name}_idvg_vd0p1V.log
+SOLVE vgate=0 vstep=0.25 vfinal=15 name=gate
+LOG off
+
+# IDVG at Vds=10.1V
+LOAD infile=${name}_vd10p1V.str master
+LOG outfile=${name}_idvg_vd10p1V.log
+SOLVE vgate=0 vstep=0.5 vfinal=15 name=gate
+LOG off
+
+# extract threshold voltage at low vds and Subthreshold Swing parameter 
+go victoryextract
+LOAD in="${name}_idvg_vd0p1V.log"
+CURVE name=idvg x="gate voltage" y=log10(abs(drain current))
+# VT
+EXTRACT.MAXSLOPE.XINTERCEPT in=idvg name="VT"
+# SS
+CURVE name="log_slope" expression="slope(curve.idvg)"
+EXTRACT.CURVE name="slope" expression="vcoord(max(curve.log_slope))/ucoord(max(curve.log_slope))" 
+EXTRACT.VDOE name="SS" expression=1/$slope
+#
+
+#### VISUALIZATION ####
+
+victoryvisual ${name}_VM.str \
+  '(${name}_idvg_vd0p1V.log+${name}_idvg_vd10p1V.log)':${name}.set
+
+QUIT
+

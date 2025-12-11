@@ -1,0 +1,149 @@
+# (c) Silvaco Inc., 2024
+
+# Dynamic Response Simulation of Liquid Crystal
+
+# This example demonstrates the LC director calculation of 
+# an in-plane switching (IPS) cell. The pixel layout of
+# the IPS sub-pixel cell consists of two zigzag electrodes.
+# A full-size pixel cell is composed of three sub-pixel cells.
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex24” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT material="oxide" gasheight=5 depth=1  from="0,0" to="30,30" 
+
+SPECIFYMASKPOLY maskname=ELEC p1="2.5,1" p2="0.5,15" p3="2.5,29" p4="4.5,29" p5="2.5,15" p6="4.5,1" electrode="Pix1"
+SPECIFYMASKPOLY maskname=ELEC p1="12.5,1" p2="10.5,15" p3="12.5,29" p4="14.5,29" p5="12.5,15" p6="14.5,1" electrode="Pix2" add 
+SPECIFYMASKPOLY maskname=ELEC p1="22.5,1" p2="20.5,15" p3="22.5,29" p4="24.5,29" p5="22.5,15" p6="24.5,1" electrode="Pix3" add
+SPECIFYMASKPOLY maskname=ELEC p1="7.5,1" p2="5.5,15" p3="7.5,29" p4="9.5,29" p5="7.5,15" p6="9.5,1" electrode="Com" add
+SPECIFYMASKPOLY maskname=ELEC p1="17.5,1" p2="15.5,15" p3="17.5,29" p4="19.5,29" p5="17.5,15" p6="19.5,1" electrode="Com" add
+SPECIFYMASKPOLY maskname=ELEC p1="27.5,1" p2="25.5,15" p3="27.5,29" p4="29.5,29" p5="27.5,15" p6="29.5,1" electrode="Com" add
+
+# Cartesian mask="ELEC" spacing.x=0.5 spacing.y=0.5 all.point 
+# ondomain
+
+LINE x position=0 spac=1
+LINE x position=30 spac=1
+
+LINE y position=0 spac=1
+LINE y position=30 spac=1
+
+LINE z position=-5 spacing=1
+LINE z position=-3 spacing=0.1
+LINE z position=-1.5 spacing=0.5
+LINE z position=-0.05 spacing=0.1
+LINE z position=0 spacing=0.1
+LINE z position=1 spacing=0.5
+
+# Pattern the pixel electrodes.
+DEPOSIT material="ITO" thick=0.05 min
+ETCH mask="ELEC" material="ITO" thick=0.05 min
+
+ELECTRODE mask="ELEC" material="ITO"
+
+DEPOSIT material="LC" thick=3 min
+
+DEPOSIT oxide thick=1 min
+
+SAVE name="$'name'_VP_sv"
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in="$'name'_VP_sv"
+REMESH conformal
+SAVE out=$'name'_VM.str
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure = "$'name'_VM.str"
+
+MATERIAL ITO conductivity=1000
+MATERIAL oxide permittivity=3.9
+
+# Specify the anisotropic permittivity, the elastic constants, and the rotational viscosity of the LC.
+SETLC epsparadir=10.7 epsvertdir=3.7 splay=14.4e-12 twist=6.9e-12 bend=18.3e-12 gama=0.1 cpenalty=1000
+
+# Specify the rubbing angle and the pre-tilt angle on the top and at the bottom of the LC region.
+LCBNDARYB partition(0,30) rubangle(90) tiltangle(1)
+LCBNDARYT partition(0,30) rubangle(90) tiltangle(1)    
+
+# use pam solver & numeric options
+SOLVER linearsolver=pam pamsolver=gmres ddprecond=RAS preconditioner=amp multilevel=0 \
+	fillratio=1.e-4 lsmaxiter=1e6 lstolerance=1.0e-6 nlsmaxiter=500 nlstolerance=1.0e-8
+
+OPTION lsconvergeinfo=1 nlsconvergeinfo
+
+# Specify the transient input voltage defined in the tabular file "vrcxex24_pulse_voltage_simple.txt".
+# The initial bias is set to be established in 4 equal-interval steps via numinitpixramp.
+SETDYNAMICPIXBIAS pixelfile="$'name'_pulse.txt"  numinitpixramp=4 vmaxtrap=5
+
+# Save the resultant structures in every 0.001 seconds.
+INTERCONNECT capacitance domainboundarycondition=cyclic log="$'name'_ips_3pix" \
+	structure="$'name'_ips_3pix" 
+
+# Save the parasitic capacitance netlist.
+SAVE spice="$'name'_ips_3pix.net"
+
+# O-type ideal polarizer
+GO victoryrcx simflags="-P 2"
+
+# Specify the optical constant for ITO and oxide at 0.55 microns.
+OPTMATERIAL ITO 1.925 0.002
+OPTMATERIAL oxide 1.477 0
+
+SYSTEM rm $'name'_0.dat
+SYSTEM  echo "Time versus Transmission" >> $'name'_0.dat
+SYSTEM  echo "41 2 2" >> $'name'_0.dat
+SYSTEM  echo "Time" >> $'name'_0.dat
+SYSTEM  echo "Average transmittance" >> $'name'_0.dat
+
+# Calculate and extract the transmittance profile 
+# from all transient structures.
+SET Time=0
+LOOP steps=41
+OPTICS structure="$'name'_ips_3pix.T$'Time'.str" indexfile="$'name'_LC_index.txt" \
+    wavelength=0.55 angle=0 lightorient=fromtop polanglestart=0 polangleend=90 \
+    dx=0.25 dy=0.5 dzmax=0.1 polindexstart=1.5 polindexend=1.5 \
+    topview="$'name'_top_ips_3pix.T$'Time'"
+
+### average transmittance
+EXTRACT init infile="$'name'_top_ips_3pix.T$'Time'.str"
+EXTRACT name="trans" 2d.area x.step=0.125 impurity="Transmittance" \
+  material="SiO2" y.min=0 y.max=30 x.min=0 x.max=30
+
+SET ave_trans=$trans/(30e-4*30e-4*1e-4)
+
+# write to vt.dat file 
+SYSTEM echo $'Time'  $'ave_trans' >> $'name'_0.dat
+
+# use structure file at every 20 ms time step 
+# from previous victoryrcx LCD dynamic solution.
+SET Time=$Time+0.002
+L.END
+
+victoryvisual \
+$'name'_VM.str:$'name'_VM.set \
+$'name'_ips_3pix_C.log:$'name'_ips_3pix_C_VPix.set \
+$'name'_ips_3pix_C.log:$'name'_ips_3pix_C_Cap.set \
+$'name'_0.dat:$'name'_Trans.set
+
+# plot 2D transmittance contour at specific time
+victoryvisual \
+$'name'_top_ips_3pix.T0.02.str:$'name'_TranCont.set \
+$'name'_top_ips_3pix.T0.03.str:$'name'_TranCont.set \
+$'name'_top_ips_3pix.T0.05.str:$'name'_TranCont.set \
+$'name'_top_ips_3pix.T0.06.str:$'name'_TranCont.set
+
+QUIT

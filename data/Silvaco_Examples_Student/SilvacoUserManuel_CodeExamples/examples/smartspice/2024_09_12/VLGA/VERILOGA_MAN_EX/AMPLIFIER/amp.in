@@ -1,0 +1,20 @@
+* Opamp (Operational amplifier)
+
+.verilog "amp.va"
+
+* Input Waveform
+vin      in  0   sin(2.5 0.1 1meg)
+
+* Opamp
+YVLG_AMP in  out amp
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 1n 2.5u
+
+* Plot Waveforms
+.iplot v(in) v(out)
+
+.end

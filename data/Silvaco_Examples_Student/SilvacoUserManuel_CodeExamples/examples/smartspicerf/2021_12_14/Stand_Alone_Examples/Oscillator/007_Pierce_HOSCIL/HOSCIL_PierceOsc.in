@@ -1,0 +1,54 @@
+* Pierce Crystal Oscillator_10MHz - HOSCIL Analysis
+.global gnd
+.option nomod brief=1
+
+.param Rser=6.4 Cser=99.5fF Lser=2.55mH Cpar=25pF
+.param Rref=1000.0
+
+*** Pierce circuit ***
+Q1    2    3    gnd   NE68100
+
+R1    2    3     100k   
+R2    1    2     2.2k
+
+C1    3   gnd   100pF
+C2    2   gnd   100pF
+
+Vcc   1   gnd   12V
+
+.MODEL  NE68100 NPN level=1
++ IS=2.7E-16 BF=185 NF=1.02 VAF=15 IKF=0.055
++ ISE=1.77E-11 NE=2.1 BR=1 VAR=0 IKR=0
++ RB=12
++ RE=.6
++ RC= 8 
++ CJE=1.2E-12 VJE=.77 MJE=.5
++ TF=1.4E-11 CJC=.8E-12 VJC=.27 MJC=.56 XCJC=0
++ ITF=.1 IRB=12E-6 NR=1 RBM=3.7 TR=.3E-9
++ VTF=25 XTF=3
++ QCO=0.0  RCO=0.0 VO=0.0 GAMMA=0.0
++ AF=1 KF=1E-3
+
+*** Crystal model ***
+.subckt Crystal  Node1  Node2
+Rs   Node1      in1    r=Rser
+Cs     in1      in2    c=Cser
+Ls     in2    Node2    l=Lser
+Cp   Node1    Node2    c=Cpar
+.ends
+X1   2   3   Crystal
+
+*** Analysis ***
+.param fund_osc_init= 10.0MegHz
+
+.HOSCIL probe(2,3)
++ fund_osc=fund_osc_init nharm=15
+*+ fund_osc_min = 9.99MegHz
+*+ fund_osc_max = 10.01MegHz
++ annotate=1
++ waves
+
+*** Results ***
+.PRINT hop v(2) v(3)
+
+.END 

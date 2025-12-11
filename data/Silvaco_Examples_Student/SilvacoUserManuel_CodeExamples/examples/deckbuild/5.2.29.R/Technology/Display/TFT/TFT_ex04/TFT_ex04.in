@@ -1,0 +1,168 @@
+# (c) Silvaco Inc., 2024
+
+# 2D Amorphous IGZO TFT simulation
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+# This example demonstrates simulation of amorphous IGZO (indium gallium
+# zinc oxide) TFT. Comparisons with experiment are included.
+
+###### VARIABLES ######
+# Example Name
+SET name="TFT_ex04"
+
+###### Device Simulation: ID-VG curve ######
+#
+GO victorydevice simflags="-P 4"
+
+#### Structure Specification ####
+#
+MESH width=180
+
+X.MESH location=0 spacing=0.5
+X.MESH location=40 spacing=0.5
+Y.MESH location=0 spacing=0.001
+Y.MESH location=0.02 spacing=0.001
+Y.MESH location=0.12 spacing=0.01
+#
+# The device is composed of a 20 nm layer of IGZO deposited
+# 100 nm oxide on a n++ substrate that acts as the gate.
+#
+REGION number=1 material=igzo y.minimum=0 y.maximum=0.02
+REGION number=2 material=sio2 y.minimum=0.02 y.maximum=0.12
+
+ELECTRODE number=1 name=gate bottom
+ELECTRODE number=2 name=source y.maximum=0.0 x.minimum=0.0  x.maximum=5.0
+ELECTRODE number=3 name=drain  y.maximum=0.0 x.minimum=35.0 x.maximum=40.0
+
+#### Material/Physics Models ####
+#
+# We define the gate as N.POLY.  This pins the gate workfunction
+# to the conduction band edge of silicon.
+#
+CONTACT number=1 n.poly
+#
+# We also define a workfunction for the source and drain that
+# is very close to the conduction edge.  In the reference the
+# authors observed that without a workfunction the results for
+# ohmic boundaries were not significantly different than the
+# Schottky model.
+#
+CONTACT number=2 workfunction=4.33
+CONTACT number=3 workfunction=4.33
+
+MODELS fermidirac print
+#
+# Key to the characterization of amorphous materials is the
+# definition of the states within the band gap.
+#
+DEFECTS nta=1.55e20 ntd=1.55e20 wta=0.013 wtd=0.12 \
+ nga=0.0 ngd=6.5e16 egd=2.9 wgd=0.1 \
+ sigtae=1e-15 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-15 \
+ siggae=1e-15 siggah=1e-15 siggde=1e-15 siggdh=1e-15 \
+ dfile = $'name'_VD_don.log afile = $'name'_VD_acc.log numa=128 numd=64
+
+#### Numerical method ####
+#
+METHOD newton
+
+#### ID-VG Simulation ####
+#
+SOLVE initial
+SOLVE previous
+SOLVE vdrain=0.1
+# bias the gate voltage to -5V
+SOLVE vgate=0 vstep=-0.1 vfinal=-5 name=gate
+
+# sweep VG from -5V to 20V
+LOG outfile = $'name'_VD_IDVG.log
+SOLVE vstep=0.5 vfinal=20.0 name=gate
+
+################################################################### 
+#### Device Simulation： ID-VD family curves
+#
+GO victorydevice simflags="-P 4"
+
+#### Structure Specification ####
+#
+MESH width=180
+
+X.MESH location=0 spacing=0.5
+X.MESH location=40 spacing=0.5
+Y.MESH location=0 spacing=0.001
+Y.MESH location=0.02 spacing=0.001
+Y.MESH location=0.12 spacing=0.01
+
+REGION number=1 material=igzo y.minimum=0 y.maximum=0.02
+REGION number=2 material=sio2 y.minimum=0.02 y.maximum=0.12
+
+ELECTRODE number=1 name=gate bottom
+ELECTRODE number=2 name=source y.maximum=0.0 x.minimum=0.0  x.maximum=5.0
+ELECTRODE number=3 name=drain  y.maximum=0.0 x.minimum=35.0 x.maximum=40.0
+
+#### Material/Physics Models ####
+
+CONTACT number=1 n.poly
+CONTACT number=2 workfunction=4.33
+CONTACT number=3 workfunction=4.33
+
+MODELS fermidirac print
+
+DEFECTS nta=1.55e20 ntd=1.55e20 wta=0.013 wtd=0.12 \
+ nga=0.0 ngd=6.5e16 egd=2.9 wgd=0.1 \
+ sigtae=1e-15 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-15 \
+ siggae=1e-15 siggah=1e-15 siggde=1e-15 siggdh=1e-15 \
+ dfile = $'name'_VD_don.log afile = $'name'_VD_acc.log numa=128 numd=64
+
+#### Numerical method ####
+#
+METHOD pas
+
+#### ID-VD family curves Simulation ####
+# Here we use loop to performaing the VD ramp under different VG
+#
+SOLVE initial
+
+SOLVE vstep=0.2 vfinal=4.0 name=gate
+SAVE outfile = $'name'_VD_2.str
+SOLVE vstep=0.2 vfinal=8.0 name=gate
+SAVE outfile = $'name'_VD_3.str
+SOLVE vstep=0.2 vfinal=12.0 name=gate
+SAVE outfile = $'name'_VD_4.str
+SOLVE vstep=0.2 vfinal=16.0 name=gate
+SAVE outfile = $'name'_VD_5.str
+SOLVE vstep=0.2 vfinal=20.0 name=gate
+SAVE outfile = $'name'_VD_6.str
+
+LOAD infile = $'name'_VD_2.str 
+LOG outfile = $'name'_VD_IDVD_2.log
+SOLVE vdrain=0.0 vstep=0.5 vfinal=20.0 name=drain
+
+LOAD infile = $'name'_VD_3.str 
+LOG outfile = $'name'_VD_IDVD_3.log
+SOLVE vdrain=0.0 vstep=0.5 vfinal=20.0 name=drain
+
+LOAD infile = $'name'_VD_4.str 
+LOG outfile = $'name'_VD_IDVD_4.log
+SOLVE vdrain=0.0 vstep=0.5 vfinal=20.0 name=drain
+
+LOAD infile = $'name'_VD_5.str 
+LOG outfile = $'name'_VD_IDVD_5.log
+SOLVE vdrain=0.0 vstep=0.5 vfinal=20.0 name=drain
+
+LOAD infile = $'name'_VD_6.str 
+LOG outfile = $'name'_VD_IDVD_6.log
+SOLVE vdrain=0.0 vstep=0.5 vfinal=20.0 name=drain
+
+# DOS display, Plot the IDVG curves and IDVD curves
+victoryvisual \
+$'name'_VD_don.log:$'name'_VD_don.set \
+$'name'_VD_acc.log:$'name'_VD_acc.set \
+$'name'_VD_IDVG.log+$'name'_IDVG_Exp.dat \
+$'name'_VD_IDVD_2.log+$'name'_VD_IDVD_6.log+\
+$'name'_IDVD_Exp_2.dat+$'name'_IDVD_Exp_6.dat
+
+QUIT

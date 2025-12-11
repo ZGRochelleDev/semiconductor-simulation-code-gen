@@ -1,0 +1,253 @@
+# (c) Silvaco Inc., 2024
+
+# Amorphous IGZO TFT Degradation Simulation by PBTS (Positive Bias Temperature Stress)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D TFT
+#   -2D Chemistry
+
+# Example Name
+SET name="TFT_ex10"
+
+###### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 2 -80"
+
+# Structure parameters
+# device length(um)
+SET l=20
+# material thickness(um)
+SET t_sin=0.1
+SET t_sio=0.15
+SET t_ch=0.02
+SET t_pas=0.3/2
+SET t_sd=0.15
+
+#### STRUCTURE SPECIFICATION ####
+# Device Width(um)
+# Simulated current Unit: A
+MESH width=20
+
+X.MESH location=-$l/2-3 spacing=0.5
+X.MESH location=-$l/2 spacing=0.5
+X.MESH location=0 spacing=1
+X.MESH location=$l/2 spacing=0.5
+X.MESH location=$l/2+3 spacing=0.5
+
+Y.MESH location=-$t_sin-$t_sio-$t_ch-$t_sd-$t_pas spacing=0.05
+Y.MESH location=-$t_sin-$t_sio-$t_ch-$t_sd spacing=0.05
+Y.MESH location=-$t_sin-$t_sio-$t_ch spacing=0.002
+Y.MESH location=-$t_sin-$t_sio-$t_ch+0.006 spacing=0.002
+Y.MESH location=-$t_sin-$t_sio-$t_ch/2 spacing=$t_ch/5
+Y.MESH location=-$t_sin-$t_sio-0.006 spacing=0.002
+Y.MESH location=-$t_sin-$t_sio spacing=0.002
+Y.MESH location=-$t_sin spacing=0.05
+Y.MESH location=-$t_sin/2 spacing=0.05
+Y.MESH location=0 spacing=0.03
+Y.MESH location=0.06 spacing=0.03
+Y.MESH location=0.5 spacing=0.1
+
+REGION number=1 oxide name=pass
+REGION number=2 nitride name=gi1 y.minimum=-$t_sin y.maximum=0
+REGION number=3 oxide name=gi2 y.minimum=-$t_sin-$t_sio y.maximum=-$t_sin
+REGION number=4 material=igzo name=channel \
+ y.minimum=-$t_sin-$t_sio-$t_ch y.maximum=-$t_sin-$t_sio
+#REGION number=5 oxide name=pass \
+ y.minimum=-$t_sin-$t_sio-$t_ch-$t_sd y.maximum=-$t_sin-$t_sio-$t_ch
+
+ELECTRODE number=1 name=gate y.minimum=0 y.maximum=0.06 material=aluminum
+ELECTRODE number=2 name=source x.minimum=-$l/2-3 x.maximum=-$l/2 \
+ y.minimum=-$t_sin-$t_sio-$t_ch-$t_sd \
+ y.maximum=-$t_sin-$t_sio-$t_ch material=aluminum
+ELECTRODE number=3 name=drain x.minimum=$l/2 x.maximum=$l/2+3 \
+ y.minimum=-$t_sin-$t_sio-$t_ch-$t_sd \
+ y.maximum=-$t_sin-$t_sio-$t_ch material=aluminum
+
+SAVE outfile=$'name'_VD_0.str
+
+# Oi(acceptor-like trap): neutral when empty
+SPECIES formula="In:Ga:Zn:O" charge=0 name="O"
+SPECIES formula="In:Ga:Zn:O" charge=-1 name="O-"
+#
+DOPING reg=4 n.type concentration=2e16 uniform
+# Initial Ion concentration
+DOPING region=4 species.name="O" uniform concentration=1e17
+DOPING region=4 species.name="O-" uniform concentration=1e16
+
+#### MATERIAL/PHYSICAL MODELS ####
+# front interface trap
+INTERFACE s.i x.minimum=-$l/2-3 x.maximum=$l/2+3 \
+ y.minimum=-0.26 y.maximum=-0.24 \
+ species.name="O" concentration=5e11
+INTERFACE s.i x.minimum=-$l/2-3 x.maximum=$l/2+3 \
+ y.minimum=-0.26 y.maximum=-0.24 \
+ species.name="O-" concentration=0.5e11
+	
+#O is acceptor like trap
+#PBTS
+REACTION formula="O + e- <=> O-" forward.ea=0.83 forward.rate=1e-7 \
+ reverse.ea=0 reverse.rate=1e-7
+
+# a-IGZO bandgap, density of states, and affinity
+MATERIAL material=IGZO nc300=5e19 nv300=1.55e20 eg300=3.05 \
+ affinity=4.16 taun0=1e-9 taup0=1e-9 
+MATERIAL material=IGZO species.name="O" \
+ species.ea=1.14 species.af=1e7 species.hop=1e-6 
+MATERIAL material=IGZO species.name="O-" \
+ species.ea=1.14 species.af=1e7 species.hop=1e-6 
+# Mobility
+MOBILITY material=IGZO mun=12 mup=0.1
+
+# SiNx GI
+MATERIAL material=nitride permittivity=7
+
+# initial Vo, Vo2+, O(nga), native
+DEFECTS continuous numa=24 numd=24 \
+ nta=5e19 wta=0.015 ntd=1.55e20 wtd=0.195+0.025 \
+ nga=1e16 ega=0.51 wga=0.26+0.02 ngd=2e16 egd=2.85 wgd=0.13+0.05  \
+ sigtae=1e-15 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-15 \
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14 
+
+# Soruce/Drain/Gate metal workfunction
+CONTACT name=gate workfunction=4.53
+CONTACT name=source workfunction=4.16
+CONTACT name=drain workfunction=4.16
+
+# Models
+MODELS bound.trap fermi srh temp=300 print
+
+# filling rate and concentration of "O" at top and bottom IFs
+PROBE x=0.0 y=-0.25 material=IGZO ft.species="O" name="ft_O_front"
+PROBE x=0.0 y=-0.25 material=IGZO species.name="O" name="O_front"
+PROBE x=0.0 y=-0.27 material=IGZO ft.species="O" name="ft_O_back"
+PROBE x=0.0 y=-0.27 material=IGZO species.name="O" name="O_back" 
+# filling rate and concentration of "O-" at top and bottom IFs
+PROBE x=0.0 y=-0.25 material=IGZO ft.species="O-" name="ft_O-_front"
+PROBE x=0.0 y=-0.25 material=IGZO species.name="O-" name="O-_front"
+PROBE x=0.0 y=-0.27 material=IGZO ft.species="O-" name="ft_O-_back"
+PROBE x=0.0 y=-0.27 material=IGZO species.name="O-" name="O-_back"
+
+OUTPUT charge con.band val.band recomb u.srh u.species u.trap \
+ species traps traps.ft
+
+#### NUMERICAL METHODS ###
+METHOD maxtrap=10 norm.scaling.local dt.max=1e7 lte.timestep itlimit=100
+
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+
+# Obtain initial threshold voltage
+SOLVE vdrain=0.1 freezespecies
+
+LOG outfile=$'name'_VD_IdVg0.log no.trap
+SOLVE vgate=-5 vstep=0.2 vfinal=2 name=gate freezespecies 
+SOLVE prev vstep=0.5 vfinal=20 name=gate freezespecies 
+LOG off
+
+# Solution: PBTS
+# initialize the solution
+SOLVE initial
+SOLVE previous freezespecies
+
+LOG outfile=$'name'_VD_tr1.log no.trap
+SOLVE previous vgate=+20 vdrain=0 vsource=0 ramptime=1e-9 tstop=1e-6 tstep=1e-10 
+SAVE outfile=$'name'_VD_tr1.str
+
+SOLVE tstop=1
+SAVE outfile=$'name'_VD_IdVg1.str
+
+SOLVE tstop=100
+SAVE outfile=$'name'_VD_IdVg2.str
+
+SOLVE tstop=500
+SAVE outfile=$'name'_VD_IdVg3.str
+
+SOLVE tstop=1000
+SAVE outfile=$'name'_VD_IdVg4.str
+
+SOLVE tstop=2e3
+SAVE outfile=$'name'_VD_IdVg5.str
+
+SOLVE tstop=5e3
+SAVE outfile=$'name'_VD_IdVg6.str
+
+# Solution#3: Reverse recovery: reverse reaction
+LOG outfile=$'name'_VD_tr2.log no.trap
+SOLVE previous vgate=0 vdrain=0 vsource=0 ramptime=1e-9 tstop=1e-6 tstep=1e-10 relative
+SOLVE tstop=1 relative
+SOLVE tstop=100 relative
+SOLVE tstop=1e3 relative
+SOLVE tstop=2e3 relative
+SOLVE tstop=5e3 relative
+SOLVE tstop=1e4 relative
+SOLVE tstop=1e5 relative
+SOLVE tstop=1e6 relative
+SOLVE tstop=1e7 relative
+SAVE outfil=$'name'_VD_IdVg7.str
+LOG off
+
+# IdVg curves
+###IdVg@t=1 sec
+LOAD infile=$'name'_VD_IdVg1.str
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg1.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###IdVg@t=100 sec
+LOAD infile=$'name'_VD_IdVg2.str
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg2.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###IdVg@t=500 sec
+LOAD infile=$'name'_VD_IdVg3.str
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg3.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###IdVg@t=1k sec
+LOAD infile=$'name'_VD_IdVg4.str 
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg4.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###IdVg@t=2k sec
+LOAD infile=$'name'_VD_IdVg5.str
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg5.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###IdVg@t=5k sec
+LOAD infile=$'name'_VD_IdVg6.str
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg6.log no.trap
+SOLVE previous vstep=-0.5 vfinal=-5 name=gate freezespecies vdrain=0.1
+LOG off
+
+###reverse recovery transfer curve
+LOAD infile=$'name'_VD_IdVg7.str 
+SOLVE previous freezespecies
+LOG outfile=$'name'_VD_IdVg7.log no.trap
+SOLVE vgate=-5 vstep=0.5 vfinal=20 name=gate freezespecies vdrain=0.1
+LOG off
+
+go victoryextract
+LOAD in="$'name'_VD_IdVg0.log"
+CURVE name=idvg x="gate voltage" y="drain current"
+EXTRACT.CURVE name="vt0" expression=intercept(y=10e-12, curve.idvg)
+
+#### VISUALIZATION ####
+#plot the simulation strcuture; plot ion concentration at the front and back interface; IV under PBTS; Compare stressed transfer curve@5e3 sec with recovery transfer curve
+victoryvisual $'name'_VD_0.str:$'name'_str.set \
+  '($'name'_VD_tr1.log+$'name'_VD_tr2.log)':$'name'_tr_loglog.set \
+  '($'name'_VD_IdVg0.log+$'name'_VD_IdVg1.log+$'name'_VD_IdVg2.log+$'name'_VD_IdVg3.log+$'name'_VD_IdVg4.log+$'name'_VD_IdVg5.log+$'name'_VD_IdVg6.log)' \
+  '($'name'_VD_IdVg0.log+$'name'_VD_IdVg6.log+$'name'_VD_IdVg7.log)'
+
+QUIT

@@ -1,0 +1,112 @@
+# (c) Silvaco Inc., 2024
+
+# Mesh Refinement
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex19” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT Layout=$'name'.lay depth=1 material=silicon gasheight=10 rulefile=$'name'.lmp
+
+ELECTRODES substrate
+
+## Process Description ##
+
+ETCH silicon thickness=0.35 max mask=AA
+DEPOSIT material=oxide thickness=0 max
+
+DEPOSIT material=gateox thickness=0.01 max
+ETCH material=gateox mask=*GATE reverse
+DEPOSIT material=PMD thickness=0 max
+
+DEPOSIT material=polysilicon thickness=0.19 max
+ETCH material=polysilicon mask=CPOL
+ELECTRODES mask=*GATE material=polysilicon
+
+## Contact ##
+DEPOSIT material=PMD thickness=0.19 max
+DEPOSIT material=PMD thickness=0.5 max
+ETCH material=PMD mask=CCON reverse
+
+## Stop Source/Drain/Substrate Contacts Shorting to Substrate ##
+## since substrate is treated as conductor here in other examples##
+## substrate is a dielectric and thus no problem of short circuit ##
+
+SET high_water_mark=-(0.19 + 0.5 + 0.19)
+DEPOSIT material=gateox thickness=$"high_water_mark" max
+
+## Named polygons will be converted into electrodes ##
+ELECTRODES mask=*CONT material=gateox
+
+## Metal 1 ##
+DEPOSIT material=ALU1 thickness=0.52 max
+ETCH material=ALU1 mask=CME1
+ELECTRODES mask=CME1 material=ALU1
+
+## M1/M2 via ##
+DEPOSIT material=HDP thickness=0.52 max
+DEPOSIT material=TEOS thickness=0.82 max
+ETCH material=TEOS Mask=CVIA reverse
+ETCH material=HDP  Mask=CVIA reverse
+
+## M2 ##
+DEPOSIT material=ALU2 thickness=0.62 max
+ETCH material=ALU2 mask=CME2
+
+DEPOSIT material=HDP thickness=0.62 max
+DEPOSIT material=TEOS thickness=0.82 max
+ETCH material=TEOS Mask=CVI2 reverse
+ETCH material=HDP  Mask=CVI2 reverse
+
+## M3 ##
+DEPOSIT material=ALU3 thickness=0.62 max
+ETCH material=ALU3 mask=CME3
+# Electrode Mask=CME3 material=ALU3
+DEPOSIT material=HDP thickness=0.62 max
+
+## passiv ##
+DEPOSIT material=TEOS thickness=1.5 max
+DEPOSIT material=NIT  thickness=1.2 max 
+
+SAVE name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" structure="$'name'_VP_sv.str" map="$'name'.lmp"
+
+#################################
+# Material Parameters #
+#################################
+
+MATERIAL silicon conductivity=1000
+
+MATERIAL polysilicon        conductivity=1.0/(25*0.19*1e-4)
+MATERIAL material("ALU1")   conductivity=1.0/(74e-3*0.52*1e-4)
+MATERIAL material("TEOS")   permittivity=4.2
+MATERIAL material("PMD")    permittivity=4.2
+MATERIAL material("NIT")    permittivity=6
+MATERIAL Material("Gateox") permittivity=0.01
+MATERIAL material("ALU2")   conductivity=1.0/(74e-3*0.62*1e-4)
+MATERIAL material("ALU3")   conductivity=1.0/(74e-3*0.62*1e-4)
+MATERIAL material("HDP")    permittivity=4.1
+
+SAVE structure="$'name'.str"
+
+## Parasitic Extraction ##
+
+INTERCONNECT capacitance adaptc=0.02 structure="$'name'" capsolver=1
+ 
+SAVE spice="$'name'.net" 
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set \
+$'name'.CAP.3.str:$'name'_pot.set
+
+QUIT

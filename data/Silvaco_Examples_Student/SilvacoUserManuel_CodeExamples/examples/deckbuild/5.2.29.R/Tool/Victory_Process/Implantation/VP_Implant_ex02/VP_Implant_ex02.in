@@ -1,0 +1,44 @@
+# (c) Silvaco Inc., 2024
+
+# Trench Implant at angle showing shadow effect
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+SET name=VP_Implant_ex02
+
+############ PROCESS SIMULATION ###########################
+GO victoryp simflags = "-P 4"
+
+SET length = 0.5
+SET depth = 2
+SET tilt = 12
+INIT material=silicon gasheight=2 meshdepth=2 depth=5 from=0 to=1 at=0.5 resolution=0.01
+LINE z loc= 0 spac=0.01
+LINE z loc= $depth-2 spac=0.01
+LINE z loc= $depth-1 spac=0.01
+LINE z loc= $depth spac=0.01
+LINE z loc= $depth+0.5 spac=0.01
+
+LINE x loc= 0 spac=0.01
+LINE x loc= 0.1 spac=0.01
+LINE x loc= 0.2  spac=0.01
+LINE x loc= $length/2 spac=0.01
+LINE x loc= $length spac=0.01
+LINE x loc= $length+0.1 spac=0.01
+LINE x loc= $length+0.2 spac=0.01
+
+SPECIFYMASKPOLY mask="trench" p=$length/2,0.1 p=$length/2,0.8 p=$length,0.8 p=$length,0.1
+
+ETCH silicon mask="trench" reverse thickness=$depth max
+SAVE name = $"name"_0 conformalstr
+
+IMPLANT boron dose=1e13 energy = 80 tilt=$tilt bca n.ion=500000
+SAVE name = $"name"_1 conformalstr
+
+victoryvisual \
+$"name"_1_exVC.str:$"name"_trench.set
+
+QUIT

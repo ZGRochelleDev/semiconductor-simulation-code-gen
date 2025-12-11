@@ -1,0 +1,259 @@
+# (c) Silvaco Inc., 2024
+
+# Enhancement Mode IEMOSFET I-V and Breakdown Curves
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=SiC_Power_ex03
+
+####### DEVICE SIMULATION #######
+# Id-Vg and Id-Vd analysis
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Set WIDTH to scale the device area to 1 cm^2 (=1e8 um^2).
+MESH width=1e8/9.5
+
+X.MESH location=0   spacing=0.05
+X.MESH location=0.7 spacing=0.05
+X.MESH location=1   spacing=0.05
+X.MESH location=1.3 spacing=0.1
+X.MESH location=1.7 spacing=0.1
+X.MESH location=1.8 spacing=0.1
+X.MESH location=2.2 spacing=0.1
+X.MESH location=2.5 spacing=0.05
+X.MESH location=2.8 spacing=0.1
+X.MESH location=3.5 spacing=0.2
+X.MESH location=4.5 spacing=0.2
+X.MESH location=6.1 spacing=0.2
+X.MESH location=6.7 spacing=0.1
+X.MESH location=7.0 spacing=0.05
+X.MESH location=7.3 spacing=0.1
+X.MESH location=7.7 spacing=0.2
+X.MESH location=8.5 spacing=0.2
+X.MESH location=9.5 spacing=0.2
+
+Y.MESH location=-0.033  spacing=0.01
+Y.MESH location=-0.023  spacing=0.01
+Y.MESH locatio=0        spacing=0.001
+Y.MESH location=0.1     spacing=0.01
+Y.MESH location=0.2     spacing=0.025
+Y.MESH location=0.3     spacing=0.01
+Y.MESH location=0.4     spacing=0.025
+Y.MESH location=0.5     spacing=0.01
+Y.MESH location=0.6     spacing=0.025
+Y.MESH location=0.9     spacing=0.025
+Y.MESH location=1       spacing=0.01
+Y.MESH location=2       spacing=0.25
+Y.MESH location=7.5     spacing=0.25
+Y.MESH location=8.5     spacing=0.05
+Y.MESH location=9.5     spacing=0.25
+Y.MESH location=11      spacing=0.25
+
+REGION number=1 material=4H-SiC y.minimum=0
+REGION number=2 material=oxide  y.maximum=0
+
+ELECTRODE name=drain bottom
+ELECTRODE name=gate top x.maximum=3.5
+ELECTRODE name=source x.minimum=4.5 x.maximum=6.5 y.maximum=0
+ELECTRODE name=pwell x.minimum=8.5 y.maximum=0
+
+DOPING n.type uniform  concentration=1e19 y.minimum=8.5
+DOPING n.type uniform  concentration=1e16 y.minimum=0.5 y.maximum=8.5
+DOPING p.type gaussian concentration=3e18 \
+  junction=1 peak=0.75 x.minimum=1 x.characteristic=0
+DOPING p.type uniform  concentration=5e15 y.maximum=0.49
+DOPING n.type gaussian concentration=2.5e16 y.characteristic=0.2 \
+  peak=0.25 x.maximum=1 x.characteristic=0
+DOPING n.type gaussian concentration=1.05e17 y.characteristic=0.08 peak=0.1 \
+  x.maximum=1 x.characteristic=0
+DOPING n.type gaussian concentration=1.0e19 y.characteristic=0.08 \
+  y.minimum=0 y.maximum=0.1 x.minimum=2.5 x.maximum=7 x.characteristic=0
+DOPING p.type gaussian concentration=3.0e19 y.characteristic=0.2 \
+  y.minimum=0 y.maximum=0.25 x.minimum=8 x.characteristic=0
+# Specify N+ Buried Channel Immplant
+DOPING n.type gaussian concentration=1.2e17 y.characteristic=0.055 \
+  peak=0.0 x.minimum=1.05 x.maximum=2.45 x.characteristic=0
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print srh analytic fldmob bound.trap temperature=350
+
+# Anisotropic mobility model 
+# Represents a lower mobility in the channel.
+MOBILITY material=4H-SiC mu2n.caug=800 n.angle=90 p.angle=90
+
+CONTACT name=gate workfunction=5.25
+
+# Specifies the continuous interface states at the SiO2/4H-SiC interface.
+INTDEFECTS tfile=$'name'_VD_intdefects.log numa=48 numd=48 continuous \
+  nta=1e14 wta=0.098 ntd=1e14 wtd=0.098 \
+  ega=0.805 nga=2e11 wga=1 egd=0.805 ngd=2e11 wgd=1
+
+#### NUMERICAL METHODS ####
+METHOD newton
+OUTPUT con.band val.band
+
+#### SOLUTION SOLVING ####
+# Id-Vg at Vd=1V.
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+SOLVE vdrain=0.01 previous
+SOLVE vdrain=0.1 
+SOLVE vdrain=0.25 vstep=0.25 vfinal=1 name=drain
+
+LOG outfile=$'name'_VD_Vth.log
+SOLVE vgate=0.01 previous
+SOLVE vgate=0.1 
+SOLVE vgate=0.25 vstep=0.25 vfinal=6 name=gate
+
+SOLVE vstep=0.5 vfinal=12 name=gate
+SAVE outfile=$'name'_VD_Vd1v_Vg12v.str
+LOG off
+
+# Gate bias sweep with Vd=0V for the following Id-Vd analysis
+LOAD infile=$'name'_VD_init.str
+
+SOLVE vgate=0.1 previous
+SOLVE vgate=0.5 vstep=0.5 vfinal=1.5 name=gate previous
+SOLVE vgate=2 vstep=1 vfinal=5 name=gate previous
+SAVE outfile=$'name'_VD_Vd0V_Vg5V.str
+
+SOLVE vstep=1 vfinal=10 name=gate previous
+SAVE outfile=$'name'_VD_Vd0V_Vg10V.str
+
+solve vstep=1 vfinal=15 name=gate previous
+
+# Id-Vd at Vg=15V
+LOG outfile=$'name'_VD_IdVd_Vg15V.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=15 name=drain previous
+LOG off
+
+# Id-Vd at Vg=10V
+LOAD infile=$'name'_VD_Vd0V_Vg10V.str
+
+LOG outfile=$'name'_VD_IdVd_Vg10V.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=15 name=drain previous
+LOG off
+
+# Id-Vd at Vg=5V
+LOAD infile=$'name'_VD_Vd0V_Vg5V.str
+
+LOG outfile=$'name'_VD_IdVd_Vg05V.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=15 name=drain previous
+LOG off
+
+# Id-Vd at Vg=0V
+LOAD infile=$'name'_VD_init.str
+
+LOG outfile=$'name'_VD_IdVd_Vg00V.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=15 name=drain previous
+LOG off
+
+
+####### DEVICE SIMULATION #######
+# Breakdown analysis
+GO victorydevice simflags="-128 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Set WIDTH to scale the device area to 1 cm^2 (=1e8 um^2).
+# Load the structure file saved in the previous IV analysis. Solution data 
+# are not loaded in the MESH statement.
+MESH infile="$'name'_VD_init.str" width=1e8/9.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print srh analytic fldmob bound.trap temperature=350
+
+# Anisotropic mobility model 
+# Represents a lower mobility in the channel.
+MOBILITY material=4H-SiC mu2n.caug=800 n.angle=90 p.angle=90
+
+CONTACT name=gate workfunction=5.25
+
+# Specifies the continuous interface states at the SiO2/4H-SiC interface.
+# TFILE is not stored here because the exact same defect distribution is used 
+# as in the previous analysis.
+INTDEFECTS numa=48 numd=48 continuous \
+  nta=1e14 wta=0.098 ntd=1e14 wtd=0.098 \
+  ega=0.805 nga=2e11 wga=1 egd=0.805 ngd=2e11 wgd=1
+
+IMPACT anisotropic sic4h0001 e.side \
+  be0001=2.838e7 bh0001=2.15e7 be1120=1.462e7 bh1120=1.376e7
+
+#### NUMERICAL METHODS ####
+METHOD newton climit=1e-4 weak=1 cx.tol=1e-8 cr.tol=1e-23
+OUTPUT con.band val.band
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+SOLVE vdrain=0.01 previous
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain previous
+SOLVE vstep=1 vfinal=20 name=drain previous
+SOLVE vstep=2.5 vfinal=50 name=drain previous
+SOLVE vstep=5 vfinal=100 name=drain previous
+SOLVE vstep=10 vfinal=600 name=drain previous
+SAVE outfile=$'name'_VD_BV_600V.str
+
+SOLVE vstep=10 vfinal=2000 name=drain compliance=2e-17 cname=drain
+SOLVE vstep=2.5 vfinal=2000 name=drain compliance=5e-17 cname=drain
+
+CONTACT name=drain current
+
+SOLVE mult istep=1.5 ifinal=1e-14 name=drain previous
+SOLVE mult istep=5 ifinal=0.1 name=drain previous
+
+SAVE outfile=$'name'_VD_BV_0p1A.str
+
+SOLVE mult istep=5 ifinal=10 name=drain previous
+
+LOG off
+
+GO victoryextract
+
+#Vt
+LOAD in="$'name'_VD_Vth.log"
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.CURVE name="Vth" expression="intercept(y=0, max(slope(curve.IV)))"
+
+#Max E-field Vg=12
+LOAD in="$'name'_VD_Vd1v_Vg12v.str"
+EXTRACT.HOTSPOT name=Emax_Vg12v regions=oxide fields='electric field' value max
+
+#Ron
+LOAD in="$'name'_VD_IdVd_Vg15V.log"
+EXTRACT.LOG name=Ron expression="min((Drain Voltage)/(Drain Current))"
+
+#Max E-field 600V
+LOAD in="$'name'_VD_BV_600V.str"
+EXTRACT.HOTSPOT name=Emax_600V regions=oxide fields='electric field' value max
+
+#BV
+LOAD in="$'name'_VD_BV.log"
+EXTRACT.LOG name=BV expression="max(Drain Voltage)"
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VD_intdefects.log:$'name'_IntDefects.set \
+$'name'_VD_init.str:$'name'_STR.set \
+$'name'_VD_Vth.log \
+$'name'_VD_IdVd_Vg15V.log+$'name'_VD_IdVd_Vg10V.log+\
+$'name'_VD_IdVd_Vg05V.log+$'name'_VD_IdVd_Vg00V.log
+
+victoryvisual \
+$'name'_VD_BV.log \
+$'name'_VD_BV_0p1A.str:$'name'_BV.set
+
+QUIT

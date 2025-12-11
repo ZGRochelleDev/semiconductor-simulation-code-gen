@@ -1,0 +1,22 @@
+* Low pass filter 
+
+.verilog "lpf.va"
+
+* Input Waveform
+vin in 0 ac 1 sin(0,1, 250)
+
+* Instance LPF
+YVLG_lpf in out lpf
+
+* Output Loading
+Rload out 0 1MEG
+
+* Analyses
+.ac oct 10 1 1g
+.tran 0.1m 4m
+
+* Plot Waveforms
+.iplot ac vdb(out)
+.iplot tran v(in)
+
+.end

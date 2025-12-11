@@ -1,0 +1,71 @@
+*SPICE OP AMP TEST CASE
+ 
+.include "header.sp"
+.include "subs.sub"
+
+.TRAN 1n 200u
+
+*****************************************************************************
+* Subcircuit Declarations
+*****************************************************************************
+*****************************************************************************
+.subckt inv_ltx in out inh_0 inh_vdd nl=99 nm=99 nw=99 pl=99 pm=99 pw=99
+m1 out in inh_vdd inh_vdd phl l=0.35 w=0.9 m=1
+m2 out in inh_0 inh_0 nhl l=0.35 w=0.9 m=1
+.ends inv_ltx
+
+.subckt vdacpad tris trisb chip pad inh_0 inh_vdd
+mn2 pad inh_0 inh_0 inh_0 nhhfe l=0.65 w=33.5 m=2
+mn1 chip trisb pad inh_0 nhhfe l=0.65 w=7.15 m=2
+mn0 pad inh_0 inh_0 inh_0 nhhfe l=0.65 w=44.5 m=8
+mp2 pad inh_vdd inh_vdd inh_vdd phhf l=0.65 w=33.5 m=2
+mp1 chip tris pad inh_vdd phhf l=0.65 w=7.15 m=2
+mp0 pad inh_vdd inh_vdd inh_vdd phhf l=0.65 w=44.5 m=8
+.ends vdacpad
+
+.subckt vdacspst phi phib in out inh_0 inh_vdd
+mp0 in phib out inh_vdd phl l=0.35 w=0.9 m=1
+mn0 in phi out inh_0 nhl l=0.35 w=0.9 m=1
+.ends vdacspst
+
+.subckt vdacopampbc inn inp vb out inh_0 inh_vdd
+xi14 difout n1 inh_0 rtc l=16.95 w=0.9
+xr1 n2 n3 inh_0 rtc l=16.95 w=0.9
+xr0 n1 n2 inh_0 rtc l=16.95 w=0.9
+xi13 n3 out 0 cmim w=1 l=2000
+mp9 inh_0 difout folow inh_vdd pll l=1 w=8 m=2
+mp10 folow net60 inh_vdd inh_vdd phl l=2 w=6 m=4
+mmdifsrc tail net60 inh_vdd inh_vdd phl l=2 w=6 m=4
+mmoutsrc out folow inh_vdd inh_vdd phl l=1 w=6.1 m=3
+mmbias net60 net60 inh_vdd inh_vdd phl l=2 w=6 m=1
+mmrite difout inp tail tail phl l=5 w=20 m=2
+mmleft miror inn tail tail phl l=5 w=20 m=2
+mn4 net60 vb inh_0 inh_0 nhl l=5 w=5 m=1
+mmoutdrv out folow inh_0 inh_0 nhl l=1 w=6 m=2
+mmldleft miror miror inh_0 inh_0 nhl l=1 w=10 m=1
+mmldrite difout miror inh_0 inh_0 nhl l=1 w=10 m=1
+.ends vdacopampbc
+
+*****************************************************************************
+* Main Circuit Netlist: testopamp
+*****************************************************************************
+xuginv ug ugb 0 vdd inv_ltx
+xtrinv 0 trib 0 vdd inv_ltx
+xpad 0 trib opout out 0 vdd vdacpad
+xswtest ugb ug inn out 0 vdd vdacspst
+xuoa inn inp bias opout 0 vdd vdacopampbc
+mmbias bias bias 0 0 nhl l=5 w=5 m=1
+mp0 bias ibias vdd vdd phl l=5 w=5 m=1
+mp1 ibias ibias vdd vdd phl l=5 w=5 m=1
+
+.biaschk3 vref=2.0 subckt="TWOBIT, ONEBIT" xcall="X1 X2, X1"  devices="*" 
+*.biaschk3 vref0=3 subckt=”opamp, opamp1, opamp2” xcall=”x1 x4, x2, x3” devices=”m*, m*, m*”
+
+
+*.biaschk3 vref0=3 subckt=”opamp” xcall=”x1 x4” devices=”m*”
+*.biaschk3 vref0=3 subckt=”ONEBIT” xcall=”x1” devices=”*”
+
+*.biaschk3 vref0=3 subckt=”TWOBIT” xcall=”x1 x2” devices=”m*”
+
+
+.END

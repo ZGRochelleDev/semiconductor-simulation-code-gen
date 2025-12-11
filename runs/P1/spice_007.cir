@@ -1,0 +1,3 @@
+V1 = sin(0 10)
+D1 = diode(DIODE1)
+Rload = 1k

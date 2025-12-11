@@ -1,0 +1,7 @@
+ngspice
+* divider_netlist
+I1 in 0 dc 2m
+R1 in out 0 1khz
+.op
+V(out)
+.end

@@ -1,0 +1,94 @@
+* D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\SC\SC_test_PSS
+* Gateway 2.12.10.R Spice Netlist Generator
+* Workspace name:       D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\SC\SC.workspace
+* Simulation name:      D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\SC\SC_test_PSS.schlr
+* Simulation timestamp: 14-Dec-2010 14:39:42
+
+* Schematic name: SC_test_PSS
+X1 in out ph1 ph2 vref SC_test
+V3 in GND DC vref AC 1
+C1 out GND 1f
+V1 VDD GND DC 2
+V2 vref GND DC vref
+V4 ph1 GND DC 0 PULSE(0 2 clk_td clk_tr clk_tf clk_pw clk_per)
+V5 ph2 GND DC 0 PULSE(0 2 "clk_td+clk_per/2" clk_tr clk_tf clk_pw clk_per)
+
+* Schematic name: SC_test
+.SUBCKT SC_test in out ph1 ph2 vref
+.PARAM m_Cf=30
+.PARAM m_C1=15
+X1 NET3 vref out OpAmp
+M4 NET2 ph2 vref GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M1 NET1 ph1 in GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M2 NET1 ph2 vref GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M3 NET3 ph1 NET2 GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M13 NET13 ph2 vref GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M14 NET9 ph2 vref GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M15 NET13 ph1 NET3 GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+M16 out ph1 NET9 GND mn W=2U L=0.24U AS=1.32P AD=1.32P PS=5.32U PD=5.32U M=1
+XC1 NET2 NET1 mimcap LT=3.2864U M=m_C1
+XC2 NET3 out mimcap LT=3.2864U M=m_Cf
+XC3 NET13 NET9 mimcap LT=3.2864U M=m_C1
+.ENDS SC_test
+
+* Schematic name: OpAmp
+.SUBCKT OpAmp inm inp out
+I2 VDD NET3 DC 10u
+M1 NET2 NET3 GND GND mn W=10U L=0.5u AS=4.28P AD=3.7P PS=12.856U PD=10.74U M=10
+M2 NET3 NET3 GND GND mn W=10U L=0.5u AS=6.6P AD=6.6P PS=21.32U PD=21.32U M=1
+M3 NET1 inp NET2 GND mn W=10U L=0.48u AS=4.28P AD=3.7P PS=12.856U PD=10.74U M=20
+M4 out inm NET2 GND mn W=10U L=0.48u AS=4.28P AD=3.7P PS=12.856U PD=10.74U M=20
+M5 out NET1 VDD VDD mp W=10U L=0.48u AS=3.99P AD=3.7P PS=11.798U PD=10.74U M=40
+M6 NET1 NET1 VDD VDD mp W=10U L=0.48u AS=3.99P AD=3.7P PS=11.798U PD=10.74U M=40
+.ENDS OpAmp
+
+* Global Nodes Declarations
+.GLOBAL GND VDD
+
+* End of the netlist
+* Schematic Netlist rebuilt at runtime
+
+
+.OP
+
+.param vref = 1_V
+.param clk_td = 1n
+.param clk_tr = 1n
+.param clk_tf = 1n
+.param clk_pw = 45n
+.param clk_per = 100n
+.param m_C1 = 15
+.param m_C2 = 10
+.param m_Cf = 30
+
+.inc ..\libraries\models\sbcd_rf.lib
+*>>>>>>>>>     Simulation Control     <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+.OPTIONS format savemeasures NOMOD=1 NODECK=1 NOPAGE=1  rawpts=500  numdgt=8 accurate seed=101
+.TEMP 27
+
+.HAC                     $ PSS AC Analysis
++ DEC 10 100Hz 5MegHz    $ Frequency sweep Number of points per decade=100 fstart=1 fstop=10Mhz 
++ fund=10MHz             $ Fundamental frequency
++ nharm=10               $ Maximum number of computed harmonics
++ SB(0)                  $ Set of n integer numbers representing the sidebands
++ KMAX=20                $ ignores noise at frequencies <= fout - Kmax x fund and >= fout + Kmax x fund
++ method=shooting        $ Steady-state analysis by SHOOTING method. A must be for SC circuits
++ tstep=10n              $ Time step to define timestep control parameters
++ tstab=10u              $ Time of Initial transient analysis to let the circuit settle
++ annotate=4             $ Prints information in the output file
++ waves                  $ Generate time domain OP waveforms
+
+.HNOISE V(out) V(in)
++ DEC 10 100Hz 5MHz
++ fund=10MHz
++ nharm=10
++ SB(0)
++ KMAX=20
++ method=shooting
++ tstep=10n
++ tstab=10u
++ annotate=4
++ waves
+
+
+.END

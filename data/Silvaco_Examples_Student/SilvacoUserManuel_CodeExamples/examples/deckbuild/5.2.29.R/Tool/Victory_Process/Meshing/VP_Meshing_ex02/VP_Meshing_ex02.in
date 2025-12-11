@@ -1,0 +1,54 @@
+# (c) Silvaco Inc., 2024
+
+# Effect of MESHDEPTH on material regions
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name=“VP_Meshing_ex02” 
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.009, MESHDEPTH=1 Coarse features are not so sharp
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.009,0.009 meshdepth=1 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+EXPORT name=$'name'_VP_0p009_MD1
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.009, MESHDEPTH=2 - features are starting to sharpen
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.009,0.009 meshdepth=2 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+EXPORT name=$'name'_VP_0p009_MD2
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.009, MESHDEPTH=3 - features are sharp
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.009,0.009 meshdepth=3 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+EXPORT name=$'name'_VP_0p009_MD3
+
+victoryvisual \
+$'name'_VP_0p009_MD1.str \
+$'name'_VP_0p009_MD2.str \
+$'name'_VP_0p009_MD3.str \
+$'name'_VP_0p009_MD1.str+$'name'_VP_0p009_MD2.str+$'name'_VP_0p009_MD3.str
+
+QUIT

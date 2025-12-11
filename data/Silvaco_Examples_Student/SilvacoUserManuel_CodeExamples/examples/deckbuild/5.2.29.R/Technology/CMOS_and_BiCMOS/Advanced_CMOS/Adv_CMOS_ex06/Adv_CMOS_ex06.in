@@ -1,0 +1,350 @@
+# (c) Silvaco Inc., 2024
+
+# 20V LDMOS Process and Device Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Remeshing
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+ 
+# Example Name
+SET name="Adv_CMOS_ex06"
+
+# Full flow from process to device simulation of 20V LDMOS Device
+# Process simualtion: 
+# -various process modules are integrated into a single flow
+# Electrical Simulation:
+# -Power Loss Characterization: Gate Charging Simulation
+# -Transfer Characterization: IdVglin Simulation
+# -Breakdown Characterization: BV Simulation
+# -Parameter extraction: Vtgm/Idlin/BVds Extraction 
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+## ---------------------------------- ##
+## ---------- Initialization -------- ##
+## -----------------------------------##
+
+SET Lsd = 0.3					# Source/Drain AA 
+SET Lov1 = 0.3 					# PW overlap
+SET Lsp = 0.1					# space between PW and Ndft
+SET Lov2 = 0.2					# Ndft overlap
+SET Lsti = 0.8 					# STI Length
+SET Pitch = $Lsd*2+$Lov1+$Lsp+$Lov2+$Lsti+$Lsd  # Simulation Domain 
+
+INIT material=silicon orientation=100 sub.rot=45 dopants=boron resistivity=100 \
+	depth=5.0 gasHeight=3.0 from=0 to=$Pitch \ 
+	resolution=0.01 meshdepth=3 
+
+LINE x location=0				spacing=$Lsd/10
+LINE x location=$Lsd*2				spacing=0.01
+LINE x location=$Lsd*2+$Lov1/2			spacing=$Lov1/10
+LINE x location=$Lsd*2+$Lov1+$Lsp/2		spacing=0.01
+LINE x location=$Lsd*2+$Lov1+$Lsp+$Lov2		spacing=$Lov2/10
+LINE x location=$Lsd*2+$Lov1+$Lsp+$Lov2+$Lsti/2	spacing=$Lsti/20
+LINE x location=$Pitch				spacing=$Lsd/10
+
+LINE z location=-0.2		spacing=0.05
+LINE z location=0.0		spacing=0.002
+LINE z location=0.05		spacing=0.01
+LINE z location=0.8		spacing=0.05
+LINE z location=1.0		spacing=0.02
+LINE z location=2.0		spacing=0.1
+LINE z location=5.0		spacing=0.3
+
+
+## ---------------------------------- ##
+## ----------- HV Well Loop --------- ##
+## -----------------------------------##
+
+DEPOSIT min material=oxide thickness=0.01
+
+## HVP Well 
+IMPLANT boron energy=500 dose=2.0e12 tilt=0 rotation=22 bca n.ion=5000  
+
+## NDrift 
+DEPOSIT min photoresist thickness=2.5 left.to.x=$Lsd*2+$Lov1+$Lsp
+
+IMPLANT phosphorus energy=400 dose=3.0e12 tilt=0 rotation=22 bca n.ion=20000  
+IMPLANT phosphorus energy=250 dose=3.0e12 tilt=0 rotation=22 bca n.ion=20000  
+IMPLANT phosphorus energy=100 dose=3.0e12 tilt=0 rotation=22 bca n.ion=20000  
+
+STRIP photoresist 
+STRIP oxide 
+
+## ---------------------------------- ##
+## -------------- AA Loop ----------- ##
+## -----------------------------------##
+
+## STI 
+SET STIl = $Lsd*2+$Lov1+$Lsp+$Lov2
+SET STIr = $Lsd*2+$Lov1+$Lsp+$Lov2+$Lsti 
+
+ETCH dry material=silicon thickness=0.3 between.x="$STIl,$STIr" angle=85 
+DEPOSIT material=oxide upto=-0.01 
+DIFFUSE time=10 min temperature=1000 
+ETCH above=0.0
+ 
+
+## ---------------------------------- ##
+## ------------ Well Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT min material=oxide thickness=0.01
+
+## PWell 
+DEPOSIT min photoresist thickness=2.0 right.to.x=$Lsd*2+$Lov1
+
+IMPLANT boron energy=200 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000  
+IMPLANT boron energy=150 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000  
+IMPLANT boron energy=100 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000  
+IMPLANT boron energy=20  dose=3.0e12 tilt=0 rotation=22 bca n.ion=20000  
+
+STRIP photoresist 
+
+## Well RTA 
+DIFFUSE time=10 sec temperature=600  t.final=1000 
+DIFFUSE time=60 sec temperature=1000 
+DIFFUSE time=10 sec temperature=1000 t.final=600
+
+ETCH dry material=oxide thickness=0.011
+
+
+## ---------------------------------- ##
+## ------------ GATE Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=oxide thickness=0.013 
+DEPOSIT conformal material=polysilicon thickness=0.2 
+
+SET PolyL = $Lsd*2
+SET PolyR = $Lsd*2+$Lov1+$Lsp+$Lov2+$Lsti/2
+ETCH dry material="polysilicon,oxide" thickness=0.213 outside.x="$PolyL,$PolyR"
+
+## ---------------------------------- ##
+## ----------- Spacer Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=oxide thickness=0.01
+DEPOSIT conformal material=nitride thickness=0.02
+DEPOSIT conformal material=oxide thickness=0.05
+
+ETCH dry materials="oxide,nitride" thickness=0.08 
+
+
+## ---------------------------------- ##
+## ------------- SD Loop ------------ ##
+## -----------------------------------##
+
+DEPOSIT min material=oxide thickness=0.01 
+
+SET NPR = $Lsd*2+$Lov1+$Lsp+$Lov2
+SET NPL = $Lsd*2+$Lov1+$Lsp+$Lov2+$Lsti
+
+# NP Implant 
+IMPLANT arsenic    energy=25 dose=1.0e15 tilt=0 rotation=22 between.x="$Lsd,$NPR" between.x="$NPL,$Pitch" bca n.ion=30000  
+IMPLANT phosphorus energy=45 dose=1.0e14 tilt=0 rotation=22 between.x="$Lsd,$NPR" between.x="$NPL,$Pitch" bca n.ion=30000  
+
+# PP Implant 
+IMPLANT boron energy=5  dose=1.0e15 tilt=0 rotation=22 left.to.x=$Lsd bca n.ion=30000  
+IMPLANT boron energy=15 dose=5.0e13 tilt=0 rotation=22 left.to.x=$Lsd bca n.ion=30000  
+
+# PP RTA 
+DIFFUSE time=10 sec temperature=600 t.final=1000
+DIFFUSE time=60 sec temperature=1000
+DIFFUSE time=10 sec temperature=1000 t.final=600
+
+
+## ---------------------------------- ##
+## ----------- Contact Loop --------- ##
+## -----------------------------------##
+
+ETCH dry material="oxide,nitride" thickness=0.011
+DEPOSIT material=oxide upto=0.0  
+
+DEPOSIT conformal material=nitride thickness=0.05
+DEPOSIT material=oxide upto=-0.5
+
+SET CTbr = $Pitch-0.2
+ETCH above=0 between.x="0,0.2" between.x="0.4,0.5" between.x="$CTbr,$Pitch" 
+DEPOSIT material=aluminum upto=-0.5
+
+# Electrods 
+ELECTRODE name=body	x=0.05		z=-0.1
+ELECTRODE name=source	x=0.45		z=-0.1
+ELECTRODE name=gate	x=$Lsd*2+0.1	z=-0.1
+ELECTRODE name=drain	x=$Pitch-0.1	z=-0.1
+
+SAVE name=$'name'_VP_sv conformalstr
+
+## ---------------------------------- ##
+## ------------ Re-Meshing ---------- ##
+## -----------------------------------##
+
+####### STRUCTURE REMESHING #######
+# Use VictoryMesh to prepare the structure for VictoryDevice simulation
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+REMESH conformal 
+
+SAVE out=$'name'_VM_con.str
+
+
+## ---------------------------------- ##
+## ------- Device: Gate Charging ---- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4 -80"
+
+#### MIXED MODE SETUP ####
+.BEGIN
+
+#  transient PULSE   i1 i2   td   tr   tf   pwidth period
+IIN  0  GG  0  pulse 0  1e-5 1e-8 1e-8 1e-8 1.0    2
+RG   GG G   10
+AMOS 0=source G=gate D=drain 0=body infile=$'name'_VM_con.str width=1e4 
+IOUT 0  D   0
+DOUT D  DD  idealDiode
+VDD  DD 0   0
+
+.MODEL idealDiode d()
+.NUMERIC vchange=1.0 LTE=0.05
+.OPTIONS m2ln print 
+
+.SAVE outfile=$'name'_VD_mix
+
+.LOG outfile=$'name'_VD_mix onefile
+
+.DC IOUT 0 1e-9 0.1e-9
+.DC IOUT 1e-9 1e-8 1e-9
+.DC IOUT 1e-8 1e-7 1e-8
+.DC IOUT 1e-7 1e-6 1e-7
+.DC IOUT 1e-6 1e-5 1e-6
+.DC IOUT 1e-5 2e-5 1e-5
+.DC VDD 0 20 0.2
+
+.TRAN 1e-8 1e-4 compliance="V(G)>5"
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####  
+CONTACT device=AMOS name=gate n.poly
+
+MODELS device=AMOS fermi srh cvt fldmob print
+
+IMPACT device=AMOS selberherr
+
+METHOD climit=1e-4 
+
+
+## ---------------------------------- ##
+## ----------- Device: IdVg --------- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+# Transfer Characterization: IdVglin Simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_con.str width=1
+
+#### MATERIAL/PHYSICAL MODELS ####
+MATERIAL material=silicon taun0=1.0e-7 taup0=1.0e-7
+
+CONTACT name=gate n.poly 
+
+MODELS fermi srh cvt fldmob print
+
+IMPACT selb 
+
+#### NUMERICAL METHODS ####
+METHOD newton maxtrap=10 
+
+OUTPUT con.band val.band band.param u.srh e.mobility
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE prev
+
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vstep=0.01 vfinal=0.1 name=drain 
+
+# Transfer Characteristics: IdVg_lin 
+LOG outfile=$'name'_VD_IdVg_lin.log
+SOLVE vgate=0.0
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vstep=0.1 vfinal=5.0 name=gate 
+LOG off
+SAVE outfile=$'name'_VD_IdVg_lin.str
+ 
+#### DEVICE EXTRACTION ####
+# Extract the Vt and Idlin
+EXTRACT init infile=$'name'_VD_IdVg_lin.log
+EXTRACT name="vtgm" (xintercept(maxslope(curve(abs(v."gate"),abs(i."drain")))) - abs(ave(v."drain"))/2.0)
+EXTRACT name="Idlin" max(abs(i."drain"))*(1e6)
+
+
+## ---------------------------------- ##
+## ----------- Device: BVdss -------- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+# BV Test : Returns Breakdaown volatage
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_con.str width=1
+
+#### MATERIAL/PHYSICAL MODELS ####
+MATERIAL material=silicon taun0=1.0e-7 taup0=1.0e-7
+
+CONTACT name=gate n.poly 
+
+MODELS fermi srh cvt fldmob print
+IMPACT selb 
+
+#### NUMERICAL METHODS ####
+METHOD newton maxtrap=10 climit=1e-4
+
+OUTPUT con.band val.band band.param u.srh e.mobility
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE prev
+
+LOG outfile=$'name'_VD_BV.log
+SOLVE vdrain=0.0
+SOLVE vdrain=0.01
+SOLVE vstep=0.1 vfinal=0.5 name=drain
+SOLVE vstep=0.2 vfinal=2.0 name=drain
+SOLVE vstep=0.5 vfinal=50.0 name=drain compl=1e-6 cname=drain
+
+LOG off
+
+SAVE outfile=$'name'_VD_BV.str
+
+#### DEVICE EXTRACTION ####
+# Extract the breakdown voltage.
+EXTRACT init infile=$'name'_VD_BV.log
+EXTRACT name="BVds" x.val from curve(abs(v."drain"),abs(i."drain")) where y.val = 1.0e-7
+
+victoryvisual \
+$'name'_VM_con.str \
+$'name'_VD_IdVg_lin.log \
+$'name'_VD_BV.log \
+$'name'_VD_mix_tr.log:$'name'_Q.set
+
+QUIT 
+

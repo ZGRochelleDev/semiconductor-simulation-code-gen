@@ -1,0 +1,50 @@
+source n1.var
+source n0c1.var
+GO victoryextract 
+
+option datafile = n29.result
+
+# Transfer Characteristics: IdVg_lin 
+load in = n25_VD_IdVg_lin.log
+
+set X = "gate Voltage" ##!!
+set Y = "drain Current" ##!!
+CURVE name = VD_IdVg_lin x = "abs($X)" y = "abs($Y)"
+
+set Io = 1e-7
+
+# Vtgm 
+extract.LOG name = Vdrain_[V] expression = "abs(median(Drain Voltage))" no.write
+extract.maxslope.xintercept name = Vtx no.write
+extract.vdoe name = Vtgm_[V] expression = "$Vtx - $'Vdrain_[V]'/2"
+# Vtlin
+extract.curve name = Vtlin_[V] expression = "intercept(y = $Io/$Lgate, abs(curve.VD_IdVg_lin))"
+# Idlin
+extract.curve name = Idlin_[uA/um] expression = "1e6*intercept(x = $Vdd, abs(curve.VD_IdVg_lin))"
+
+# Transfer Characteristics: IdVg_sat 
+load in = n25_VD_IdVg_sat.log
+
+set X = "gate Voltage" ##!!
+set Y = "drain Current" ##!! 
+CURVE name = VD_idvg_sat x = "abs($X)" y = "abs($Y)"
+
+# Vtsat 
+extract.curve name = Vtsat_[V] expression = "intercept(y = $Io/$Lgate, abs(curve.VD_idvg_sat))"
+# Idsat
+extract.curve name = Idsat_[uA/um] expression = "1e6*intercept(x = $Vdd, abs(curve.VD_idvg_sat))"
+# Ioff
+extract.curve name = Idoff_[pA/um] expression = "1e12*intercept(x = 0.0, abs(curve.VD_idvg_sat))"
+# SSsat
+extract.curve name = Vtmin_[V] expression = "intercept(y = $Io/$Lgate/10, abs(curve.VD_idvg_sat))" no.write 
+extract.vdoe name = SSsat_[mV/dec] expression = "1e3*($'Vtsat_[V]'-$'Vtmin_[V]')"
+# DIBL
+set dibl = $'Vtlin_[V]' - $'Vtsat_[V]'
+extract.vdoe name = DIBL_[mV] expression = $dibl*1000
+
+
+## ---------------------------------- ##
+## ----------- Device: BVdss -------- ##
+## -----------------------------------##
+
+# -Output Characteristics: Breakdown Simulation and Voltage extraction

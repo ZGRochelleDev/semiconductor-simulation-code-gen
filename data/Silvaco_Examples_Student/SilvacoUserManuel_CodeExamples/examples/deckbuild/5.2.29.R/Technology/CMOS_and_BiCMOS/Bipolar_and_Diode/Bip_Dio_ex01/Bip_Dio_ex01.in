@@ -1,0 +1,118 @@
+# (c) Silvaco Inc., 2024
+
+# Avalanche breakdown in a cryogenic p-i-n structure
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Giga
+
+# Example Name
+Set name=“Bip_Dio_ex01” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH
+X.MESH location=0.0 spacing=0.25
+X.MESH location=1.0 spacing=0.25
+
+Y.MESH location=0.0 spacing=0.01
+Y.MESH location=1.0 spacing=0.01
+Y.MESH location=2.0 spacing=0.01
+Y.MESH location=3.0 spacing=0.01
+
+# Regions and electrodes
+REGION num=1 silicon y.min=0.0 y.max=1.0
+REGION num=2 silicon y.min=1.0 y.max=2.0
+REGION num=3 silicon y.min=2.0 y.max=3.0
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+# Device doping
+DOPING region=1 n.type uniform conc=1.0e18
+DOPING region=2 n.type uniform conc=1.0e15
+DOPING region=3 p.type uniform conc=1.0e18
+
+SAVE outf=$'name'_VD.str
+
+####### DEVICE SIMULATION #######
+# at 77K
+GO victorydevice simflags="-P 4 -160"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MODEL arora temperature=77 srh
+ 
+IMPACT selb selb.set2 e.side jny.min=1E-12 jpy.min=1E-12 
+
+#### NUMERICAL METHODS ####
+METHOD newton climit=1e-4  ir.tol=1e-40 ix.tol=1e-40 cr.tol=1e-20 min.temp=2.0 max.temp=1000.0 itlimit=100 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+LOG outf=$'name'_77k.log
+
+SOLVE name=anode vstep=1.0 vfinal=24.0
+
+CONTACT name=anode current
+
+SOLVE prev
+
+SOLVE name=anode istep=1.414 imult ifinal=1.0e-3 proj
+
+LOG off
+
+go victoryextract
+LOAD in="$'name'_77k.log"
+CURVE name=iava x="Anode Voltage" y="Anode Current"
+EXTRACT.CURVE name=Vbreakdown_77k expression="intercept(y=1e-4, curve.iava)"
+
+####### DEVICE SIMULATION #######
+# at 77K
+GO victorydevice simflags="-P 4 -160"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MODEL arora temperature=4 srh
+ 
+IMPACT selb selb.set2 e.side jny.min=1E-12 jpy.min=1E-12 
+
+#### NUMERICAL METHODS ####
+METHOD newton climit=1e-4  ir.tol=1e-40 ix.tol=1e-40 cr.tol=1e-20 min.temp=2.0 max.temp=1000.0 itlimit=100 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+LOG outf=$'name'_4k.log
+
+SOLVE name=anode vstep=1.0 vfinal=24.0
+
+CONTACT name=anode current
+
+SOLVE prev
+
+SOLVE name=anode istep=1.414 imult ifinal=1.0e-3 proj
+
+LOG off
+
+go victoryextract
+LOAD in="$'name'_4k.log"
+CURVE name=iava x="Anode Voltage" y="Anode Current"
+EXTRACT.CURVE name=Vbreakdown_4k expression="intercept(y=1e-4, curve.iava)"
+
+victoryvisual --overlay \
+$'name'_77k.log \
+$'name'_4k.log
+
+QUIT

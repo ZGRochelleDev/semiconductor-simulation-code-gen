@@ -1,0 +1,9 @@
+.zener_regrulator
+V1 in dc 12
+Rin out 220 ohm
+.ZD5V6 out 0 5v6
+.Rload out dc 1k
+.model ZD5V6 d
+.op
+.print vout
+.end

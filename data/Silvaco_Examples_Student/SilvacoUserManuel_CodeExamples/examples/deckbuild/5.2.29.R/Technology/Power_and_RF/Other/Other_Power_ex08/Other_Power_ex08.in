@@ -1,0 +1,195 @@
+# (c) Silvaco Inc., 2024
+
+# Wide Bandgap Ga2O3 MOSFET
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Giga
+
+# Example Name
+SET name="Other_Power_ex08"
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4" 
+
+#### STRUCTURE SPECIFICATION ####
+MESH width=1e3
+
+X.MESH location=-2.0  spacing=0.4
+X.MESH location=0.0   spacing=0.4 
+X.MESH location=9.0   spacing=0.1
+X.MESH location=11.0  spacing=0.1
+X.MESH location=20.0  spacing=0.4
+X.MESH location=22.0  spacing=0.4
+
+Y.MESH location=-0.02 spacing=0.01
+Y.MESH location=0     spacing=0.01
+Y.MESH location=0.3   spacing=0.01
+Y.MESH location=0.5   spacing=0.05
+
+# Ga2O3 is user-defined material.
+REGION number=1 material=Al2O3 y.max=0.0
+REGION number=2 user.material=Ga2O3 y.min=0.0 y.max=0.3
+REGION number=3 user.material=Ga2O3 y.min=0.3 
+
+ELECTRODE number=1 name=source x.min=-2.0  x.max=0.0  y.min=0.0   y.max=0.0
+ELECTRODE number=2 name=gate   x.min=9.0   x.max=11.0 y.min=-0.02 y.max=-0.02
+ELECTRODE number=3 name=drain  x.min=20.0  x.max=22.0 y.min=0.0   y.max=0.0
+
+DOPING region=2 uniform n.type conc=1.08e17
+DOPING region=2 gauss x.max=0.0  y.min=0.0 y.max=0.15 conc=3.0e19 \
+       n.type char=0.01 ratio.lat=1.0
+DOPING region=2 gauss x.min=20.0 y.min=0.0 y.max=0.15 conc=3.0e19 \
+       n.type char=0.01 ratio.lat=1.0
+DOPING region=3 uniform n.type conc=1.5e16
+
+#### MATERIAL/PHYSICAL MODELS ####  
+# Definition of Ga2O3 as user-defined material
+MATERIAL material=Ga2O3 user.default=GaN user.group=semiconductor \
+         affinity=4.0 eg300=4.8 nc300=3.72e18 nv300=3.72e18 permittivity=10.0 \
+         mun=118 mup=50 tcon.const tc.const=0.13
+MATERIAL material=Al2O3 tcon.const tc.const=0.33
+MATERIAL region=3 mun=20
+
+MOBILITY tmun=2.0
+
+MODELS lat.temp print
+
+THERMCONTACT num=1 x.min=-2.0 x.max=22.0 y.min=0.5 y.max=0.5 \
+             alpha=200 ext.temp=300
+THERMCONTACT num=2 elec=1 ext.temp=300 
+THERMCONTACT num=3 elec=3 ext.temp=300
+
+CONTACT num=2 workf=5.23
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 maxtraps=10
+
+OUTPUT con.band val.band flowline
+
+#### SOLUTION SOLVING #### 
+SOLVE  init
+SOLVE  previous
+SAVE outfile=$'name'_VD_init.str
+
+# Id-Vg at Vd=25V
+#  Bias Vg=+4V and Vd=+25V
+SOLVE  vgate=0.1
+SOLVE  vgate=0.5 
+SOLVE  vstep=0.25 vfinal=2 name=gate
+SOLVE  vstep=0.5  vfinal=4.0 name=gate
+SAVE outfile=$'name'_VD_Vg4v.str
+
+SOLVE  vdrain=0.001
+SOLVE  vdrain=0.01
+SOLVE  vdrain=0.1
+SOLVE  vdrain=1.0   
+SOLVE  vdrain=2.0 vstep=1.0 vfinal=25.0 name=drain
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_Vth.log
+
+# Voltage ramp
+SOLVE vgate=4.0 vstep=-0.5 vfinal=-15.0 name=gate
+SOLVE vstep=-2.5 vfinal=-25.0 name=gate
+
+# close log file
+LOG off
+
+# Id-Vd simulations
+#  Preparation of solution files at Vd=0V
+LOAD infile=$'name'_VD_init.str
+SOLVE vgate=0.0 vstep=-0.5 vfinal=-4.0 name=gate 
+SAVE outfile=$'name'_VD_Vg-4v.str
+SOLVE vstep=-0.5 vfinal=-8.0 name=gate
+SAVE outfile=$'name'_VD_Vg-8v.str
+
+#  Id-Vd at Vg=+4V
+LOAD infile=$'name'_VD_Vg4v.str
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_IdVd_Vg4v.log
+
+# Voltage ramp
+SOLVE prev
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=1.0 vfinal=40.0 vstep=1.0 name=drain
+
+# close log file and save solution file
+LOG off
+SAVE outfile=$'name'_VD_Vg4v_Vd40v.str
+
+#  Id-Vd at Vg=0V
+LOAD infile=$'name'_VD_init.str
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_IdVd_Vg0v.log
+
+# Voltage ramp
+SOLVE prev
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=1.0 vfinal=40.0 vstep=1.0 name=drain
+
+# close log file and save solution file
+LOG off
+SAVE outfile=$'name'_VD_Vg0v_Vd40v.str
+
+#  Id-Vd at Vg=-4V
+LOAD infile=$'name'_VD_Vg-4v.str
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_IdVd_Vg-4v.log
+
+# Voltage ramp
+SOLVE prev
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=1.0 vfinal=40.0 vstep=1.0 name=drain
+
+# close log file and save solution file
+LOG off
+SAVE outfile=$'name'_VD_Vg-0v_Vd40v.str
+
+#  Id-Vd at Vg=-8V
+LOAD infile=$'name'_VD_Vg-8v.str
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_IdVd_Vg-8v.log
+
+# Voltage ramp
+SOLVE prev
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=1.0 vfinal=40.0 vstep=1.0 name=drain
+
+# close log file and save solution file
+LOG off
+SAVE outfile=$'name'_VD_Vg-0v_Vd40v.str
+
+####### VISUALIZATION OF RESULTS #######
+
+victoryvisual \
+$'name'_VD_init.str:$'name'_str.set \
+$'name'_IdVd_Vg-8v_exp.dat+$'name'_IdVd_Vg-4v_exp.dat+\
+$'name'_IdVd_Vg0v_exp.dat+$'name'_IdVd_Vg4v_exp.dat+\
+$'name'_VD_IdVd_Vg-8v.log+$'name'_VD_IdVd_Vg-4v.log+\
+$'name'_VD_IdVd_Vg0v.log+$'name'_VD_IdVd_Vg4v.log \
+$'name'_Vth_exp.dat+$'name'_VD_Vth.log
+
+QUIT

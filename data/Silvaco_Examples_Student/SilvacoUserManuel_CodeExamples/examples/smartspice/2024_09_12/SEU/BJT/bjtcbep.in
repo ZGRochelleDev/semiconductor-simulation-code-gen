@@ -1,0 +1,90 @@
+* Test SEE in bipolar.
+
+.param bf=80
+.global vcc vee
+
+* No parasitic capacitances.
+.subckt diffpair0 in1 in2 out1 out2
+RS1  in1 2  1K
+RS2  in2 5  1K
+RC1  out1 vcc  10K
+RC2  out2 vcc  10K
+RBIAS  7 vcc  20K
+CLOAD  out1 out2  5PF
+Q1  out1 2 6 QNL m=1
+Q2  out2 5 6 QNL 1 temp=50
+Q3  6 7 vee QNL
+Q4  7 7 vee QNL
+.ends
+
+
+* Parasitic capacitances represented by discrete devices.
+.subckt diffpair1 in1 in2 out1 out2
+RS1  in1 2  1K
+RS2  in2 5  1K
+RC1  out1 vcc  10K
+RC2  out2 vcc  10K
+RBIAS  7 vcc  20K
+CLOAD  out1 out2  5PF
+Q1  out1 2 6 QNL m=1
+cbcp 2 out1 1p
+cbep 2 6 100p
+Q2  out2 5 6 QNL 1 temp=50
+Q3  6 7 vee QNL
+Q4  7 7 vee QNL
+.ends
+
+* Parasitic capacitances on QNL1 model (Q1 device)
+.subckt diffpair2 in1 in2 out1 out2
+RS1  in1 2  1K
+RS2  in2 5  1K
+RC1  out1 vcc  10K
+RC2  out2 vcc  10K
+RBIAS  7 vcc  20K
+CLOAD  out1 out2  5PF
+Q1  out1 2 6 QNL1 m=1
+Q2  out2 5 6 QNL 1 temp=50
+Q3  6 7 vee QNL
+Q4  7 7 vee QNL
+.ends
+
+VIN  1 0  DC 0  SIN(0 0.1 5MEG)  AC 1
+VCC  vcc 0  DC 10
+VEE  vee 0  DC -12
+x0 1 gnd out10 out20 diffpair0
+x1 1 gnd out11 out21 diffpair1
+x2 1 gnd out12 out22 diffpair2
+
+.MODEL QNL NPN(
++ BF='bf' RB=100 CCS=2PF TF=0.3NS TR=6NS CJE=3PF CJC=2PF VA=50 
++ )
+.MODEL QNL1 NPN(
++ BF='bf' RB=100 CCS=2PF TF=0.3NS TR=6NS CJE=3PF CJC=2PF VA=50 
++ cbep=100p cbcp=1p
++ )
+
+.tran 5ns 500ns  
+
+.let diff_out1=v(out11)-v(out12)
+.let diff_out2=v(out21)-v(out22)
+
+* If everything is working okay, the differences should be 0
+
+.options acct reltol=0.001 nomod brief format vzero=2
+
+.options nomod nodeck measraw=0
+.probe all
+.probe @q.x0.q1[iseu]  @q.x0.q1[qdep]
+
+.measure tran vout10_300n point v(out10) arg0=300n
+
+.alter
+
+.rad SEE
++ device=q.x0.q1 node=ncp
++ start=250n taur=5e-12 tauf=12e-12
++ lf=5u let=15
++ upset_node=out10 upset_threshold=5.6 upset_delta=50n
++ annotate=1
+
+.end

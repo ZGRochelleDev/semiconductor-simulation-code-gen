@@ -1,0 +1,35 @@
+# (c) Silvaco Inc., 2024
+
+# Calling external files into a simulation (SOURCE)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=“Deckbuild_ex04” 
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh temperature=300 print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD newton
+
+# source data contained in external file and include in this simulation
+# in this instance, the SOLVE statements are included in the file
+SOURCE $'name'_SOLVE_vth.in
+
+victoryvisual $'name'_VD_300K.log
+
+QUIT
+

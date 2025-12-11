@@ -1,0 +1,109 @@
+# (c) Silvaco Inc., 2024
+
+# Circuit Analysis of NMOS Inverters 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+
+# Example Name
+SET name=“Bulk_ex02” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH
+X.MESH location=0.0 spacing=0.1
+X.MESH location=3.0 spacing=0.1 
+#
+Y.MESH location=-0.02 spacing=0.01
+Y.MESH location=0.0 spacing=0.01
+Y.MESH location=0.7 spacing=0.06
+Y.MESH location=2.0 spacing=0.2 
+
+# Regions and electrodes
+REGION number=1 y.min=0 silicon
+REGION number=2 y.max=0 oxide
+
+ELECTRODE number=1 x.min=1 length=1.0 name=gate
+ELECTRODE number=2 left length=1.0 y.min=0 y.max=0 name=source
+ELECTRODE number=3 right length=1.0 y.min=0 y.max=0 name=drain
+ELECTRODE number=4 substrate name=substrate
+
+# Device doping
+DOPING uniform conc=1e16 p.type
+DOPING gauss conc=1e17 p.type char=0.2 peak=0.15
+DOPING gauss conc=1e20 n.type junc=0.17 x.right=1.0 ratio=0.7
+DOPING gauss conc=1e20 n.type junc=0.17 x.left=2.0 ratio=0.7
+
+# Save structure for biasing
+SAVE outfile=$'name'_VD.str
+
+# Mixedmode simulation - DC simulation
+GO victorydevice simflags="-P 4"
+
+.begin
+
+# Circuit description
+vin 1 0 0 
+amos 2=drain 1=gate 0=source 0=substrate infile=$'name'_VD.str width=15.
+mn 3 2 0 0 simple L=2.0u W=5u 
+r1 2 4 10k
+r2 3 4 10k
+vcc 4 0 0
+c1 3 0 3ff
+# End of circuit description
+
+.model simple nmos ( tox=0.02e-6 vt0=0.9 ) 
+
+.options print fulln noshift 
+.numeric vchange=0.1
+
+.log outfile=$'name'
+
+.dc vcc 0. 5. 0.1
+.dc vin 0. 5. 0.1
+
+.end
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT device=amos name=gate n.poly
+MODEL device=amos reg=1 conmob fldmob bgn
+
+# Mixedmode simulation - Transient simulation
+GO victorydevice simflags="-P 4"
+
+.begin
+# Circuit description
+vin 1 0 0 PULSE 0 5 0 50ps 50ps 1000ps 10 
+amos 2=drain 1=gate 0=source 0=substrate infile=$'name'_VD.str width=15
+mn 3 2 0 0 simple L=2.0u W=5u 
+r1 2 4 10k
+r2 3 4 10k
+vcc 4 0 0
+c1 3 0 3ff
+# End of circuit description
+
+.MODEL simple nmos ( tox=.02e-6 vt0=0.9 ) 
+
+.numeric lte=0.05 dtmin=1e-15
+.options print noshift
+
+.log outfile=$'name'
+
+.dc vcc 0. 5. 0.1
+.tran 0.0001ps 3ns
+.end
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT device=amos name=gate n.poly
+MODEL device=amos reg=1 conmob fldmob bgn
+
+GO victorydevice simflags="-P 4"
+
+victoryvisual $'name'_dc_2.log:$'name'_dc.set $'name'_tr.log:$'name'_tr.set
+
+QUIT

@@ -1,0 +1,64 @@
+# (c) Silvaco Inc., 2024
+
+# In-statement mask modification
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name="VP_Masking_ex02" 
+
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon from="0,0" to="1,1" depth=0.2 resolution=0.02 gasheight=1
+
+# Define a circular mask in the top right corner 
+# of the simulation domain as the reference
+SPECIFYMASKPOLY maskname="ref" circle \
+ center="0.6, 0.6" radius=0.3 npoints=100
+
+# Save initial condition structure for later re-load
+SAVE name=$'name'_Init_sv
+
+# Reference mask - no operations
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="ref"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_REF.str"
+
+# SHIFT: the reference mask by a given value in the x and y 
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="ref" shift.x=-0.2 shift.y=-0.2 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_SHIFT.str"
+
+# DELTACD: reduce the critical dimension by 0.1 on the reference mask
+# depositing on reference mask for clarity
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="ref"
+DEPOSIT material=nitride thick=0.1 max mask="ref" deltacd=-0.1 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_DELTACD.str"
+
+# REVERSE: Invert the previously defined mask
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="ref" reverse
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_REVERSE.str"
+
+victoryvisual \
+$'name'_REF.str \
+$'name'_SHIFT.str \ 
+$'name'_DELTACD.str \
+$'name'_REVERSE.str
+
+QUIT

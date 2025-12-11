@@ -1,0 +1,21 @@
+* Two Input XOR Gate
+
+.verilog "xor.va"
+
+* Input Waveforms
+vin1 in1 0 pulse(0 5 1u 1n 1n 2u 4u)
+vin2 in2 0 pulse(0 5 1.5u 1n 1n 2u 4u)
+
+* Instance Xor
+YVLG_XOR in1 in2 out xorg
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 10n 7u
+
+* Plot Waveforms
+.print v(in1) v(in2) v(out)
+
+.end

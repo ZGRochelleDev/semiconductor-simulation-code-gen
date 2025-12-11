@@ -1,0 +1,112 @@
+# (c) Silvaco Inc., 2024
+
+# Introduction to physical deposition models
+
+# Required Modules
+#  Victory Process
+#   -2D Physical Etch & Deposit
+
+# Example Name
+Set name=“VP_Etch_Dep_ex04” 
+
+# Conformal deposition 
+GO victoryprocess simflags="-P 4"
+
+INIT material=oxide from=0 to=1 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 flow.dim=2D_xz
+
+DEPOSIT material=semiconductor max thick=0.1 left.to=0.7 angle=120
+ETCH material=semiconductor max thick=0.1 left.to=0.3 angle=60
+
+DEPOSIT model="conformal" material="metal" depositionrate=0.1 time=10 seconds
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Conformal.str
+
+# Non-conformal
+GO victoryprocess simflags="-P 4"
+
+INIT material=oxide from=0 to=1 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 flow.dim=2D_xz
+
+DEPOSIT material=semiconductor max thick=0.1 left.to=0.7 angle=120
+ETCH material=semiconductor max thick=0.1 left.to=0.3 angle=60
+
+# Deposition defined by conformity ratio. ratio=1 => conformal.
+DEPOSIT model="nonconformal" material="metal" depositionrate=0.1 ratio=0.5 time=10 seconds maxcfl=1
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_NonConformal.str
+
+# Primary-Ballistic-Mode
+GO victoryprocess simflags="-P 4"
+
+INIT material=oxide from=0 to=1 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 flow.dim=2D_xz
+
+DEPOSIT material=semiconductor max thick=0.1 left.to=0.7 angle=120
+ETCH material=semiconductor max thick=0.1 left.to=0.3 angle=60
+
+# Primary depo model uses Primary-Ballistic-Mode for the flux transport
+# Isotropic flux with visibility calculations
+DEPOSIT model="primary" material="metal" depositionrate=0.1 time=10 seconds
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_PriBallistic.str
+
+# Sputter Deposition
+GO victoryprocess simflags="-P 4"
+
+INIT material=oxide from=0 to=1 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 flow.dim=2D_xz
+
+DEPOSIT material=semiconductor max thick=0.1 left.to=0.7 angle=120
+ETCH material=semiconductor max thick=0.1 left.to=0.3 angle=60
+
+# The sputter deposition
+
+# Set up model
+# For c-function see :
+# common/etchdepo/flux/primaryFundamentals.c
+
+set COSPOWER = 0.8
+
+# No reflections 
+##################
+#Flux NAME="sputter_flux" \
+ PRI_C_FUNCTION="cosinepower" \
+ PRIDEP1="thetaSample" \
+ PRIPAR1=$COSPOWER
+
+# With reflections
+####################
+Flux NAME="sputter_flux" \
+ PRI_C_FUNCTION="cosinepower" \
+ PRIDEP1="thetaSample" \
+ PRIPAR1=$COSPOWER \
+ SEC_C_FUNCTION="isotropic_reflection"
+
+# For FLUX see Flux statement above
+TopographyModel NAME="sputter_model" \
+ REACTION="fluxdependent" FLUX="sputter_flux"
+
+# For MODEL see TopographyModel statement above
+# Note : Rate unit is um/minute
+DEPOSIT material="metal" MODEL="sputter_model" time=10 seconds \
+ depositionRate=0.1 \
+ solver="LAX_FRIEDRICH" maxcfl=1.
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Sputter.str
+
+victoryvisual \
+$'name'_Conformal.str \
+$'name'_NonConformal.str \
+$'name'_PriBallistic.str \
+$'name'_Sputter.str
+
+QUIT

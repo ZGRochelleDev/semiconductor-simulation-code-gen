@@ -1,0 +1,83 @@
+# (c) Silvaco Inc., 2024
+
+# Chemical Mechanical Polishing (CMP) example 
+
+# Required Modules
+#  Victory Process
+#   -3D Physical Etch & Deposit 
+
+# Example Name
+Set name="VP_Etch_Dep_ex08" 
+
+GO victoryprocess simflags="-P 4"
+
+INIT material="silicon" from="-10.0,-4.0" to="10.0,0.5" depth=3.0 gasheight=3.0 \
+ resolution=0.2 
+
+# deposit aluminum
+DEPOSIT max material="aluminum" thickness=0.5
+
+# etch aluminum
+ETCH dry material="aluminum" thickness=0.5 between.x="-5.,-3." between.x="-1.,1." between.x="2.,6."
+ETCH dry material="aluminum" thickness=0.5 right.to=8.
+ETCH dry material="aluminum" thickness=0.5 left.to=-6.
+
+ETCH dry material="aluminum" thickness=0.5 right.to.y=-2.5
+DEPOSIT min material="aluminum" thickness=0.5 right.to.y=0.0
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Metal.str"
+
+# deposit SiO2
+DEPOSIT CONFORMAL material="sio2" thickness=1.
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Oxide.str"
+
+# Configure the CMP model
+
+# set the maximal CMP rates for each material
+ETCHDEPOPROPERTIES Name="cmp_rates" \
+ material="sio2" rate=0.1 \
+ material="aluminum" rate=0.0 \
+ material="silicon" rate=0.1 
+
+## Info :
+# disheffect .. The rate decrease (see cmpeffect) is reduced, the further a point
+# is vertically away from any highest point. This parameter sets the
+# strength of this dishing effect.
+# Or in other words, if you are far away from the high points, there
+# is no CMP effect anymore. 
+# cmpeffect .. How much the rate decreases with the (z)-distance from the highest point
+# e.g. 0.8 mean the rate decreases by 80% if a point it 1 um deeper than 
+# the highest surface point 
+
+set DISHEFFECT = 0.08
+set CMPEFFECT = 0.8
+REACTION Name="cmp_reaction" c_function="cmp_physical2020" \
+ dep1 = "highestsurfacecoordinate" \
+ dep2 = "position" \
+ dep3 = "globalDishingRadius" \
+ dep4 = "rate" \
+ param1 = $DISHEFFECT \
+ param2 = $CMPEFFECT
+
+TOPOGRAPHYMODEL name="cmp_model" \
+ reactionmodelname="cmp_reaction" \
+ fluxmodelname="constant"
+
+# Run the CMP simulation
+ETCH model="cmp_model" materialproperties="cmp_rates" time=10.0 minutes
+
+EXPORT structure="$'name'_Etch.str"
+
+victoryvisual \
+$'name'_Metal.str \
+$'name'_Oxide.str \
+$'name'_Etch.str
+
+
+QUIT
+

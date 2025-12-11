@@ -1,0 +1,51 @@
+source n2.var
+source n0c2.var
+GO victorydevice simflag="-P 4 -80"
+
+if cond = ($type = "NMOS") 
+set sign = 1 ##!!
+set wf = 4.2 ##!!
+if.end
+
+if cond = ($type = "PMOS") 
+set sign = -1 ##!!
+set wf = 5.1 ##!!
+if.end
+
+#### structure SPECIFICATION ####
+mesh infile = n22_VM_con.str width = 1
+CONTACT name = gate workfunction = $wf 
+INTERFACE Qf = 2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material = Silicon taun0 = 1.0e-7*1e-2 taup0 = 1.0e-7*1e-2
+MODELs fermi srh cvt fldmob print
+MODELs bbt.schenk 
+IMPACT selb 
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap = 10 climit = 1e-4 
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility
+
+## ---------------------------------- ##
+## -------- Device: extraction ------ ##
+## -----------------------------------##
+
+# Output Characteristics: BVdss 
+SOLVE init
+SOLVE previous
+
+log outfile = n34_VD_BVds.log
+SOLVE vdrain = 0.0
+SOLVE vdrain = 0.001*$sign
+SOLVE vdrain = 0.01*$sign
+SOLVE vstep = 0.02*$sign vfinal = 0.1*$sign name = drain 
+SOLVE vstep = 0.1*$sign vfinal = 0.5*$sign name = drain
+SOLVE vstep = 0.2*$sign vfinal = 20.0*$sign name = drain compl = 1.0e-6*$sign cname = drain 
+#CONTACT name = drain current 
+#SOLVE previous 
+#SOLVE istep = 1.4 ifinal = 1.0e-6*$sign name = drain imult 
+LOG off
+save outfile = n34_VD_BVds.str
+
+#### DEVICE extractION ####

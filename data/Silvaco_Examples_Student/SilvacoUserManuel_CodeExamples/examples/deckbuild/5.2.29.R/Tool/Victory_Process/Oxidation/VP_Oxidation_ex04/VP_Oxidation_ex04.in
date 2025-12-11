@@ -1,0 +1,85 @@
+# (c) Silvaco Inc., 2024
+
+# Oxidation of arbitrary materials
+
+# Required Modules
+#  Victory Process
+#   -2D Oxidation
+
+# Example Name
+Set name=“VP_Oxidation_ex04” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material="nitride" \
+ from=0 to=0.7 depth=0.1 gasheight=1 \
+ resolution=0.002 meshdepth=2
+
+# Deposit arbitary material "my_material_<n>"
+DEPOSIT min material=my_material_1 thickness=0.1 between.x="0.1,0.2"
+DEPOSIT min material=my_material_2 thickness=0.1 between.x="0.3,0.4"
+DEPOSIT min material=my_material_3 thickness=0.1 between.x="0.5,0.6"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_INIT.str"
+
+# The arbitary material should "inherit" - have the same parameters as silicon
+# gives a comprehensive starting point that we can then modify
+MATERIAL material="my_material_1" inherit="silicon"
+MATERIAL material="my_material_2" inherit="silicon"
+MATERIAL material="my_material_3" inherit="silicon"
+
+# Modify the arrhenius parameters for the linear component of the oxidation rate
+# setting different values for my_material_1, _2 and _3
+MATERIAL name="my_material_1" ambient=wet ox.parameter="lin" \
+ parametervalue="(anisotropic-diamond) \
+ (100)(10e6/2.05) \
+ (110)(10e6/2.05) \
+ (111)(10e6/2.05)" \ 
+ parameterunit="um/min : eV"
+
+MATERIAL name="my_material_2" ambient=wet ox.parameter="lin" \
+ parametervalue="(anisotropic-diamond) \
+ (100)(5e6/2.05) \
+ (110)(5e6/2.05) \
+ (111)(5e6/2.05)" \ 
+ parameterunit="um/min : eV"
+
+MATERIAL name="my_material_3" ambient=wet ox.parameter="lin" \
+ parametervalue="(anisotropic-diamond) \
+ (100)(2e6/2.05) \
+ (110)(2e6/2.05) \
+ (111)(2e6/2.05)" \ 
+ parameterunit="um/min : eV"
+
+# State the parabolic component of the oxidation rate.
+# No modification made, just shown for completeness - default Silicon parameters
+MATERIAL name="my_material_1" ambient=wet \
+ ox.parameter="par" \
+ parametervalue="(new)(twostage) (tbreak)(950) (f1)(283.333/1.17) (f2)(7/0.78)" \
+ parameterunit="(degC)(um2/min:eV)(um2/min:eV)"
+
+MATERIAL name="my_material_2" ambient=wet \
+ ox.parameter="par" \
+ parametervalue="(new)(twostage) (tbreak)(950) (f1)(283.333/1.17) (f2)(7/0.78)" \
+ parameterunit="(degC)(um2/min:eV)(um2/min:eV)"
+
+MATERIAL name="my_material_3" ambient=wet \
+ ox.parameter="par" \
+ parametervalue="(new)(twostage) (tbreak)(950) (f1)(283.333/1.17) (f2)(7/0.78)" \
+ parameterunit="(degC)(um2/min:eV)(um2/min:eV)"
+
+Diffuse time=70 seconds temp=1000 wet
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_Ox.str"
+
+victoryvisual \
+$'name'_INIT.str \
+$'name'_Ox.str
+
+QUIT
+

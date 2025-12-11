@@ -1,0 +1,82 @@
+# (c) Silvaco Inc., 2024
+
+# Wafer warpage - stress
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#   -3D Stress
+#  Victory Mesh
+#  -3D Meshing
+
+# Example Name
+SET name=VP_Stress_ex02
+
+##################### PROCESS SIMULATION ##############################
+GO victoryprocess simflags="-P 4"
+
+#setting thickness of the substrate
+SET t_sub = 775
+
+INIT material = "SI" depth = 775 from = "-165000,-165000" to = "165000,165000" gasheight = 12 flip dopant = boron dopingvalue = 1e15
+
+LINE y location = -165000 spacing = 3000
+LINE y location = 165000 spacing = 3000
+
+LINE x location = -165000 spacing = 3000
+LINE x location = 165000 spacing = 3000
+
+LINE z location = 775 spacing = 775
+LINE z location = 0 spacing = 775
+LINE z location = 0 spacing = 10
+LINE z location = -10 spacing = 10
+
+set npts_circ = 40
+SPECIFYMASKPOLY MASK = "msk" CIRCLE CENTER = "0,0" RADIUS = 150000 NPOINTS =40 
+
+DEPOSIT material = "film" directional thickness = 10
+ETCH material = "film" max thickness = 10 mask = "msk"
+ETCH material = "SI" max thickness = $t_sub mask = "msk"
+SAVE name = $"name"_process 
+
+####################### STRUCTURE REMESHING ##########################
+
+GO victorymesh simflags="-P 4"
+LOAD in = $"name"_process
+
+REMESH conformal prism
+CONVERT
+
+SAVE out = $"name"_VM mode = clever 
+
+##################### PROCESS SIMULATION ##############################
+
+GO victoryprocess simflags="-P 4"
+LOAD name = $"name"_VM loadstressmesh
+
+MATERIAL material = "film" inherit = oxide stress.parameter = "young.modulus" stress.parameterValue = "125e10" stress.parameter = "poisson.ratio" stress.parameterValue = "0.27"
+
+MATERIAL material = "SI" inherit = oxide stress.parameter = "young.modulus" stress.parameterValue = "150e10" stress.parameter = "poisson.ratio" stress.parameterValue = "0.27" 
+
+#set stress in both X and Y axis to get saddle shaped wafer warpage
+SET stressx = 1e10
+SET stressy = -1e10
+SETSTRESS INTRINSIC MATERIAL = film STRESSXX = $stressx STRESSYY = $stressy
+
+METHOD stress.aniso = off stress.solver = PAS STRESS.TOLERANCE = 5e-06
+
+#Stress bounadries such that: Wafer is free to move along all axis. Center point is kept fixed, where stress is applied.
+STRESSBOUNDARYCONDITIONS name = "free_boundaries" domain.x.free domain.z.free domain.y.free
+STRESSBOUNDARYCONDITIONS name = "fixz" spoint = "(0, 0, 1000)" searchtolerance = 3000 fix
+
+#Alpha - numerical parameter only.
+STRESS bc ="free_boundaries, fixz" showresidual alpha = 0
+
+#Export deformed saved the deformed boundaries in the structure. Only for visualization.
+EXPORT deformed structure = $"name"_wafer_stress_deformed.str
+
+SAVE name = $"name"_deformed 
+
+victoryvisual $"name"_wafer_stress_deformed.str:$"name"_wafer_saddle.set
+
+QUIT

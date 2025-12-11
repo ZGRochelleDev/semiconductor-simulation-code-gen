@@ -1,0 +1,151 @@
+GO victorydevice simflags="-P 2"
+
+#global_var
+set name = "TFT_ex14_vdoe"
+set temp = 253
+set lsz = 5
+set wsz = 10
+set igzo_th = 0.01
+set igzo_dp = 5e+15
+set mue0 = 14
+set tgm = 178.33
+set gm0 = -0.3088
+set necr = 10e19
+set ntac = 1e19
+set wtac = 0.008
+set ngac = 1.5e17
+set egac = 0.0
+set wgac = 0.64
+set ntdo = 3.0e19
+set wtdo = 0.12
+set ngdo = 1.3e17
+set egdo = 2.48
+set wgdo = 0.24
+set i_vt = 1.e-10
+#global_var
+
+
+#### structure SPECIFICATION ####
+mesh outfile = "TFT_ex14_vdoe_0.str" width = $wsz
+
+X.mesh location = 0 spacing = 1
+X.mesh location = 1 spacing = 1
+X.mesh location = 4.6 spacing = 0.1
+X.mesh location = 5 spacing = 0.1
+X.mesh location = 5.4 spacing = 0.1
+X.mesh location = 6 spacing = 0.1
+X.mesh location = 0.5*$'lsz'+5 spacing = $'lsz'/10
+X.mesh location = $'lsz'+4 spacing = 0.1
+X.mesh location = $'lsz'+4.6 spacing = 0.1
+X.mesh location = $'lsz'+5 spacing = 0.1
+X.mesh location = $'lsz'+5.4 spacing = 0.1
+X.mesh location = $'lsz'+9 spacing = 1
+X.mesh location = $'lsz'+10 spacing = 1
+
+Y.mesh location = -0.4 spacing = 0.1
+Y.mesh location = -0.2 spacing = 0.05
+Y.mesh location = -0.1 spacing = 0.05
+Y.mesh location = -0.02 spacing = 0.005
+Y.mesh location = 0 spacing = 0.002
+Y.mesh location = 0.5*$'igzo_th' spacing = 0.1*$'igzo_th'
+Y.mesh location = $'igzo_th' spacing = 0.002
+Y.mesh location = 0.02+$'igzo_th' spacing = 0.005
+Y.mesh location = 0.04+$'igzo_th' spacing = 0.01
+Y.mesh location = 0.05+$'igzo_th' spacing = 0.02
+Y.mesh location = 0.06+$'igzo_th' spacing = 0.05
+Y.mesh location = 0.2+$'igzo_th' spacing = 0.1
+#
+# The device is composed of a 40 nm layer of IGZO deposited
+# Gate insulater is composed of 200 nm SiO2.
+# Protection is 200nm SiO2 and Passivation is 
+#
+REGION number = 1 material = igzo y.minimum = 0 y.maximum = $'igzo_th'
+REGION number = 2 material = sio2 y.minimum = $'igzo_th' y.maximum = 0.2+$'igzo_th'
+REGION number = 3 material = sio2 x.minimum = 5 x.maximum = $'lsz'+5 y.minimum = -0.2 y.maximum = 0
+REGION number = 4 material = sin y.minimum = -0.4 y.maximum = -0.2
+REGION number = 5 material = sin x.minimum = 0 x.maximum = 5 y.minimum = -0.2 y.maximum = 0
+REGION number = 6 material = sin x.minimum = $'lsz'+5 x.maximum = $'lsz'+10 y.minimum = -0.2 y.maximum = 0
+
+# electrodes
+ELECTRODE number = 1 name = gate y.minimum = 0.2+$'igzo_th' y.maximum = 0.2+$'igzo_th'
+ELECTRODE number = 2 name = source y.minimum = 0 y.maximum = 0 x.minimum = 0 x.maximum = 2
+ELECTRODE number = 3 name = drain y.minimum = 0 y.maximum = 0 x.minimum = $'lsz'+8 x.maximum = $lsz+10
+
+# doping
+# channel
+DOPING region = 1 uniform concentration = $igzo_dp n.type
+# SD
+DOPING region = 1 gaussian x.right = 5 concentration = 1e20 characteristic = 0.3 n.type
+DOPING region = 1 gaussian x.left = $'lsz'+5 concentration = 1e20 characteristic = 0.3 n.type
+
+#### MATERIAL/PHYSICAL MODELS ####
+#
+# IGZO parameters
+#
+MATERIAL region = 1 semiconductor m.dsn = 0.34 m.dsp = 1.5 eg300 = 3.1 affinity = 4.2 permittivity = 13
+
+# IGZO.TOKYO mobility model
+MOBILITY igzo.tokyo mun = $mue0 mup = 0.01 tmun = 0 tmup = 0 igzo.gamma0 = $gm0 igzo.tgamma = $tgm igzo.ncrit = $necr
+
+# cvd-sio2
+MATERIAL material = oxide permittivity = 4.2
+
+#
+# Defects
+#
+DEFECTS continuous nta = $ntac ntd = $ntdo wta = $wtac wtd = $wtdo nga = $ngac ngd = $ngdo ega = $egac egd = $egdo wga = $wgac wgd = $wgdo sigtae = 1e-17 sigtah = 1e-15 sigtde = 1e-15 sigtdh = 1e-17 siggae = 2e-16 siggah = 2e-15 siggde = 2e-15 siggdh = 2e-16 tfile = "TFT_ex14_vdoe_igzo_ext-std1_dos.log" numa = 200 numd = 100
+
+#
+# contacts 
+# Ti 4.3
+# Mo 4.53
+#
+CONTACT workfunction = 4.53 name = gate
+CONTACT workfunction = 4.3 name = source
+CONTACT workfunction = 4.3 name = drain
+
+# models
+MODELS srh fermidirac print temp = $temp
+
+#### NUMERICAL METHODS ####
+# outputs
+OUTPUT band.para band.temp con.band val.band e.mobility h.mobility
+
+# probe
+PROBE name = "ne_1n" n.conc x = $'lsz'*0.5+5 y = $'igzo_th'-0.001
+PROBE name = "mob_1n" n.mob x = $'lsz'*0.5+5 y = $'igzo_th'-0.001
+PROBE name = "ne_2n" n.conc x = $'lsz'*0.5+5 y = $'igzo_th'-0.002
+PROBE name = "mob_2n" n.mob x = $'lsz'*0.5+5 y = $'igzo_th'-0.002
+PROBE name = "ne_5n" n.conc x = $'lsz'*0.5+5 y = $'igzo_th'-0.005
+PROBE name = "mob_5n" n.mob x = $'lsz'*0.5+5 y = $'igzo_th'-0.005
+PROBE name = "ne_10n" n.conc x = $'lsz'*0.5+5 y = $'igzo_th'-0.01
+PROBE name = "mob_10n" n.mob x = $'lsz'*0.5+5 y = $'igzo_th'-0.01
+PROBE name = "ne_20n" n.conc x = $'lsz'*0.5+5 y = $'igzo_th'-0.02
+PROBE name = "mob_20n" n.mob x = $'lsz'*0.5+5 y = $'igzo_th'-0.02
+
+#### SOLUTION SOLVING ####
+#
+# Solve
+#
+SOLVE initial
+save outfile = n12_TFT_ex14_vdoe_init.str
+
+# method
+METHOD newton climit = 1e-5 maxtraps = 10 itlimit = 20 ir.tol = 5e-16 ix.tol = 2e-6 carriers = 1 electrons dvmax = 0.1
+
+# id-vg at Vd = 0.1
+SOLVE previous
+SOLVE vdrain = 0.01
+SOLVE vdrain = 0.1
+
+SOLVE vgate = 0.1
+SOLVE vgate = 1
+SOLVE vgate = 2 vstep = 2 vfinal = 20 name = gate
+#save outfile = $'name'_vg20vd01.str
+
+log outfile = n12_idvg_vd01.log no.trap
+SOLVE vgate = 20 vstep = -0.25 vfinal = -40 name = gate
+#save outfile = $'name'_vgm10vd01.str
+#extract name = "idvg01" curve( v."gate", abs(i."drain") ) outfile = "idvg01_$'temp'.dat"
+#extract name = "mob01" deriv( v."gate", abs(i."drain")/($wsz*1.73e-8*(4.2/3.9)*0.1/$lsz) ) outfile = "mob-lin_$'temp'.dat"
+LOG off

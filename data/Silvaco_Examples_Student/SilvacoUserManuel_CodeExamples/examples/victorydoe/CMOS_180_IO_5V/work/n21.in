@@ -1,0 +1,18 @@
+source n1.var
+source n0c1.var
+GO victorymesh simflags="-P 4"
+
+load in = n17_VP_sv
+CROP axis = "z" offset = "1.2"
+REmesh conformal 
+save out = n21_VM_con.str
+
+## ---------------------------------- ##
+## ----------- Device: IdVg --------- ##
+## -----------------------------------##
+
+# -Transfer Characterization: IdVglin and IdVgsat Simulation
+# -Parameter extraction: Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/SSsat/DIBL extraction
+
+#### structure SPECIFICATION ####
+info

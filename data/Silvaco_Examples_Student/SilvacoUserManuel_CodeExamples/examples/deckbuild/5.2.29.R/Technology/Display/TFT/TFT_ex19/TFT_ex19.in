@@ -1,0 +1,437 @@
+# (c) Silvaco Inc., 2024
+
+# Vth shift of p-type Poly TFT after transient PBTS and NBTS conditions
+
+# Required Modules
+# Victory Process
+# -3D Structure Editor
+# Victory Mesh
+# -3D Meshing
+# Victory Device
+# -3D Simulator
+# -3D TFT
+
+# Example Name
+set name=TFT_ex19
+
+
+####### PROCESS SIMULATION #######
+#---------------- Initialization ---------------- 
+GO VICTORYPROCESS simflags="-P 4"
+INIT material=oxide depth=1 gasheight=5 flow.dim=3D from="0, 0" to ="35, 5"
+
+SPECIFYMASKPOLY MASK=Gate p="8, 0" p="13, 0" p="13, 5" p="8, 5"
+SPECIFYMASKPOLY MASK=Gate ADD p="22, 0" p="27, 0" p="27, 5" p="22, 5"
+
+SPECIFYMASKPOLY MASK=PS p="0, 1" p="35, 1" p="35, 4" p="0, 4"
+SPECIFYMASKPOLY MASK=PP p="5, 0" p="16, 0" p="16, 5" p="5, 5"
+SPECIFYMASKPOLY MASK=PP ADD p="19, 0" p="30, 0" p="30, 5" p="19, 5"
+
+SPECIFYMASKPOLY MASK=CONT p="1.5, 2" p="3.5, 2" p="3.5, 3" p="1.5, 3"
+SPECIFYMASKPOLY MASK=CONT ADD p="31.5, 2" p="33.5, 2" p="33.5, 3" p="31.5, 3"
+
+SPECIFYMASKPOLY MASK=M2 p="0, 0" p="5, 0" p="5, 5" p="0, 5"
+SPECIFYMASKPOLY MASK=M2 ADD p="30, 0" p="35, 0" p="35, 5" p="30, 5"
+
+#---------------- Mesh setting ---------------- 
+LINE x location=0 spacing=2
+LINE x location=5 spacing=0.5
+LINE x location=8 spacing=0.5
+LINE x location=10.5 spacing=1
+LINE x location=13 spacing=0.5
+LINE x location=17.5 spacing=1
+LINE x location=22 spacing=0.5
+LINE x location=24.5 spacing=1
+LINE x location=27 spacing=0.5
+LINE x location=30 spacing=0.5
+LINE x location=35 spacing=2
+
+LINE y location=0 spacing=1
+LINE y location=5 spacing=1 
+
+LINE z location=-1.38 spacing=0.1
+LINE z location=-0.78 spacing=0.1
+LINE z location=-0.18 spacing=0.1
+LINE z location=-0.08 spacing=0.05
+LINE z location=-0.044 spacing=0.05 
+LINE z location=-0.04 spacing=0.004
+LINE z location=0 spacing=0.02
+LINE z location=0.04 spacing=0.04
+
+#---------------- Process steps ---------------- 
+DEPOSIT material="poly" thick=0.04 max dopant=boron dopingvalue=3e11
+MASK mask="PS"
+ETCH material="poly" thick=0.04 angle=50 dry 
+STRIP resist
+
+DEPOSIT material=oxide thick=0.04 conformal
+
+DEPOSIT material=titanium thick=0.1 conformal 
+MASK mask="Gate" 
+ETCH material=titanium 
+STRIP material=barrier
+
+ELECTRODES name=gate x=10 y=2 material=titanium
+ELECTRODES name=gate x=25 y=2 material=titanium
+
+IMPLANT boron dose=11e13 energy=50 amorph
+
+#-----
+MASK mask="PP"
+IMPLANT boron dose=6.66E16 energy=65 amorph #PP doping 
+STRIP material=barrier
+DIFFUSE time=40 temp=900 
+
+DEPOSIT nitride thick=0.3 conformal
+DEPOSIT oxide thick=0.3 conformal
+
+MASK mask="CONT" reverse
+ETCH material=oxide dry
+ETCH material=nitride dry
+ETCH material=oxide dry
+STRIP material=barrier
+
+DEPOSIT material=molybdenum thick=0.1 max
+MASK mask="M2" 
+ETCH material=molybdenum dry 
+STRIP material=barrier 
+
+# Passivation
+DEPOSIT nitride thick=0.1 conformal
+
+ELECTRODES name=source x=2 y=2 material=molybdenum 
+ELECTRODES name=drain x=32 y=2 material=molybdenum
+
+SAVE name=$'name'_VP
+
+####### STRUCTURE REMESHING #######
+GO VICTORYMESH simflags="-P 4"
+LOAD in=$'name'_VP
+
+REMESH conformal
+
+SAVE out=$'name'_VM.str
+
+####### DEVICE SIMULATION #######
+
+GO VICTORYDEVICE simflags="-P 4 -80"
+
+MESH inf=$'name'_VM.str 
+
+DEFECTS material="poly" tfile=DOS.dat nta=8.0e+19 ntd=1.0e+20 wta=0.028 wtd=0.03 nga=3.0e+17 \
+ngd=7.0e+17 ega=0.27 egd=0.3 wga=0.25 wgd=0.3 sigtae=1.e-16 sigtah=1.e-14 sigtde=1.e-14 \
+sigtdh=1.e-16 siggae=1.e-16 siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16 numd=24 numa=24
+
+MATERIAL material=poly nc300=6e20 nv300=6e20 eg300=1.2 permitti=12.3 affinity=4 \
+mun=300 mup=30 taun0=1e-9 taup0=1e-9 
+
+MODELS srh fermi temp=313 print
+ 
+CONTACT name=gate workf=4.6
+CONTACT name=source workf=4.8
+CONTACT name=drain workf=4.8
+ 
+INTERFACE s.i qf=3E11
+ 
+OUTPUT devdeg band.para con.band val.band qfn qfp e.mobility e.velocity \
+h.mobility h.velocity recom traps traps.ft u.trap u.srh flowlines charge
+
+METHOD maxtrap=50 itlimit=600 trap pas climit=1e-5
+
+SOLVE init
+
+SAVE outf=$'name'_init.str
+
+LOG outfile=$'name'_Vg_PBTS.log 
+
+SOLVE vgate=0 vstep=0.2 vfinal=1 name=gate 
+SOLVE vstep=0.5 vfinal=5 name=gate 
+SOLVE vstep=1 vfinal=10 name=gate 
+SOLVE vstep=2.5 vfinal=20 name=gate 
+SOLVE vstep=5 vfinal=90 name=gate 
+
+SAVE outf=$'name'_Vg_90.str 
+LOG off 
+
+####### TRANSIENT PBTS condition #######
+GO VICTORYDEVICE simflags="-P 4 -80"
+
+MESH inf=$'name'_VM.str 
+
+DEFECTS material="poly" tfile=DOS.dat nta=8.0e+19 ntd=1.0e+20 wta=0.028 wtd=0.03 \
+nga=3.0e+17 ngd=7.0e+17 ega=0.27 egd=0.3 wga=0.25 wgd=0.3 \
+sigtae=1.e-16 sigtah=1.e-14 sigtde=1.e-14 sigtdh=1.e-16 siggae=1.e-16 \
+siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16 numd=24 numa=24
+
+####### MATERIAL/PHYSICAL MODELS #######
+MATERIAL material=poly nc300=6e20 nv300=6e20 eg300=1.2 permitti=12.3 \
+affinity=4 mun=300 mup=30 taun0=1e-9 taup0=1e-9 
+
+MODELS srh fermi temp=313 print
+
+DEGRADATION esm.a=1e15 esm.ea=0.5 esm.kox=1e-8 esm.n=0.42 esm.pbti 
+
+CONTACT name=gate workf=4.6
+CONTACT name=source workf=4.8
+CONTACT name=drain workf=4.8
+ 
+INTERFACE s.i qf=3E11
+ 
+OUTPUT devdeg band.para con.band val.band qfn qfp e.mobility e.velocity \
+h.mobility h.velocity recom traps traps.ft u.trap u.srh flowlines charge
+
+METHOD trap maxtrap=80 climit=1e4 tol.time=1e-2 dt.max=0.1 dt.min=1e-8 lte.timestep pas
+
+LOAD inf=$'name'_Vg_90.str
+
+SOLVE previous
+
+LOG outf=$'name'_PBTS.log
+
+METHOD trap maxtrap=50 dt.max=1e-8 dt.min=1e-10
+
+SOLVE tstep=1e-8 tstop=1e-7
+SAVE outf=$'name'_PBTS_0.str
+
+METHOD trap maxtrap=50 dt.max=1e-7 dt.min=1e-9
+SOLVE tstep=1e-7 tstop=1e-6
+SAVE outf=$'name'_PBTS_1u.str
+
+METHOD trap maxtrap=150 dt.max=1e-4 dt.min=1e-6
+SOLVE tstep=1e-5 tstop=1e-4
+
+METHOD trap maxtrap=150 dt.max=1e-2 dt.min=1e-6
+SOLVE tstep=1e-4 tstop=1e-3
+SAVE outf=$'name'_PBTS_3m.str
+
+METHOD trap maxtrap=150 dt.max=1e0 dt.min=1e-5
+SOLVE tstep=1e-3 tstop=1e-2 
+SOLVE tstep=1e-2 tstop=1e-1 
+SOLVE tstep=1e-1 tstop=1
+SOLVE tstep=1 tstop=10 
+SAVE outf=$'name'_PBTS_10.str
+
+METHOD trap maxtrap=150 dt.max=20 dt.min=1
+SOLVE tstep=20 tstop=200 
+
+METHOD trap maxtrap=150 dt.max=50 dt.min=10
+SOLVE tstep=50 tstop=500 
+
+METHOD trap maxtrap=150 dt.max=100 dt.min=20
+SOLVE tstep=100 tstop=1200 
+SAVE outf=$'name'_PBTS_1200.str
+
+METHOD trap maxtrap=150 dt.max=200 dt.min=40
+SOLVE tstep=200 tstop=2400 
+SAVE outf=$'name'_PBTS_2400.str
+
+METHOD trap maxtrap=150 dt.max=200 dt.min=100
+SOLVE tstep=200 tstop=3600 
+SAVE outf=$'name'_PBTS_3600.str
+
+LOG off
+
+####### DC after Transient PBTS #######
+
+LOOP steps=4 print
+ASSIGN name=time n.value=(0,1200,2400,3600)
+
+GO VICTORYDEVICE simflags="-P 4 -80"
+
+MESH inf=$'name'_VM.str 
+
+DEFECTS material="poly" tfile=DOS.dat nta=8.0e+19 ntd=1.0e+20 wta=0.028 wtd=0.03 \
+nga=3.0e+17 ngd=7.0e+17 ega=0.27 egd=0.3 wga=0.25 wgd=0.3 sigtae=1.e-16 sigtah=1.e-14 \
+sigtde=1.e-14 sigtdh=1.e-16 siggae=1.e-16 siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16 numd=24 numa=24
+
+MATERIAL material=poly nc300=6e20 nv300=6e20 eg300=1.2 permitti=12.3 affinity=4 \
+mun=300 mup=30 taun0=1e-9 taup0=1e-9
+
+MODELS srh fermi temp=313 print
+
+CONTACT name=gate workf=4.6
+CONTACT name=source workf=4.8
+CONTACT name=drain workf=4.8
+ 
+INTERFACE s.i qf=3e11
+
+OUTPUT devdeg band.para con.band val.band qfn qfp e.mobility e.velocity \
+h.mobility h.velocity recom traps traps.ft u.trap u.srh flowlines charge
+
+METHOD maxtrap=50 itlimit=600 trap pas climit=1e-5
+
+LOAD inf=$'name'_PBTS_$"time".str
+
+SOLVE previous
+
+SOLVE vdrain=0 vstep=-0.1 vfinal=-0.1 name=drain
+
+SOLVE vgate=90 vstep=-10 vfinal=50 name=gate 
+SOLVE vstep=-5 vfinal=10 name=gate
+SOLVE vstep=-1 vfinal=5 name=gate
+
+LOG outfile=$'name'_DC_IdVg_PBTS_$"time".log no.trap
+
+SOLVE vgate=5 vstep=-0.2 vfinal=-4 name=gate
+SOLVE vstep=-0.2 vfinal=-10 name=gate 
+
+LOG off
+
+GO VICTORYEXTRACT
+LOAD in="$'name'_DC_IdVg_PBTS_$'time'.log"
+EXTRACT.LOG name=mean expression="log10(abs(ave(DRAIN VOLTAGE)))/2.0"
+CURVE name=IV x=(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.CURVE name="Vth_PBTS_$'time'" expression="intercept(y=0, max(slope(curve.IV)))-$'mean'"
+
+L.END
+
+####### Transient NBTS condition #######
+GO VICTORYDEVICE simflags="-P 4 -80"
+MESH inf=$'name'_VM.str
+ 
+DEFECTS material="poly" tfile=DOS.dat nta=8.0e+19 ntd=1.0e+20 wta=0.028 wtd=0.03 \
+nga=3.0e+17 ngd=7.0e+17 ega=0.27 egd=0.3 wga=0.25 wgd=0.3 sigtae=1.e-16 sigtah=1.e-14 \
+sigtde=1.e-14 sigtdh=1.e-16 siggae=1.e-16 siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16 numd=24 numa=24
+
+MATERIAL material=poly nc300=6e20 nv300=6e20 eg300=1.2 permitti=12.3 affinity=4 \
+mun=300 mup=30 taun0=1e-9 taup0=1e-9
+
+MODELS srh fermi temp=313 print
+ 
+CONTACT name=gate workf=4.6
+CONTACT name=source workf=4.8
+CONTACT name=drain workf=4.8
+ 
+INTERFACE s.i qf=3e11
+ 
+OUTPUT devdeg band.para con.band val.band qfn qfp e.mobility e.velocity \
+h.mobility h.velocity recom traps traps.ft u.trap u.srh flowlines charge
+
+METHOD maxtrap=50 itlimit=600 trap pas climit=1e-5
+
+SOLVE init
+
+SAVE outf=$'name'_init.str
+
+LOG outfile=$'name'_Vg_NBTS.log 
+
+SOLVE vstep=-0.5 vfinal=-5 name=gate 
+SOLVE vstep=-1 vfinal=-10 name=gate 
+SOLVE vstep=-2.5 vfinal=-20 name=gate 
+SOLVE vstep=-5 vfinal=-90 name=gate 
+
+SAVE outf=$'name'_Vg_-90_NBTS.str 
+LOG off 
+
+DEGRADATION esm.a=1e15 esm.ea=0.5 esm.kox=1e-8 esm.n=0.42 esm.nbti 
+
+METHOD trap maxtrap=80 climit=1e4 tol.time=1e-2 dt.max=0.1 dt.min=1e-8 lte.timestep pas
+
+LOAD inf=$'name'_Vg_-90_NBTS.str
+
+SOLVE previous
+
+LOG outf=$'name'_NBTS.log
+
+METHOD trap maxtrap=50 dt.max=1e-8 dt.min=1e-10
+SOLVE tstep=1e-8 tstop=1e-7
+SAVE outf=$'name'_NBTS_0.str
+
+METHOD trap maxtrap=50 dt.max=1e-7 dt.min=1e-9
+SOLVE tstep=1e-7 tstop=1e-6
+SAVE outf=$'name'_NBTS_1u.str
+
+METHOD trap maxtrap=150 dt.max=1e-4 dt.min=1e-6
+SOLVE tstep=1e-5 tstop=1e-4
+
+METHOD trap maxtrap=150 dt.max=1e-2 dt.min=1e-6
+SOLVE tstep=1e-4 tstop=1e-3
+SAVE outf=$'name'_NBTS_3m.str
+
+METHOD trap maxtrap=150 dt.max=1e0 dt.min=1e-5
+SOLVE tstep=1e-3 tstop=1e-2 
+SOLVE tstep=1e-2 tstop=1e-1 
+SOLVE tstep=1e-1 tstop=1
+SOLVE tstep=1 tstop=10 
+SAVE outf=$'name'_NBTS_10.str
+
+METHOD trap maxtrap=150 dt.max=20 dt.min=1
+SOLVE tstep=20 tstop=200 
+
+METHOD trap maxtrap=150 dt.max=50 dt.min=10
+SOLVE tstep=50 tstop=500 
+
+METHOD trap maxtrap=150 dt.max=100 dt.min=20
+SOLVE tstep=100 tstop=1200 
+SAVE outf=$'name'_NBTS_1200.str
+
+METHOD trap maxtrap=150 dt.max=200 dt.min=40
+SOLVE tstep=200 tstop=2400 
+SAVE outf=$'name'_NBTS_2400.str
+
+METHOD trap maxtrap=150 dt.max=200 dt.min=100
+SOLVE tstep=200 tstop=3600 
+SAVE outf=$'name'_NBTS_3600.str
+
+LOG off
+
+####### DC after Transient NBTS #######
+
+LOOP steps=4 print
+ASSIGN name=time n.value=(0,1200,2400,3600)
+
+GO VICTORYDEVICE simflags="-P 4 -80"
+
+MESH inf=$'name'_VM.str 
+
+DEFECTS material="poly" tfile=DOS.dat nta=8.0e+19 ntd=1.0e+20 wta=0.028 wtd=0.03 \
+nga=3.0e+17 ngd=7.0e+17 ega=0.27 egd=0.3 wga=0.25 wgd=0.3 sigtae=1.e-16 sigtah=1.e-14 \
+sigtde=1.e-14 sigtdh=1.e-16 siggae=1.e-16 siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16 numd=24 numa=24
+
+MATERIAL material=poly nc300=6e20 nv300=6e20 eg300=1.2 permitti=12.3 \
+affinity=4 mun=300 mup=30 taun0=1e-9 taup0=1e-9
+
+MODELS srh fermi temp=313 print
+
+CONTACT name=gate workf=4.6
+CONTACT name=source workf=4.8
+CONTACT name=drain workf=4.8
+ 
+INTERFACE s.i qf=3e11
+
+OUTPUT devdeg band.para con.band val.band qfn qfp e.mobility \
+e.velocity h.mobility h.velocity recom traps traps.ft u.trap u.srh \
+flowlines charge
+
+METHOD maxtrap=50 itlimit=600 trap pas climit=1e-5
+
+load inf=$'name'_NBTS_$"time".str
+
+SOLVE previous
+SOLVE vdrain=0 vstep=-0.1 vfinal=-0.1 name=drain
+
+SOLVE vgate=-90 vstep=10 vfinal=-30 name=gate 
+SOLVE vstep=5 vfinal=-10 name=gate
+
+LOG outfile=$'name'_DC_IdVg_NBTS_$"time".log no.trap
+
+SOLVE vgate=-10 vstep=0.2 vfinal=-4 name=gate
+SOLVE vstep=0.2 vfinal=5 name=gate 
+
+LOG off
+
+GO VICTORYEXTRACT
+LOAD in="$'name'_DC_IdVg_NBTS_$'time'.log"
+EXTRACT.LOG name=mean expression="log10(abs(ave(DRAIN VOLTAGE)))/2.0"
+CURVE name=IV x=(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.CURVE name="Vth_NBTS_$'time'" expression="intercept(y=0, max(slope(curve.IV)))-$'mean'"
+L.END
+
+victoryvisual \
+$'name'_VM.str:$'name'_3D.set \
+$'name'_DC_IdVg_PBTS_0.log+$'name'_DC_IdVg_PBTS_1200.log+$'name'_DC_IdVg_PBTS_2400.log+\
+$'name'_DC_IdVg_PBTS_3600.log:$'name'_PBTS.set \
+$'name'_DC_IdVg_NBTS_0.log+$'name'_DC_IdVg_NBTS_1200.log+$'name'_DC_IdVg_NBTS_2400.log+\
+$'name'_DC_IdVg_NBTS_3600.log:$'name'_NBTS.set
+
+QUIT

@@ -1,0 +1,21 @@
+* VoltGain
+
+.include 'LNAcircuit.inc'
+.param prf=-10_dBm
+.param rpar21=470
+
+Pout 9  0  r=40
+Prf  in 0  r=50  mag1=prf
+
+$ ----------- Voltage Gain ------------
+.HARM 
++  FUND=900MegHz nharm=25
++  annotate=3 waves
+
+.MEASURE HARM_SP modH1in FIND vm(in) AT=900MegHz  $ 1.3547e-01
+.MEASURE HARM_SP modH1out FIND vm(8) AT=900MegHz
+.MEASURE HARM_SP GAIN EXPR VAL='db20(modH1out/modH1in)'
+
+.let HARM_SP VoltGain='db(vm(8)/1.3547e-01)'
+
+.END

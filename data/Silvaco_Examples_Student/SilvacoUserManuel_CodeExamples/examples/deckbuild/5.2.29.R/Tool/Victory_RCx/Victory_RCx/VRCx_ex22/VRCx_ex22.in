@@ -1,0 +1,113 @@
+# (c) Silvaco Inc., 2024
+
+# Liquid Crystal (LCD) Field Dependent Capacitance
+
+# This example demonstrates the LC director calculation
+# of a super in-plane switching (S-IPS) cell. 
+# The pixel electrodes of the S-IPS cell 
+# consist of two zigzag ITO electrodes.
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex22” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT  material="oxide" gasheight=5 depth=1 from="0,0" to="10,10"
+
+SPECIFYMASKPOLY maskname=Pixel p1="3,5" p2="4.5,10" p3="2.5,10" p4="1,5" \
+                p5="2.5,0" p6="4.5,0" electrode="Pix"
+SPECIFYMASKPOLY maskname=Common p1="8,5" p2="9.5,10" p3="7.5,10" p4="6,5" \
+                p5="7.5,0" p6="9.5,0" electrode="Com"
+
+LINE x location=0 spac=0.25
+LINE x location=10 spac=0.25
+
+LINE y location=0 spac=0.25
+LINE y location=5 spac=0.2
+LINE y location=10 spac=0.25
+
+LINE z location=-5 spacing=1
+LINE z location=-4 spacing=1
+LINE z location=-3 spacing=0.025
+LINE z location=-2.95 spacing=0.025
+LINE z location=-1.5 spacing=0.1
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=1
+
+DEPOSIT material="LC" thick=2.95 min
+
+# Pattern the pixel electrodes.
+DEPOSIT material=ITO thick=0.05 min
+ETCH material=ITO thick=0.05 min mask=Pixel
+ELECTRODES mask=Pixel material="ITO"
+
+DEPOSIT material=oxide thick=0.05 max
+ETCH material=oxide thick=0.1 max mask=Common reverse
+
+DEPOSIT material=ITO thick=0.05 min
+ELECTRODES mask=Common material=ITO
+STRIP oxide
+
+DEPOSIT material=LC thick=0.05 min
+DEPOSIT material=oxide thick=1 min
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+## Create a Conformal Mesh Structure File ##
+
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal
+SAVE out=$'name'_VM.str
+
+## Now Analyze LC Characteristics ##
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+SET penalty=1000
+
+INIT structure="$'name'_VM.str"
+
+MATERIAL ITO conductivity=1000
+MATERIAL oxide permittivity=3.9
+
+# Specify the anisotropic permittivity and the elastic constants of the LC.
+SETLC epsparadir=10.7 epsvertdir=3.7 splay=14.4e-12 twist=6.9e-12 \
+      bend=18.3e-12 cpenalty=$penalty
+
+# Specify the rubbing angle and the pre-tilt angle 
+# on the top and at the bottom of the LC region.
+LCBNDARYB partition(0 10) rubangle(90) tiltangle(1)
+LCBNDARYT partition(0 10) rubangle(90) tiltangle(1)    
+
+SOLVER linearsolver=pam pamsolver=gmres ddprecond=RAS preconditioner=amp \
+        multilevel=0 fillratio=1.e-3 lsmaxiter=200 lstolerance=1.0e-10 \
+        nlsmaxiter=100 nlstolerance=1.0e-8 topdirichletbc
+
+OPTION lsconvergeinfo=1 nlsconvergeinfo
+
+# Ramp the pixel voltage to 6V with a step of 0.5V until 2V 
+# and of 0.25V thereafter.
+
+setpixelbias("Pix",0,0.5,1,1.5,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4,4.25,4.5,4.75,5,5.25,5.5,5.75,6)
+
+# Save the structure at each 1-volt interval from 0 to 5V.
+INTERCONNECT capacitance domainboundarycondition=cyclic savestep=1 structure="$'name'" 
+
+# Save the parasitic capacitance netlist.
+SAVE spice="$'name'.dat"
+
+victoryvisual $'name'.V6.str:$'name'_Pot.set $'name'.dat
+
+QUIT

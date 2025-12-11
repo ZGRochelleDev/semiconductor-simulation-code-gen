@@ -1,0 +1,7 @@
+* dc_divider
+V1 in 10 DC
+R1 in out
+R2 out 2k
+.operatpoint
+.dc V(out)
+.end

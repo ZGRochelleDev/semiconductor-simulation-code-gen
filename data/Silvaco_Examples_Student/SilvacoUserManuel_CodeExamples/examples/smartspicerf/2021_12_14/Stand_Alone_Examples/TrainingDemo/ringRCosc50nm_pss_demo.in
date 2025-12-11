@@ -1,0 +1,57 @@
+* Ring RC Oscillator: .pss oscillator analysis demo
+*
+* Topology based on 3 inverter stages and RC feedback
+*   to allow for lower frequency operation.
+*
+* Oscillation Frequency: ~1 MHz 
+*
+
+* Uses BSIM4 models; fictional 50nm process:
+.include "cmos_50n_models.m"
+
+.options accurate post
+
+.temp 25
+.option tnom=25
+.param  Vdd=1.0
+
+
+** Inverter
+.subckt inv3v agnd avcc vi vo
+M1 vo vi avcc avcc P_50n L=300.0n W=5u 
+M2 vo vi agnd agnd N_50n L=350.0n W=2u 
+.ends inv3v
+
+** Three inverter stages with RC feedback
+XI0  0 netvdd net4 net8 inv3v
+XI1  0 netvdd net8 net6 inv3v
+XI2  0 netvdd net6 OUT  inv3v
+RI3  OUT    net4  180e3   
+CI5  net4   net6  2p
+CI4  net4   0     2p
+Vd   netvdd 0     Vdd
+
+*----------------------------------------
+* .pss analysis setup
+*
+.ic v(OUT)=0       $ Used to stimulate oscillations
+.option vsta=0.05  $ Enables better sampling on edges
+
+.pss V(OUT)  
++ fund=1.0e6  
++ nharm=16         $ Used for spectrum generation
++ method=shooting
++ newton_accuracy=highest
++ Oscillator=ring  $ optional
++ waves  
++ annotate=4   $ enable additional status reporting
++ ese=-1       $ disable state elimination
++ tstab=20u    $ Stabilizing time roughly 20 periods
++ tstep=200p   $ tstab forced to 20u in old releases
++ saveinit     $ Saves the results of the initial transient analysis
++ saveiter     $ Saves pss iteration results
+
+.save all(v) 
+
+
+.end

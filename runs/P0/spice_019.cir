@@ -1,0 +1,19 @@
+plaintext
+.model RC R1 1K
+.model RC C1 100n
+.model RC R2 1K
+.model DC C2 100n
+
+.Vout 0
+.n1 0
+.out 0
+
+.R1 1K
+.C1 100p
+.n1 0
+
+.R2 1K
+.C2 100p
+
+.AC 1V 1MHz
+.DC 1V 10Hz

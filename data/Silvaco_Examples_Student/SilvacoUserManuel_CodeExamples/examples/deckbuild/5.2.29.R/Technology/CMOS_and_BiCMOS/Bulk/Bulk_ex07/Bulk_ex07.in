@@ -1,0 +1,135 @@
+# (c) Silvaco Inc., 2024
+
+# Effect of Poly Depletion on C-V curves 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bulk_ex07” 
+
+####### DEVICE SIMULATION ####### 
+# First simulation
+# P+ poly gate doped to a concentration of 1e19/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.01 spacing=0.01
+X.MESH location=0.01  spacing=0.01
+
+Y.MESH location=-0.04 spacing=0.001
+Y.MESH location=0.02  spacing=0.001
+
+REGION number=1 x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03  \
+       material=aluminum
+REGION number=2 x.min=-0.01 x.max=0.01 y.min=-0.03 y.max=-0.005 \
+       material=poly
+REGION number=3 x.min=-0.01 x.max=0.01 y.min=-0.005 y.max=0.0   \
+       material=oxide
+REGION number=4 x.min=-0.01 x.max=0.01 y.min=0.0 y.max=0.02     \
+       material=silicon
+
+ELECTRODE x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE bottom name=substrate
+
+DOPING region=2 p.type concentration=1e19 uniform
+DOPING region=4 p.type concentration=1e17 uniform
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vgate=-1.5
+SOLVE vgate=-3
+
+LOG outfile =$'name'_VD_CV19.log
+
+SOLVE vgate=-2.8 vstep=0.2 vfinal=3.0 name=gate ac freq=1e6 previous
+
+####### DEVICE SIMULATION ####### 
+# Second simulation
+# P+ poly gate doped to a concentration of 1e20/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.01 spacing=0.01
+X.MESH location=0.01  spacing=0.01
+
+Y.MESH location=-0.04 spacing=0.001
+Y.MESH location=0.02  spacing=0.001
+
+REGION number=1 x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03  \
+       material=aluminum
+REGION number=2 x.min=-0.01 x.max=0.01 y.min=-0.03 y.max=-0.005 \
+       material=poly
+REGION number=3 x.min=-0.01 x.max=0.01 y.min=-0.005 y.max=0.0   \
+       material=oxide
+REGION number=4 x.min=-0.01 x.max=0.01 y.min=0.0 y.max=0.02     \
+       material=silicon
+
+ELECTRODE x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE bottom name=substrate
+
+DOPING region=2 p.type concentration=1e20 uniform
+DOPING region=4 p.type concentration=1e17 uniform
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vgate=-1.5
+SOLVE vgate=-3
+
+LOG outfile =$'name'_VD_CV20.log
+
+SOLVE vgate=-2.8 vstep=0.2 vfinal=3.0 name=gate ac freq=1e6 previous
+
+
+####### DEVICE SIMULATION ####### 
+# Third simulation
+# P+ poly gate doped to a concentration of 1e21/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.01 spacing=0.01
+X.MESH location=0.01  spacing=0.01
+
+Y.MESH location=-0.04 spacing=0.001
+Y.MESH location=0.02  spacing=0.001
+
+REGION number=1 x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03  \
+       material=aluminum
+REGION number=2 x.min=-0.01 x.max=0.01 y.min=-0.03 y.max=-0.005 \
+       material=poly
+REGION number=3 x.min=-0.01 x.max=0.01 y.min=-0.005 y.max=0.0   \
+       material=oxide
+REGION number=4 x.min=-0.01 x.max=0.01 y.min=0.0 y.max=0.02     \
+       material=silicon
+
+ELECTRODE x.min=-0.01 x.max=0.01 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE bottom name=substrate
+
+DOPING region=2 p.type concentration=1e21 uniform
+DOPING region=4 p.type concentration=1e17 uniform
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vgate=-1.5
+SOLVE vgate=-3
+
+LOG outfile =$'name'_VD_CV21.log
+
+SOLVE vgate=-2.8 vstep=0.2 vfinal=3.0 name=gate ac freq=1e6 previous
+
+victoryvisual \
+$'name'_VD_CV19.log:$'name'_VD_CV19.set+\
+$'name'_VD_CV20.log:$'name'_VD_CV20.set+\
+$'name'_VD_CV21.log:$'name'_VD_CV21.set
+
+QUIT

@@ -1,0 +1,47 @@
+ Example #3: Three Coupled Lines
+* ----------------------------------------
+* from:
+* A.Dounavis, Xin Li, M.S.Nakhla, R.Achar
+* "Passive Closed-Form Transmission-Line Model
+*   for General-Purpose Circuit Simulators",
+*   IEEE Transactions on Microwave Theory and Techniques,
+*   vol. 47, No.12, 1999, p.2450-2459.
+* ----------------------------------------
+
+
+.TRAN .001n 6ns
+.options ACCT NOMOD
+*.probe v(1) v(2) v(3) v(4) v(5) v(6)
+
+.measure TRAN Wvout CROSS v(4) val=5
+
+.measure TRAN RSDEL DELAY V(3) RISE=1 VAL0=0 VAL1=5 TARG=V(4)
+.measure TRAN FLDEL DELAY V(3) FALL=1 VAL0=0 VAL1=5 TARG=V(4)
+.measure TRAN DELDIFF EXPR VAL="abs(fldel-rsdel)" 
+
+V1 3 0 PWL (0,0v 0.02ns,5v 3.02ns,5v 3.04ns,0)
+
+w1 1 3 5 0  2 4 6 0  Umodel= example3 
++                    l = 0.04
+
+c1 1 0 1pf
+c2 2 0 1pf
+c4 4 0 1pf
+c5 5 0 1pf
+c6 6 0 1pf
+
+.MODEL example3 W elev=2  nl=3 
+
++        C11=90.112pF/m   C12=-16.643pF/m   C13=-1.110pF/m
++                         C22= 96.521pF/m   C23=-16.643pF/m
++                                           C33= 90.112pF/m
+
++        L11=305.64nH/m  L12=98.65nH/m   L13=42.008nH/m
++                        L22=296.78nH/m  L23=98.650nH/m
++                                        L33=305.640nH/m
+
++        R11=1125     R22=1125   R33=1125
+
+
+.end
+

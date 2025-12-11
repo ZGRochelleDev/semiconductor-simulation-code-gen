@@ -1,0 +1,4 @@
+```plaintext
+.MODEL NMOS1 NMOS(nmos) nmos(Vt=-2.3) ptype=n channel width=4mm length=6mm beta=100 gm=0.1
+.VIN 0 5
+.END

@@ -1,0 +1,74 @@
+# (c) Silvaco Inc., 2024
+
+# Doping Dependent Hopping Mobility
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D Organic
+
+##### VARIABLES #####
+# Example Name
+SET name="LED_OLED_ex06"
+
+# Set variables for chaning simulation conditions
+# Dopant number density "dopant_density" [1/cm3] is swept by DBInternal
+SET dopant_density=1e19
+# Variable for file name including dopant_density
+SET ver="$'name'_$'dopant_density'"
+
+###### DEVICE SIMULATION ######
+# Simulate hole mobility and extract the value from log file
+GO victorydevice simflags="-P 2"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+X.MESH location=0 spacing=0.5
+X.MESH location=1 spacing=0.5
+Y.MESH location=0 spacing=0.002
+Y.MESH location=0.1 spacing=0.002
+REGION number=1 material=organic 
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+#### MATERIAL/PHYSICAL MODELS ####
+# Material parameters for the host
+# Note: nc300 and nv300 were effective density of states for parabolic DOS,
+#       not just number density for LUMO and HOMO 
+MATERIAL material=organic permittivity=3 affinity=3.2 eg300=2.8 \
+ nc300=1.0e22 nv300=1.0e22
+# The host and the dopant DOS for hopping  
+ODEFECTS material=organic hopping \
+ nia=1.6e21 sigmaia=0.05 \
+ nid=1.6e21 sigmaid=0.05 \
+ na=$dopant_density ea=0.19 sigmaa=0.34 \
+ nd=$dopant_density ed=0.19 sigmad=0.34
+# Hopping mobility model parameters
+MATERIAL material=organic hopn.v0=8e12 hopn.beta=2.5 hopn.gamma=3.3e7 \
+ hopp.v0=8e12 hopp.beta=2.5 hopp.gamma=3.3e7
+# langevin - Langevin recombination generates excitons from holes and electrons
+# hopmob - Hopping Mobility depends on ODEFECTS
+# print - output model/parameter information to runtime.
+MODELS langevin hopmob print
+# Set workfunction on Anode and Cathode
+CONTACT name=anode   workfunction=5.8
+CONTACT name=cathode workfunction=5.8
+
+#### ADDITIONAL OUTPUT INFORMATION ####
+# Output hole mobility to structure file at SAVE statement
+OUTPUT h.mobility
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE initial
+SOLVE previous
+# Save structure file including hole mobility
+SAVE outfile=$'ver'_Structure.str
+
+# Extract hole mobility
+# This value is saved to the specified file in DBInternal input
+EXTRACT init infile="$'ver'_Structure.str"
+EXTRACT name="Hole Mobility" 2d.max.conc impurity="h+ Mobility" material="organic"
+
+QUIT
+

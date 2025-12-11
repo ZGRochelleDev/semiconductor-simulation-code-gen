@@ -1,0 +1,11 @@
+* npn_bjt_common_emitter
+vcc in 0 DC 12
+Rc in out 4.7k
+Re in 0 1k
+
+.basedivider
+Rb1 in base 100k 
+Rb2 in base 20k 
+
+.Q1 in base 0 NPN1
+.end

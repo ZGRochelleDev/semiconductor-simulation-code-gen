@@ -1,0 +1,83 @@
+# (c) Silvaco Inc., 2024
+
+# Fully Depleted SOI - Vt and Subthreshold Slope
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“SOI_ex02” 
+
+GO victoryd simflags="-P 4"
+#
+# 0.1um of silicon on 0.4um oxide substrate  
+#
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH space.mult=1.0
+# 
+X.MESH location=0.00 spacing=0.50
+X.MESH location=1.15 spacing=0.02
+X.MESH location=1.5 spacing=0.1
+X.MESH location=1.85 spacing=0.02
+X.MESH location=3  spacing=0.5
+#
+Y.MESH location=-0.017 spacing=0.02
+Y.MESH location=0.00 spacing=0.005
+Y.MESH location=0.05 spacing=0.02
+Y.MESH location=0.1 spacing=0.01
+Y.MESH location=0.5 spacing=0.25
+
+## Regions and electrodes
+REGION num=1 y.max=0 oxide 
+REGION num=2 y.min=0 y.max=0.1 silicon
+REGION  num=3 y.min=0.1 oxide
+#
+ELECTRODE name=gate x.min=1 x.max=2 y.min=-0.017 y.max=-0.017
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.5 y.min=0 y.max=0
+ELECTRODE substrate
+#
+#Device doping
+#
+DOPING uniform conc=1e17 p.type reg=2
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.r=1.0 
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.l=2.0 
+SAVE outf=$'name'_VD.str
+
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE qf=3e10 y.max=0.1
+INTERFACE qf=1e11 y.min=0.1
+CONTACT name=gate n.poly
+MODELS conmob srh auger bgn fldmob print 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+METHOD newton trap 
+SOLVE prev 
+SOLVE vgate=-0.2 
+SOLVE vdrain=0.05
+SOLVE vdrain=0.1
+
+LOG outf=$'name'_VD_DC.log
+
+SOLVE vgate=0.1 vstep=0.1 name=gate vfinal=1.5
+
+#Vt and Subthreshold Slope extraction
+extract name="subvt" \
+ 1.0/slope(maxslope(curve(v."gate",log10(abs(i."drain")))))
+
+extract name="vt" (xintercept(maxslope(curve(v."gate",abs(i."drain")))) \
+ - abs(ave(v."drain"))/2.0)
+
+victoryvisual \
+$'name'_VD.str \
+$'name'_VD_DC.log \
+$'name'_VD_DC.log:$'name'_VD_DC.set
+
+QUIT
+
+
+

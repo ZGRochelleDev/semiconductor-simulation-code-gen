@@ -1,0 +1,205 @@
+# (c) Silvaco Inc., 2024
+
+# Ion Enhanced Chemical Etching Example 
+
+# Required Modules
+#  Victory Process
+#   -3D Physical Etch & Deposit 
+
+# Example Name
+Set name="VP_Etch_Dep_ex07" 
+
+GO victoryprocess simflags="-P 4"
+
+# Define simulation domain, wafer material and simulation mesh resolution
+INIT material="silicon" depth=0.4 gasHeight=0.4 \
+ from="0.06, -0.1" to="0.94, 0.3" \
+ resolution="0.04, 0.04, 0.04" 
+
+# Define mask layer - circle with center at the domain boundary.
+SPECIFYMASKPOLY ellipse maskID=1 center="0.5, -0.1" radius1=0.25 radius2=0.25 npoints=50
+
+#Deposit 200um of resist using inverted mask with angles at 20 degrees.
+DEPOSIT directional material=resist thickness=0.2 \
+ maskID=1 reverse angle=70
+
+# Save the simulation status
+# The simulation status at this point can then be loaded in as 
+# a starting point for the Case 2
+SAVE name=$'name'_Init_sv
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Init.str"
+
+# ==================================
+# | CASE 1 -- no ion enhancement |
+# ==================================
+# Define the process characteristics
+# ==================================
+#
+# Note, that for this case, the ion properties, athough set,
+# do not play any role in simulation, as corresponding parameter
+# in REACTION (effective ion energy (par3)) is set to 0
+
+# Material specific properties
+# ----------------------------
+# Set the neutral and ion related
+# .) rates and 
+# .) sticking efficiencies
+# For the physical interpretation of the rates 
+# see the manual section on the IECE model
+# Those must be obtained by calibration
+# The default unit of the rates is um/min 
+
+ETCHDEPOPROPERTIES name="ions_case_1" species="ions" \
+ material="silicon" rate=90 ratio=1. sticking=1.0 \
+ material="photoresist" rate=0. ratio=1. sticking=1.0
+
+ETCHDEPOPROPERTIES name="neutrals_case_1" species="neutrals" \
+ material="silicon" rate=17 ratio=1 sticking=0.2 \
+ material="photoresist" rate=0. ratio=1. sticking=0.2
+
+# Plasma properties
+# -----------------
+# Set the neutral ion related
+# .) relative particle densities and 
+# .) particle velocity distributions
+# Those can either be obtained 
+# .) from reactor scale simulation or
+# .) by calibration
+# !! The IECE model implementation requires to set the concentration !!
+# !! .) of the neutrals to 1 and !! 
+# !! .) of the ions relative to the neutral concentration !!
+# !! Both concentrations are therefore dimensionless !! 
+
+FLUX name="ionflux_case_1" species="ions" concentration=0.026 \
+ pri_c_function="errorfunction" \
+ pridep1="theta" \
+ pripar1=3
+
+FLUX name="neutralflux_case_1" species="neutrals" concentration=1. \
+ pri_c_function="cosinepower" \
+ pridep1="theta" \
+ pripar1=0.0 \
+ sec_c_function="isotropic_reflection"
+ 
+# Model parameters
+# ----------------
+# Set the model parameters which are not set by the 
+# .) ETCHDEPOPROPERTIES statement or the
+# .) FLUX statement
+# see the manual for more details on the parameters
+# par1 ... ion threshold energy - unit : eV
+# par2 ... ion reference energy - unit : eV
+# par3 ... effective ion energy - unit : eV
+# For this REACTION ion's properties do not play role, as
+# "effective ion energy (par3)" < "ion reference energy (par2)"
+
+REACTION name="plasma_etch_case_1" \
+ c_function="plasmaetch_iece_2part" \
+ dep1="FLUX" dep2="Rate" dep3="Ratio" \
+ par1=4 par2=44 par3=0
+
+# Set-up the model
+TOPOGRAPHYMODEL name="plasma_etch_model_case_1" \
+ reactionmodel="plasma_etch_case_1" \
+ fluxmodel1="ionflux_case_1" fluxmodel2="neutralflux_case_1"
+
+# Run the plasma etch configuration WITHOUT ion enchancement
+ETCH model=plasma_etch_model_case_1 \
+ materialpropertiesspecies1=ions_case_1 \
+ materialpropertiesspecies2=neutrals_case_1 \
+ time=0.02 minutes maxCFL=1
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Case1.str"
+EXPORT 2D yleft structure="$'name'_Case1_2D.str"
+
+# ====================================
+# | CASE 2 -- with ion enhancement |
+# ====================================
+
+# Load previously saved simulation status (initial starting conditions)
+LOAD name=$'name'_Init_sv
+
+# Re-set the model again, as previous setup is lost after
+# LOAD statement
+
+# Define the process characteristics
+# ==================================
+
+# Material specific properties
+# ----------------------------
+# See above for more details
+
+ETCHDEPOPROPERTIES name="ions_case_2" species="ions" \
+ material="silicon" rate=90 ratio=1. sticking=1.0 \
+ material="photoresist" rate=0. ratio=1. sticking=1.0
+
+ETCHDEPOPROPERTIES name="neutrals_case_2" species="neutrals" \
+ material="silicon" rate=17 ratio=1 sticking=0.2 \
+ material="photoresist" rate=0. ratio=1. sticking=0.2
+
+
+# Plasma properties
+# -----------------
+# See above for more details
+
+FLUX name="ionflux_case_2" species="ions" concentration=0.026 \
+ pri_c_function="errorfunction" \
+ pridep1="theta" \
+ pripar1=3
+
+FLUX name="neutralflux_case_2" species="neutrals" concentration=1. \
+ pri_c_function="cosinepower" \
+ pridep1="theta" \
+ pripar1=0.0 \
+ sec_c_function="isotropic_reflection"
+ 
+# Model parameters
+# ----------------
+# Set the model parameters which are not set by the 
+# .) ETCHDEPOPROPERTIES statement or the
+# .) FLUX statement
+# see the manual for more details on the parameters
+# par1 ... ion threshold energy - unit : eV
+# par2 ... ion reference energy - unit : eV
+# par3 ... effective ion energy - unit : eV
+# Here we set par3 >= par2, 
+# so the ion enchancement will be visible.
+
+REACTION name="plasma_etch_case_2" \
+ c_function="plasmaetch_iece_2part" \
+ dep1="FLUX" dep2="Rate" dep3="Ratio" \
+ par1=4 par2=44 par3=44
+
+# Set-up the model
+
+TOPOGRAPHYMODEL name="plasma_etch_model_case_2" \
+ reactionmodel="plasma_etch_case_2" \
+ fluxmodel1="ionflux_case_2" fluxmodel2="neutralflux_case_2"
+
+
+# Run the plasma etch configuration WITH ion enchancement
+
+ETCH model=plasma_etch_model_case_2 \
+ materialpropertiesspecies1=ions_case_2 \
+ materialpropertiesspecies2=neutrals_case_2 \
+ time=0.02 minutes maxCFL=1
+
+# Save the results and export in tonyplot format
+EXPORT structure="$'name'_Case2.str"
+EXPORT 2D yleft structure="$'name'_Case2_2D.str"
+
+victoryvisual \
+$'name'_Init.str \
+$'name'_Case1.str \
+$'name'_Case2.str \
+$'name'_Case1_2D.str+$'name'_Case2_2D.str
+
+QUIT
+
+
+

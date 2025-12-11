@@ -1,0 +1,69 @@
+# (c) Silvaco Inc., 2024
+
+# AlGaAs/GaAs HEMT with user defined C-Interpreter mobility model
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Other_Power_ex04” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.0 spacing=0.2
+X.MESH location=0.4 spacing=0.2
+X.MESH location=0.9 spacing=0.07
+X.MESH location=1.6 spacing=0.07
+X.MESH location=2.1 spacing=0.2
+X.MESH location=2.5 spacing=0.2
+
+Y.MESH location=0.0 spacing=0.01
+Y.MESH location=0.055 spacing=0.001
+Y.MESH location=0.058 spacing=0.001
+Y.MESH location=0.3 spacing=0.05
+
+REGION number=1 material=GaAs y.min=0.055
+REGION number=2 material=AlGaAs y.max=0.055 x.composition=0.3 grad.3=0.002
+
+ELECTRODE number=1 name=source x.min=0.0 x.max=0.4 y.min=0.0 y.max=0.0
+ELECTRODE number=2 name=gate x.min=0.9 x.max=1.6 y.min=0.0 y.max=0.0
+ELECTRODE number=3 name=drain x.min=2.1 x.max=2.5 y.min=0.0 y.max=0.0
+
+DOPING uniform y.max=0.0530 n.type conc=1.e18
+DOPING uniform y.min=0.0530 n.type conc=1.e14
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL taun0=1.e-9 taup0=1.e-9 f.conmun=$'name'.lib
+MATERIAL align=0.6
+
+MODEL bgn fldmob srh
+
+CONTACT name=gate workfun=4.87 
+
+#### SOLUTION SOLVING ####
+SOLVE init
+
+OUTPUT con.band val.band e.mobility h.mobility
+
+# Gate ramp
+SOLVE vgate=0 vstep=-0.2 name=gate vfinal=-0.6 
+
+# Drain ramp
+LOG outfile=$'name'_VD_IV.log
+
+SOLVE vdrain=0 vstep=0.05 name=drain vfinal=0.3 
+
+SOLVE vdrain=0.4 vstep=0.1 name=drain vfinal=5.0
+
+SAVE outfile=$'name'_VD_VD5p0.str
+
+victoryvisual \
+$'name'_VD_IV.log \
+$'name'_VD_VD5p0.str
+
+QUIT 

@@ -1,0 +1,202 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Simulation of a FinFET with SiGe Source-Drain Stressors 
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+SET name=“Fin_GAA_ex07” 
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 2"
+
+# create some simple shapes for slicing (add a save after any to see the shape)
+
+PATH line from="0,0.021,-0.008" to="0.0175,0.021,-0.008" out="line_a"
+PATH line from="0.0525,0.021,-0.008" to="0.07,0.021,-0.008" out="line_b"
+
+# bezier sige fins
+BEZIER.FIN line="line_a" material="sige" box.aa="0,0,-0.1" box.bb="0.07,0.042,0" out="bezier_fin_a" 
+BEZIER.FIN line="line_b" material="sige" box.aa="0,0,-0.1" box.bb="0.07,0.042,0" out="bezier_fin_b" 
+
+# angled silicon fin
+ANGLE.FIN point.a="0.021, 0" width.a=0.007  point.b="0.021, 0.035" width.b=0.01 depth=0.07 out="silicon_fin"
+
+# cuboids for the inner features
+CUBOID from="0.0269, 0.0151, -0.0304" to="0.0431, 0.0269, -0.0024" out="hfo2_block"
+CUBOID from="0.0253, 0.0167, -0.0288" to="0.0447, 0.0253, -0.0008" out="sio2_block"
+CUBOID from="0.0525, 0.0245, -0.021" to="0.0175, 0.0175, 0" out="si_rec_block"
+CUBOID from="0.0525, 0.0245, -0.028" to="0.0175, 0.0175, -0.021" out="sio2_rec_block"
+
+# cuboids for nitride
+CUBOID from="0.0175, 0, -0.063" to="0.0245, 0.042, 0" out="nitride_rec_block_a"
+CUBOID from="0.0455, 0, -0.063" to="0.0525, 0.042, 0" out="nitride_rec_block_b"
+
+# structure creation
+
+# step 1: create a layered uniform structure representing most of the geometry required \
+         'p' is the minimum point in the structure, the layers are relative offsets in the x-axis \
+         and the axis are relative offsets in the z-axis. For each layer delta we specify one \
+         material for each axis delta
+LAYERS p="-0.01,0,-0.063" cuboid.width=0.042 num.edges=1 \
+       materials="(sio2, sio2, sio2, sio2, silicon), \
+                  (hfo2, hfo2, sio2, sio2, silicon), \
+                  (aluminum, hfo2, sio2, sio2, silicon), \
+                  (hfo2, hfo2, sio2, sio2, silicon), \
+                  (sio2, sio2, sio2, sio2, silicon)" \
+       layer.offset=0 \
+       layer.deltas="0.0353, 0.0016, 0.0162, 0.0016, 0.0353" \
+       axis.deltas="0.0606, 0.0016, 0.0008, 0.035, 0.07" out="$'name'_0"
+SAVE
+
+# switch to interface complex to use combine/splice
+SKELETON
+
+
+# step 2: add the sige fins
+
+SPLICE in="bezier_fin_a" regions="sige" material="sio2"
+SPLICE in="bezier_fin_b" regions="sige" material="sio2"
+
+COMBINE in.a="$'name'_0" in.b="bezier_fin_a"
+COMBINE in.a="$'name'_0" in.b="bezier_fin_b"
+
+# back to solid geometry (benefits in slice due to optimize)
+REMESH strict spacing=0.01
+
+# crop to size after internal combine/splice stages
+CROP from="0" to="0.07"
+
+# step 3: insert the contacts and nitride
+INSERT shape="nitride_rec_block_a" material="si3n4"
+INSERT shape="nitride_rec_block_b" material="si3n4"
+
+SLICE from="0,0,-0.063" to="0.07,0.042,0"
+TAG point="0.01,0.021,-0.05" value="to_aluminum"
+TAG point="0.06,0.021,-0.05" value="to_aluminum"
+
+MATERIAL regions="to_aluminum" value="aluminum"
+
+# step 4: insert the inner silicon, sio2 and hfo2 features. note that the order here is important (outer to inner); \
+          we first make it all hfo2, then reslice the inner to turn it into sio2
+INSERT shape="hfo2_block" material="hfo2"
+INSERT shape="sio2_block" material="sio2"
+INSERT shape="si_rec_block" material="silicon"
+INSERT shape="sio2_rec_block" material="sio2"
+
+
+# step 5: insert the base silicon
+INSERT shape="silicon_fin" material="silicon"
+
+SAVE
+
+# re-slice this shape to keep it and the fins as unique regions for the remesh
+SLICE shape="si_rec_block"
+
+# additional slice for explode benefit
+SLICE from="0,0,-0.063" to="0.07,0.042,0"
+
+
+# step 6: remesh
+TAG point="0.01,0.021,-0.01" value="sige_fins"
+TAG point="0.06,0.021,-0.01" value="sige_fins"
+
+REMESH delaunay out="$'name'_1"
+REFINE max.size=0.01 regions="*"
+REFINE regions="silicon" interface.regions="silicon" other.interface.regions="sige_fins" \
+       max.interface.size=0.0005
+
+# Create Line Statements for Conformal Remesh
+LINE in="$'name'_0" x location=0.0269 spacing=0.002
+LINE x location=0.0431 spacing=0.002
+LINE y location=0.0175 spacing=0.001
+LINE y location=0.0245 spacing=0.001
+LINE z location=-0.021 spacing=0.001
+
+REMESH conformal out="$'name'_2"
+
+# step 7: add electrodes and dopants (Delaunay and conformal)
+DEVICE_AUX in="$'name'_1"
+SAVE
+
+DEVICE_AUX in="$'name'_2"
+SAVE
+
+# exploded view structure
+EXPLODE_AUX in="$'name'_1" out="$'name'_3"
+SAVE
+
+EXPLODE_AUX in="$'name'_2" out="$'name'_4"
+SAVE
+
+# for device simulation remerge the oxide (only split for the explode stage)
+MERGE in="$'name'_1" regions="sio2" out="$'name'_1_VM"
+SAVE
+
+MERGE in="$'name'_2" regions="sio2" out="$'name'_2_VM"
+SAVE
+
+# Un-Saturated Vt WITHOUT Strain Induced Mobility Enhancement
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_1_VM.str
+
+ELECTRODE name=substrate x.min=0 x.max=0.07 y.min=0 y.max=0.042 \
+          z.min=0.104 z.max=0.106
+
+MATERIAL material=hfo2    permittivity=20
+MATERIAL material=silicon align=1
+MODELS   material=silicon consrh cvt
+MODELS   material=SiGe    consrh conmob
+CONTACT name=gate workfunc=4.8
+
+METHOD   pas pas.minpivot=0 dvmax=0.05 px.tol=1e-10 cx.tol=1e-10
+OUTPUT   con.band val.band band.param u.srh u.auger
+
+SOLVE init
+SOLVE previous
+SOLVE vdrain=-0.001
+SOLVE vdrain=-0.01
+SOLVE vdrain=-0.05
+LOG outfile=$'name'_0.log
+SOLVE vgate=-0.01
+SOLVE vgate=-0.05 vstep=-0.05 vfinal=-0.8 name=gate
+LOG off
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_2_VM.str
+
+ELECTRODE name=substrate x.min=0 x.max=0.07 y.min=0 y.max=0.042 \
+          z.min=0.104 z.max=0.106
+
+MATERIAL material=hfo2    permittivity=20
+MATERIAL material=silicon align=1
+MODELS   material=silicon consrh cvt
+MODELS   material=SiGe    consrh conmob
+CONTACT name=gate workfunc=4.8
+
+METHOD   pas pas.minpivot=0 dvmax=0.05 px.tol=1e-10 cx.tol=1e-10
+OUTPUT   con.band val.band band.param u.srh u.auger
+
+SOLVE init
+SOLVE previous
+SOLVE vdrain=-0.001
+SOLVE vdrain=-0.01
+SOLVE vdrain=-0.05
+LOG outfile=$'name'_1.log
+SOLVE vgate=-0.01
+SOLVE vgate=-0.05 vstep=-0.05 vfinal=-0.8 name=gate
+LOG off
+
+victoryvisual $'name'_3.str $'name'_0.log+$'name'_1.log
+
+QUIT
+

@@ -1,0 +1,79 @@
+* Conditional Parameter Sweeping
+
+************** Optional Parameters
+.OPTIONS NOMOD FORMAT SAVEMEASURES
++ SCALE=1u
++ RELTOL=0.002
++ AUTOSTOP 
++ IPLOT_ONE 
+
+************** .MODIF Statement
+.MODIF loop=5  cap  *=(1pf)0.5 STOP del_rise LE 1ns PRTBL PROFF 
++MODIF loop=10 cap +=0.02pf    STOP 1ns LE del_rise PRTBL PROFF  
+************** Parameter Labels
+.PARAM vd=5 rise=2n fall=2n 
+.PARAM pw=10 nw=4  length=1.2 pl=1.2 cap= 1pf
+.PARAM  tox = 2.400E-8  delta = 0.2e-8
+.PARAM  vto0 = -0.9 deltavto=0.04 vtop='vto0+deltavto'
+   
+************** Global Net Declarations
+.GLOBAL GND vdd
+.IPLOT v(out)
+
+************** Circuit  Netlist
+Vcc vdd GND  'vd' 
+Vin inp GND  DC 0 PULSE(0 vd 0ns rise fall 10ns 24ns ) 
+
+Mn mid inp GND GND nmod W='nw' L='length'
+Mp mid inp vdd vdd pmod W=pw L=length
+
+X1  mid out  inv  nl=1.2 pl=1.4 vbb=0.0
+
+************** Subcircuit  Definition
+.SUBCKT inv  input output  nl=1.3  pl=1.3 vbb=-1
+M1 output input GND vbias  nmod W=nw L=nl
+M2 output input vdd vdd  pmod W=pw L=pl
+Cload  output 0  'cap'
+Vb  vbias  0 dc  'vbb'
+.ENDS inv
+
+************** Analysis Statement
+.TRAN  0.1n 24n  CALLV SAVEV 
+************** Output Statements
+************** Measurements
+
+.MEAS TRAN del_rise DELAY v(inp) VAL='vd/2' RISE=1
++                   TARG v(out)  VAL='vd/2' RISE=1
+.MEAS TRAN del_fall TRIG v(inp) VAL='vd/2'  FALL=1
++                   TARG v(out)  VAL='vd/2' FALL=1
+.MEAS TRAN  diff    EXPR  VAL='del_fall-del_rise'
+
+*****************************************************************************
+* Model Definitions
+*
+* Fast-Fast Transistor Model
+*
+.MODEL nmod     NMOS (                TOX= 'tox+delta'
++  BEX=-1.5                           LD=1.850E-7
++  WD=0.000E-7     NSUB=3.000E16      VTO=0.720
++  UO=630.00       DELTA=0.000        VMAX=1.950E5
++  XJ=3.0E-7       KAPPA=0.100        ETA=0.026
++  THETA=0.060     TPG=1              NFS=1.20E11
++  CJ=420E-6       CJSW=271E-12       PB=0.940
++  MJ=0.430        MJSW=0.160         CGDO=3.2E-10
++  CGSO=3.2E-10    CGBO=0
++  RSH=35.0        CAPMOD=2           LEVEL=3     )
+*
+.model pmod     PMOS (                TOX= 'tox+delta'
++  BEX=-1.5                           LD=2.70E-7
++  WD=-0.500E-7    NSUB=2.700E16      VTO= 'vtop'
++  UO=190.00       DELTA=0.000        VMAX=4.600E5
++  XJ=4.0E-7       KAPPA=0.100        ETA=0.042
++  THETA=0.100     TPG=1              NFS=0.50E11
++  CJ=392E-6       CJSW=373E-12       PB=0.880
++  MJ=0.460        MJSW=0.210         CGDO=3.2E-10
++  CGSO=3.2E-10    CGBO=0
++  RSH=60.0        LEVEL=3            )
+
+.END
+

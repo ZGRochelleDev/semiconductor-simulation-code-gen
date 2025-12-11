@@ -1,0 +1,44 @@
+# (c) Silvaco Inc., 2024
+
+# Mixed Ambient Oxidation
+
+# Required Modules
+#  Victory Process
+#   -2D Oxidation
+#   -2D Diffusion & Implantation
+
+# Example Name
+Set name=“VP_Oxidation_ex01” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Loop 3 times to increase O2 flow
+set o2flow=2
+loop steps=3
+
+# Init bulk silicon
+INIT material=silicon depth=0.8 gasheight=3 from=0 to=0.9 resolution=0.1
+
+# Create a trench
+ETCH max material=silicon thickness=0.5 between.x="0.3, 0.6"
+
+# Perform mixed oxidation, flows are given in [L/min]
+DIFFUSE time=25 min temperature=870 f.o2=$o2flow f.h2=12
+
+# Extract oxide thickness on surface and sidewall
+EXTRACT3D name="OxTop_$'o2flow'" THICKNESS material="sio2" X.VAL=0.1
+EXTRACT3D name="OxSide_$'o2flow'" THICKNESS material="sio2" Y.VAL=0.3
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_o2_$'o2flow'.str"
+
+# Increase o2flow value
+set o2flow = $o2flow + 2
+l.end
+
+victoryvisual \
+$'name'_o2_2.str+$'name'_o2_4.str+$'name'_o2_6.str
+
+QUIT

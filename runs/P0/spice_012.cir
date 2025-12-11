@@ -1,0 +1,18 @@
+Answer:
+**Given:**
+
+- The input voltage $V_{IN}$ of the circuit is $1.8\mathrm{~V}$;
+- The output voltage $V_{OUT}$ of the circuit is equal to zero;
+- The time constant $\tau$ of the circuit is $200\mathrm{~ns}$.
+
+**Required:**
+
+We need to write an ngspice net list that represents the given circuit.
+**Introduction:**
+
+In this problem, we are required to write an ngspce net list that represents the following circuit:
+
+!['slader'](https://slader-solution-uploads.s3.amazonaws.com/6479f5a0-0b0c-4d5e-b001-500000010530-1690000020000120.png)
+
+$$
+\small{\text{Figure 1: Given circuit}}

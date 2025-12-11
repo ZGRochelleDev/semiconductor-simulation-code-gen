@@ -1,0 +1,225 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Trench Shape Effect on IV and BV Characteristics
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -3D Structure Editor
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=SiC_Power_ex04
+
+####### PROCESS SIMULATION #######
+# Create 1D Aluminum profile data by MC impantation. This will be used in the
+# later PROFILE statements.
+GO victoryprocess simflags="-P 4"
+
+INIT material=4H-SiC from=-0.1 to=0.1 depth=7 gasheight=5 \
+  resolution=0.02 meshdepth=2 \
+  sub.ori="0001" sub.rot=0 sub.miscut.theta=4 sub.miscut.phi=90
+
+LINE x location=-0.1 spacing=0.1
+LINE x location=0.1  spacing=0.1
+
+LINE z location=0    spacing=0.02
+LINE z location=1    spacing=0.01
+LINE z location=3    spacing=0.01
+LINE z location=5    spacing=0.2
+LINE z location=7    spacing=0.3
+
+IMPLANT aluminum dose=1e15 energy=90 tilt=7 rotation=30 \
+  bca n.ion=10000 traj.split
+IMPLANT aluminum dose=1e15 energy=60 tilt=7 rotation=30 \
+  bca n.ion=10000 traj.split
+IMPLANT aluminum dose=5e14 energy=30 tilt=7 rotation=30 \
+  bca n.ion=10000 traj.split
+
+EXPORT structure=$'name'_profile.str
+
+GO victoryextract 
+LOAD in=$'name'_profile.str
+OPTION STRIP.HEADER 
+OPTION DELIM=" "
+EXTRACT.PROFILE csvfile="$'name'_VP_Al_profile.dat" regions="*" field="Aluminum"
+
+# Create three kinds of structures with different trench shape by using 
+# Victory Process Cell-mode.
+#   1) 90 degree angle layout and trench (Lay90_Trn90)
+#   2) Rounded layout and 90 degress trench (LayR_Trn90)
+#   3) Rounded layout and 60 degress trench (LayR_Trn60)
+
+LOOP steps=3
+ ASSIGN name=gds c1="$'name'.gds" c2="$'name'_round.gds" c3="$'name'_round.gds"
+ ASSIGN name=angle n.value=(90, 90, 60)
+ ASSIGN name=label c1="Lay90_Trn90" c2="LayR_Trn90" c3="LayR_Trn60"
+
+ ####### PROCESS SIMULATION #######
+ GO victoryprocess simflags="-P 4"
+
+ INIT material=4H-SiC depth=1 gasheight=10 \
+   gds2=$'gds' cell="CELL" layermap="$'name'.map" \
+   dopants="phosphorus, boron" dopingvalues="4e19, 1e12"
+
+ LINE x location=5 spacing=0.25
+ LINE x location=6 spacing=0.02
+ LINE x location=8 spacing=0.25
+
+ LINE y location=5 spacing=0.25
+ LINE y location=6 spacing=0.02
+ LINE y location=8 spacing=0.25
+
+ LINE z location=-5.05 spacing=0.02
+ LINE z location=-4.75 spacing=0.05
+ LINE z location=-4.5  spacing=0.02
+ LINE z location=-4.4  spacing=0.2
+ LINE z location=-4.2  spacing=0.05
+ LINE z location=-4.1  spacing=0.1
+ LINE z location=-4    spacing=0.05
+ LINE z location=0     spacing=0.5
+ LINE z location=1     spacing=0.5
+
+ DEPOSIT material="4H-SiC" max thickness=4.5 phosphorus=2e16
+ DEPOSIT material="4H-SiC" max thickness=0.55 boron=8e17
+ DEPOSIT material="4H-SiC" max thickness=0.15 phosphorus=4e19
+
+ MASK mask="IMPLANT" reverse 
+ PROFILE infile="$'name'_VP_Al_profile.dat" lstddev=0.02 boron
+ STRIP material=barrier
+
+ # Trench gate formation
+ ETCH material="4H-SiC" max thickness=0.9 angle=$'angle' mask="TRENCH" reverse
+ DEPOSIT material=oxide thickness=0.05 conformal
+ DEPOSIT material=polysilicon max thickness=0.5
+ Etch material=polysilicon max thickness=0.6 mask="GATE"
+ ELECTRODES mask="GATE" material=polysilicon
+
+ # Source contact formation
+ DEPOSIT material=oxide max thickness=0
+ ETCH material=oxide max thickness=2 mask="CONTACT" reverse
+ DEPOSIT material=aluminum max thickness=0
+ ELECTRODES mask="CONTACT" material=aluminum
+
+ SAVE name=$'name'_VP_sv_$'label'
+
+
+ ####### STRUCTURE REMESHING #######
+ GO victorymesh simflags="-P 4"
+
+ LOAD in=$'name'_VP_sv_$'label'
+
+ REMESH delaunay
+
+ REFINE max.size=0.5
+ REFINE max.interface.size=0.075 max.interface.distance=2.25
+ REFINE max.junction.size=0.075 max.junction.distance=1.5
+ REFINE impurity=donor min.impurity.size=0.075 max.impurity.factor=4
+
+ SAVE out=$'name'_VM_del_$'label'.str
+
+L.END
+
+
+# Id-Vg and BV simulation for each trench shape
+#   1) 90 degree angle layout and trench (Lay90_Trn90)
+#   2) Rounded layout and 90 degress trench (LayR_Trn90)
+#   3) Rounded layout and 60 degress trench (LayR_Trn60)
+
+LOOP steps=3
+ ASSIGN name=label c1="Lay90_Trn90" c2="LayR_Trn90" c3="LayR_Trn60"
+
+ ####### DEVICE SIMULATION #######
+ # Id-Vg simulation
+ GO victorydevice simflags="-80 -P 4"
+
+ #### STRUCTURE SPECIFICATION ####
+ MESH infile=$'name'_VM_del_$'label'.str
+
+ ELECTRODE x.min=5 x.max=8 y.min=5 y.max=8 z.min=1 z.max=1 name=drain
+
+ #### MATERIAL/PHYSICAL MODELS ####  
+ MATERIAL material=4H-SiC taun0=5e-10 taup0=1e-10
+ MODELS srh print
+ CONTACT name=gate n.polysilicon
+
+ #### NUMERICAL METHODS ####
+ METHOD pam.gmres norm.scaling.local
+ 
+ #### SOLUTION SOLVING #### 
+ SOLVE init
+ SOLVE previous
+
+ SOLVE vdrain=0.1 previous
+
+ LOG outfile=$'name'_VD_Vth_$'label'.log
+
+ SOLVE vgate=0.1 previous
+ SOLVE vgate=0.5
+ SOLVE vstep=0.5 vfinal=12 name=gate
+
+ SAVE outfile=$'name'_VD_LayR_Trn90_Vth_Vg12v.str
+
+ SOLVE vstep=0.25 vfinal=16 name=gate
+ SOLVE vstep=0.5 vfinal=20 name=gate
+
+ LOG off
+
+ # BV simulation
+ GO victorydevice simflags="-80 -P 4"
+
+ #### STRUCTURE SPECIFICATION ####
+ MESH infile=$'name'_VM_del_$'label'.str
+
+ ELECTRODE x.min=5 x.max=8 y.min=5 y.max=8 z.min=1 z.max=1 name=drain
+
+ #### MATERIAL/PHYSICAL MODELS ####  
+ MATERIAL material=4H-SiC taun0=5e-10 taup0=1e-10 ni.min=1e6
+ MODELS srh print
+ CONTACT name=gate n.polysilicon
+ IMPACT anisotropic e.side
+
+ #### NUMERICAL METHODS ####
+ METHOD pam.gmres norm.scaling.local climit=1e-8 itlimit=40 \
+   weak=1 pr.tol=1e-14 cr.tol=1e-14
+ 
+ #### SOLUTION SOLVING #### 
+ SOLVE init
+ SOLVE previous
+
+ LOG outfile=$'name'_VD_BV_$'label'.log
+
+ SOLVE vdrain=0.1 previous
+ SOLVE vdrain=0.5 previous
+ SOLVE vdrain=1 vstep=1 vfinal=5 name=drain previous
+ SOLVE vstep=2.5 vfinal=50 name=drain previous
+ SOLVE vstep=5 vfinal=100 name=drain previous
+ SOLVE vstep=10 vfinal=1000 name=drain compliance=2e-12 cname=drain previous
+
+ CONTACT name=drain current
+
+ SOLVE previous
+ SOLVE mult istep=1.2 ifinal=5e-11 name=drain previous
+
+ SAVE outf=$'name'_VD_BV_final_$'label'.str
+
+L.END
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$"name"_VD_Vth_Lay90_Trn90.log+\
+$"name"_VD_Vth_LayR_Trn90.log+\
+$"name"_VD_Vth_LayR_Trn60.log \
+$"name"_VD_BV_Lay90_Trn90.log:$"name"_BV.set+\
+$"name"_VD_BV_LayR_Trn90.log:$"name"_BV.set+\
+$"name"_VD_BV_LayR_Trn60.log:$"name"_BV.set
+
+victoryvisual \
+$"name"_VD_BV_final_Lay90_Trn90.str:$"name"_ImpactGen.set \
+$"name"_VD_BV_final_LayR_Trn90.str:$"name"_ImpactGen.set \
+$"name"_VD_BV_final_LayR_Trn60.str:$"name"_ImpactGen.set
+
+QUIT

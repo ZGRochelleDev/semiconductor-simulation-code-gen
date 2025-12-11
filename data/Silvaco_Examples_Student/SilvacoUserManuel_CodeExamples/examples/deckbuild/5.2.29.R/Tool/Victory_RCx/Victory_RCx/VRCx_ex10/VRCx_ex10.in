@@ -1,0 +1,91 @@
+# (c) Silvaco Inc., 2024
+
+# Inverter Cell with Lithographic Geometry
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name:
+SET name=“VRCx_ex10” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+## Process Description ##
+
+INIT layout=$'name'.lay depth=1 material=silicon rulefile=$'name'.lmp
+
+set accuracy=0.005
+
+# Create Gate Mask Photoresist shape
+LITHOGRAPHY mask=POLY maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.193
+
+# Gate Stack Process Steps
+DEPOSIT material=oxide thickness=0.25 max
+DEPOSIT material=polysilicon thickness=0.3 max
+ETCH material=polysilicon thickness=0.36 angle=87 mask=POLY_LITHO max \
+     tolerance=$accuracy
+ELECTRODES mask=POLY material=polysilicon
+ELECTRODES mask=*GATE material=polysilicon
+
+# Create Via 2 Mask Photoresist Shape
+LITHOGRAPHY mask=VIA2 maskcriticalintensity=0.21 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.193 resultimage=via2.str
+
+# Via 2 Process Steps
+DEPOSIT material=oxide thickness=0.25 max
+ETCH material=oxide thickness=0.8 angle=87 mask=VIA2_LITHO reverse max \
+     tolerance=$accuracy
+ELECTRODES mask=*CONT material=silicon
+
+# Create Metal 1 Photoresist Shape
+LITHOGRAPHY mask=MET1 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.193
+
+# Metal 1 Process Steps
+DEPOSIT material=aluminum thickness=0.25 max
+ETCH material=aluminum thickness=0.3 angle=87 mask=MET1_LITHO max \
+     tolerance=$accuracy
+ELECTRODES mask=MET1 material=aluminum
+
+# Create Via 3 Photoresist Shape
+LITHOGRAPHY mask=VIA3 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.193 resultimage=via3.str
+
+# Via 3 Process Steps
+DEPOSIT material=oxide thickness=0.25 max
+ETCH material=oxide thickness=0.3 angle=87 mask=VIA3_LITHO reverse max \
+     tolerance=$accuracy
+
+# Create Metal 2 Photoresist Shape
+LITHOGRAPHY mask=MET2 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.193
+
+# Metal 2 Process Steps
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.6 angle=87 mask=MET2_LITHO max \
+     tolerance=$accuracy
+ELECTRODES mask=MET2 material=aluminum
+
+# Passivation
+DEPOSIT material=oxide thickness=0.25 max
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" map="$'name'.lmp" structure="$'name'_VP_sv.str" 
+
+SAVE Spice="$'name'.before.net" layout="$'name'_1.lay"
+
+INTERCONNECT  adapt=(0.04, 0.02)
+
+SAVE Spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

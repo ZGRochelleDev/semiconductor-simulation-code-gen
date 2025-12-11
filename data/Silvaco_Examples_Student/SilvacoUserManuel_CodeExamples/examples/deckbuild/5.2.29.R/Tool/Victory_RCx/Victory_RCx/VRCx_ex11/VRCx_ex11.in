@@ -1,0 +1,144 @@
+# (c) Silvaco Inc., 2024
+
+# SRAM Cell with Multiple Metals and Dielectrics
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex11” 
+
+####### PROCESS SIMUlATION ####### 
+
+GO victoryprocess simflags="-P 2"
+
+## Process Description ##
+
+INIT layout=$'name'.lay depth=1 rulefile=$'name'.lmp material=silicon
+
+########################################################
+
+DEPOSIT material=Oxide thickness=0.3 max
+
+DEPOSIT material=polysilicon thickness=0.25 max
+ETCH material=polysilicon mask=poly
+ELECTRODES mask=*GATE material=polysilicon
+
+## First contact level ##
+## Contact hole        ##
+
+DEPOSIT material=oxide thickness=0.5 max
+ETCH oxide mask=cont reverse
+ELECTRODES mask=*CONT material=silicon
+
+## Contact filling and etch back  ##
+DEPOSIT material=interface conformal thickness=0.06
+DEPOSIT material=tungsten thickness=0 max
+ETCH thickness=0.06 max
+
+DEPOSIT material=aluminum thickness=0.58 max
+DEPOSIT material=ARC1     thickness=0.01   max
+DEPOSIT material=ARC2     thickness=0.04   max
+
+ETCH material=ARC2     mask=M1
+ETCH material=ARC1     mask=M1
+ETCH material=aluminum mask=M1
+
+ELECTRODES mask=M1 material=ARC2
+
+## First contact level ##
+## Contact hole        ##
+
+DEPOSIT material=oxide thickness=0.75 max
+ETCH material=oxide mask=via1 reverse
+
+## Contact filling and etch back ##
+
+DEPOSIT material=interface conformal thickness=0.06
+DEPOSIT material=tungsten thickness=0 max
+ETCH thickness=0.06 max
+
+DEPOSIT material=aluminum thickness=0.8 max
+DEPOSIT material=ARC1     thickness=0.01   max
+DEPOSIT material=ARC2     thickness=0.04   max
+
+ETCH material=ARC2     mask=M2
+ETCH material=ARC1     mask=M2
+ETCH material=aluminum mask=M2
+
+ElECTRODES mask=M2 material=ARC2
+
+## Second contact level ##
+## Contact hole         ##
+
+DEPOSIT material=oxide thickness=0.75 max
+ETCH material=oxide mask=via2 reverse
+
+## Contact filling and etch back ##
+
+DEPOSIT material=interface conformal thickness=0.06
+DEPOSIT material=tungsten thickness=0 max
+ETCH thickness=0.06 max
+
+DEPOSIT material=aluminum thickness=0.8 max
+DEPOSIT material=ARC1     thickness=0.01   max
+DEPOSIT material=ARC2     thickness=0.04   max
+
+ETCH material=ARC2     mask=M3
+ETCH material=ARC1     mask=M3
+ETCH material=aluminum mask=M3
+
+ElECTRODES mask=M3 material=ARC2
+
+DEPOSIT material=oxide   thickness=0.8  max
+DEPOSIT material=nitride thickness=0.2 max
+ETCH material=nitride mask=via3 reverse
+
+Deposit material=oxide thickness=0.9 max
+Etch material=oxide mask=M4 reverse
+
+DEPOSIT material=liner1 Conformal thickness=0.04
+DEPOSIT material=liner2 Conformal thickness=0.06
+DEPOSIT material=copper thickness=0 max
+
+ETCH thickness=0.1 max
+
+ElECTRODES mask=M4 material=copper
+ElECTRODES mask=M4 material=liner1
+ElECTRODES mask=M4 material=liner2
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION #######
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" map="$'name'.lmp" structure="$'name'_VP_sv.str"
+
+## Set material constants ##
+
+MATERIAL polysilicon conductivity=334000
+MATERIAL aluminum conductivity=334000
+MATERIAL material("interface") conductivity=4000
+MATERIAL material("tungsten") conductivity=187000
+MATERIAL material("ARC1") conductivity=16000
+MATERIAL material("ARC2") conductivity=4000
+MATERIAL material("liner1") conductivity=16000
+MATERIAL material("liner2") conductivity=4000
+MATERIAL copper conductivity=560000
+MATERIAL oxide permittivity=4
+MATERIAL nitride permittivity=7.2
+
+########################################################
+
+## Perform the Interconnect Analysis ##
+
+INTERCONNECT capacitance adaptc=0.05 capsolver=1
+INTERCONNECT resistance adaptr=0.05 
+
+SAVE Spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

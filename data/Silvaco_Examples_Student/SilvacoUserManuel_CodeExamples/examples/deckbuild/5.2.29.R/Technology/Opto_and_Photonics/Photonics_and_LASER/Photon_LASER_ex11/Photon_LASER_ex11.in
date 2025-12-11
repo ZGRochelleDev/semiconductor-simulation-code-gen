@@ -1,0 +1,131 @@
+# (c) Silvaco Inc., 2024
+
+# 1D GaN Laser Model
+
+# Required Modules
+#  Atlas 
+#   -Blaze
+#   -Quantum
+#   -Laser
+
+# Example Name
+SET name=“Photon_LASER_ex11” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 2"
+
+# Blue single-quantum well laser
+
+#-------------------------------------------------------------------
+# SECTION 1 : MESH GENERATION
+#-------------------------------------------------------------------
+#
+
+MESH width=300
+#
+X.MESH  loc=0.0 spac=0.5
+X.MESH  loc=1.0 spac=0.5
+#
+Y.MESH  loc=0.0 spac=0.1
+Y.MESH  loc=0.5 spac=0.001
+Y.MESH loc=0.55 spac=0.005
+Y.MESH  loc=0.600 spac=0.0002
+Y.MESH  loc=0.640 spac=0.0002
+Y.MESH  loc=0.645 spac=0.0002
+Y.MESH  loc=0.800 spac=0.002
+Y.MESH  loc=2.00   spac=0.1
+#
+#-------------------------------------------------------------
+# SECTION 2: REGIONS AND ELECTRODES
+#-------------------------------------------------------------
+REGION num=1 material=GaN y.max=0.5 
+REGION num=2 material=AlGaN y.min=0.5 y.max=0.640 x.comp=0.2 
+
+REGION num=4 material=InGaN y.min=0.640 y.max=0.645 x.comp=0.20   name=well qwell led   \
+       calc.strain polarization polar.scale=1.0 
+
+REGION num=5 material=AlGaN y.min=0.645 y.max=0.800 x.comp=0.05 
+REGION num=6 material=GaN y.min=0.800 substrate
+#
+ELECTRODE name=anode   top
+ELECTRODE name=cathode bottom
+#
+#-------------------------------------------------------------
+# SECTION 3: DOPING PROFILES
+#-------------------------------------------------------------
+# p type is Mg
+# n type is Si
+DOPING region=1 uniform p.type conc=1e18
+DOPING region=2 uniform p.type conc=1e18
+DOPING region=6 uniform n.type conc=1e18
+#
+#---------------------------------------------------------------
+# SECTION 4: MATERIAL MODELS
+#---------------------------------------------------------------
+#
+MATERIAL material=GaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+         augn=1.0e-34 augp=1.0e-34
+MATERIAL material=AlGaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+         augn=1.0e-34 augp=1.0e-34
+MATERIAL material=InGaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+         augn=1.0e-34 augp=1.0e-34 
+#
+# Lorentz Broaden factor
+MATERIAL well.gamma0=30e-3
+
+#Capture escape time
+MATERIAL well.taup=1e-12 well.taun=1e-12
+#
+MATERIAL edb=0.080 eab=0.101
+#
+
+MATERIAL material=GaN  real.index=2.3 imag.index=0
+MATERIAL material=AlGaN  real.index=2.7 imag.index=0
+MATERIAL material=InGaN  real.index=2.8 imag.index=0
+
+
+MODELS fermi incomplete srh auger optr 
+MODELS k.p wz.three  
+MODELS name=well  well.cnbs=1 well.vnbs=1  spontaneous 
+
+#
+MOBILITY mun0=100 mup0=10 
+#
+#----------------------------------------------------------------
+# SECTION 5: OUTPUT FLAGS and METHOD
+#----------------------------------------------------------------
+#
+OUTPUT con.band val.band band.param charge polar.charge e.mobility \
+       h.mobility u.srh u.radiative u.auger las.loss
+#
+METHOD climit=1e-4 maxtrap=10   itlimit=30 
+#
+#----------------------------------------------------------------
+# SECTION 6: INITIAL SOLUTION
+#----------------------------------------------------------------
+#
+LASER  s.helm  helm.geom=1dy ^helm.tm nmodes=5   prt.eval   \
+photon.energy=2.64 index.model=1 gainmod=5 itmax=10  rf=90 rr=100 fcarrier absorption 
+
+SOLVE init 
+ 
+LOG outf= $'name'_IV.log
+
+SOLVE prev
+SOLVE vstep=0.1 vfinal=2 name=anode
+SAVE outf= $'name'_v2.str spectrum= $'name'_v2.log
+
+SOLVE vstep=0.05 vfinal=3 name=anode
+SAVE outf= $'name'_v3.str spectrum= $'name'_v3.log
+
+SOLVE vstep=0.05 vfinal=6 name=anode
+SAVE outf= $'name'_v6.str spectrum= $'name'_v6.log
+
+victoryvisual \
+$'name'_v3.log:$'name'_v3.set \
+$'name'_v6.str:$'name'_v6.set \
+$'name'_IV.log:$'name'_IV.set
+
+LOG off
+
+QUIT

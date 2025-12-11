@@ -1,0 +1,128 @@
+# (c) Silvaco Inc., 2024
+
+# Temperature Properties of Amorphous In-Ga-Zn-O Thin-Film Transistors with a new Mobility Model
+
+# IGZO.TOKYO mobility model with electron conconcentration and temperature.
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+####### VARIABLE DEFINITION #######
+# Example Name
+SET name=TFT_ex14
+
+######## DOE #######
+GO internal
+
+# input deck
+LOAD infile = $'name'_aux.in
+log outf=output_
+# dos dependence
+SWEEP parameter=set_t type=list range="253, 273, 300, 313, 333, 358, 393"
+	
+# saving of "EXTRACT" values for each calculation 
+SAVE type=sdb outfile = $'name'_temperature.dat
+
+# id-vg summary > $'name'_idvg_sim.dat
+# clear file
+SYSTEM rm $'name'_idvg_sim.dat
+# prefix of data file with 0.25 V step from -5 V to 20 V
+SYSTEM echo "ID-VG calculated with IGZO.TOKYO" >> $'name'_idvg_sim.dat
+SYSTEM echo "101 8 8" >> $'name'_idvg_sim.dat
+SYSTEM echo "gate bias" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_253K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_273K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_300K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_313K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_333K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_358K" >> $'name'_idvg_sim.dat
+SYSTEM echo "Drain_393K" >> $'name'_idvg_sim.dat
+
+# mob-vg summary > $'name'_mobility_sim.dat
+# clear file
+SYSTEM rm  $'name'_mobility_sim*.dat
+# prefix of data file with 0.25 V step from -5 V to 20 V
+SYSTEM echo "Mob-VG calculated with IGZO.TOKYO" >> $'name'_mobility_sim.dat
+SYSTEM echo "101 8 8" >> $'name'_mobility_sim.dat
+SYSTEM echo "gate bias" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_253K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_273K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_300K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_313K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_333K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_358K" >> $'name'_mobility_sim.dat
+SYSTEM echo "ulin_393K" >> $'name'_mobility_sim.dat
+
+SET v_gate=-5
+
+LOOP steps=101
+
+# 253K
+EXTRACT init infile = "$'name'_vd01_253.log"
+EXTRACT name="id_253" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_253" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 273K
+EXTRACT init infile = "$'name'_vd01_273.log"
+EXTRACT name="id_273" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_273" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 300K
+EXTRACT init infile = "$'name'_vd01_300.log"
+EXTRACT name="id_300" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_300" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 313K
+EXTRACT init infile = "$'name'_vd01_313.log"
+EXTRACT name="id_313" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_313" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 333K
+EXTRACT init infile = "$'name'_vd01_333.log"
+EXTRACT name="id_333" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_333" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 358K
+EXTRACT init infile = "$'name'_vd01_358.log"
+EXTRACT name="id_358" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_358" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40)) \
+ where x.val=$v_gate
+# 393K
+EXTRACT init infile = "$'name'_vd01_393.log"
+EXTRACT name="id_393" y.val from curve(v."gate", i."drain") where x.val=$v_gate
+EXTRACT name="mb_393" y.val from \
+ deriv(v."gate", abs(i."drain")/(10*1.73e-8*(4.2/3.9)*0.1/40) ) \
+ where x.val=$v_gate
+
+# id-vg
+SYSTEM echo "$'v_gate' $'id_253' $'id_273' $'id_300' $'id_313' $'id_333'\
+ $'id_358' $'id_393'" >> $'name'_idvg_sim.dat
+# mob-vg
+SYSTEM echo "$'v_gate' $'mb_253' $'mb_273' $'mb_300' $'mb_313' $'mb_333'\
+ $'mb_358' $'mb_393'" >> $'name'_mobility_sim.dat
+
+SET v_gate=$v_gate+0.25
+L.END
+
+# rename the sdb file to log file
+SYSTEM cp $'name'_temperature.dat $'name'_temperature.log
+
+# simulated structure
+victoryvisual $'name'_init.str:$'name'_str.set
+
+# ID and mobility comparison between measurements and calculations 
+victoryvisual '($'name'_idvg_meas.dat+$'name'_idvg_sim.dat)':$'name'_transfer.set
+victoryvisual '($'name'_mobility_meas.dat+$'name'_mobility_sim.dat)':$'name'_mob.set
+
+# temperature dependence of Vth
+victoryvisual $'name'_temperature.log:$'name'_vt.set
+
+QUIT

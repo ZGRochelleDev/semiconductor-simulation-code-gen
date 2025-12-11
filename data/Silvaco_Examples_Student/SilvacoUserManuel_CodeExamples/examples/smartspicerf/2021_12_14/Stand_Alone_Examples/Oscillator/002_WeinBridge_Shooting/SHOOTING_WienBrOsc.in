@@ -1,0 +1,51 @@
+* Wien-bridge Oscillator - 10kHz - HNOISE Analysis
+
+.GLOBAL vcc vee gnd
+
+.option nomod brief=1
+.param Rref=1000
+
+.include Wien-br_Amplifier.inc
+.include Wien-br_FeedbackNet.inc
+
+; Sources
+Vcc  vcc  gnd  dc=15
+Vee  vee  gnd  dc=-15
+
+; Op Amp
+XAmp1  1    2    3    ua741 
+
+; Resistors
+R1      2   gnd     r=10k
+
+; Amplitude stabilization network
+R3      2    3      r=21k
+R4      2    4      r=200k
+D1      4    3      DioN
+D2      3    4      DioN
+
+; Tunable capacitance
+.param Ctune=1nF
+
+; RC feedback network
+XRes1   3   1   gnd   FeedbackNet 
+
+.model DioN   D  is=.1fA
+
+************
+* Analysis *
+************
+.HNOISE v(3)     
++ DEC 20  10Hz 10kHz       
++ nharm=20
++ Ftype=REL Relharm=1 Faxis=REL 
++  METHOD=SHOOTING
++  tstab=25ms  tstep=1ms
++ annotate=1 
++ PhaseNoise 
++ OSCILLATOR
++ SAVEINIT
++ SAVEITER
++ WAVES
+
+.end

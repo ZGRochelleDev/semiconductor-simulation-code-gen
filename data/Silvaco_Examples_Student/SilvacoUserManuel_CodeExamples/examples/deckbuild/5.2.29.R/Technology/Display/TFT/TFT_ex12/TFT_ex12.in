@@ -1,0 +1,339 @@
+# (c) Silvaco Inc., 2024
+
+# NBIS (Negative Bias Illumination Stress)
+
+# NBIS of IGZO TFT with hole trap: Vo + 2h+ <=> Vo2+
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D TFT
+#   -2D Chemistry
+#   -2D Optical
+
+# Example Name
+SET name="TFT_ex12"
+
+# Fw reaction ratio
+SET fwr=1e-20
+# Rv reaction ratio
+SET rvr=1e-25
+# negative stress
+SET nvg=-10
+# illumination power, default: 1e-3 W/cm2, wavelength 0.365 um
+# you can see no vth shift when inpw = 0.01e-3 (low power)
+SET ipw="1e-3"
+SET wL="0.365"
+# stress time
+SET ts1=1e2
+SET ts2=3e2
+SET ts3=1e3
+SET ts4=3e3
+SET ts5=1e4
+# conditions
+SET ver="$'name'_$'ipw'Wcm-2_$'wL'um"
+
+##### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 2 -80"
+
+#### STRUCTURE SPECIFICATION ####
+# parameters of structure
+SET l=20
+SET t_sin=0.1
+SET t_sio=0.15
+SET t_ch=0.02
+SET t_pas=0.15
+SET t_sd=0.15
+
+# meshing
+# W/L=20/20
+MESH width=20
+
+X.MESH location=-$l/2-3 spacing=0.5
+X.MESH location=-$l/2 spacing=0.5
+X.MESH location=0 spacing=1
+X.MESH location=$l/2 spacing=0.5
+X.MESH location=$l/2+3 spacing=0.5
+
+Y.MESH location=-$t_sin-$t_sio-$t_ch-$t_sd-$t_pas spacing=0.05
+Y.MESH location=-$t_sin-$t_sio-$t_ch-$t_sd spacing=0.05
+Y.MESH location=-$t_sin-$t_sio-$t_ch spacing=$t_ch/10
+Y.MESH location=-$t_sin-$t_sio spacing=$t_ch/10
+Y.MESH location=-$t_sin spacing=0.05
+Y.MESH location=-$t_sin/2 spacing=0.05
+Y.MESH location=0 spacing=0.03
+Y.MESH location=0.06 spacing=0.03
+Y.MESH location=0.5 spacing=0.1
+
+# structure definition
+REGION number=1 oxide name=pass
+REGION number=2 nitride name=gi1 y.minimum=-$t_sin y.maximum=0
+REGION number=3 oxide name=gi2 y.minimum=-$t_sin-$t_sio y.maximum=-$t_sin
+REGION number=4 material=igzo name=channel \
+ y.minimum=-$t_sin-$t_sio-$t_ch y.maximum=-$t_sin-$t_sio
+
+# electrode
+ELECTRODE number=1 material=aluminum name=gate y.minimum=0 y.maximum=0.06
+ELECTRODE number=2 material=aluminum name=source \
+ x.minimum=-$l/2-3 x.maximum=-$l/2 \
+ y.minimum=-$t_sin-$t_sio-$t_ch-$t_sd y.maximum=-$t_sin-$t_sio-$t_ch
+ELECTRODE number=3 material=aluminum name=drain \
+ x.minimum=$l/2 x.maximum=$l/2+3 \
+ y.minimum=-$t_sin-$t_sio-$t_ch-$t_sd y.maximum=-$t_sin-$t_sio-$t_ch
+
+# doping
+## Species definition for donor: Vo+/Vo2+
+SPECIES formula="In:Ga:Zn:O" charge=+2 name="Vo2+"
+SPECIES formula="In:Ga:Zn:O" charge=0 name="Vo"
+
+## bulk
+DOPING region=4 n.type concentration=1e16 uniform
+## Vo
+DOPING region=4 species.name="Vo" uniform concentration=1.e18
+## Vo2+: initial vo2+/Io should be the same as ngd
+DOPING region=4 species.name="Vo2+" uniform concentration=1e14
+
+SAVE outfile=$'name'_0.str
+
+#### MATERIAL/PHYSICAL MODELS ####
+# material
+## IGZO bandgap, density of states, affinity, and optical properties
+MATERIAL material=IGZO nc300=5e18 nv300=5e19 \
+ eg300=3.05 affinity=4.16 taun0=1e-9 taup0=1e-9 \
+ index.file=igzo_nk.dat out.index=igzo_nk_log
+## mobility
+MOBILITY material=IGZO mun=12 mup=0.1
+# initial DOS for Vo, Vo2+, Io
+DEFECTS material=IGZO continuous numa=64 numd=64 \
+ nta=5e19 wta=0.015 ntd=1.55e20 wtd=0.195+0.025 \
+ nga=2e16 ega=0.51 wga=0.26+0.02 ngd=1e16 egd=2.85 wgd=0.13+0.05  \
+ sigtae=1e-15 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-15 \
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14 \
+ tfile=dos.dat
+
+## sin
+MATERIAL material=nitride permittivity=7
+## al
+MATERIAL material=aluminum sopra=Al.nk
+
+## ionic species
+#models nspecies=2 species1.z=0 species2.z=2
+
+## ionic tranpsort: diffusion coeff. relating mobility via Einstein relation
+# Vo
+MATERIAL material=IGZO species.name="Vo" \
+ species.ea=2.36 species.af=1e7 species.hop=1e-6 
+# Vo2+
+MATERIAL material=IGZO species.name="Vo2+" \
+ species.ea=1.7 species.af=1e7 species.hop=1e-6 
+
+## ionic reaction	
+# Vo + 2h+ => Vo2+
+REACTION formula="Vo + 2h+ <=> Vo2+" forward.ea=0.2 forward.rate=$fwr \
+ reverse.ea=1.0 reverse.rate=$rvr
+
+# boundary condition for species
+# Vo
+#SPECIESCONTACT name=pass species="Vo" concentration=0
+#SPECIESCONTACT name=gi2 species="Vo" vsurf=0
+#SPECIESCONTACT electrode.name=source species="Vo" vsurf=0
+#SPECIESCONTACT electrode.name=drain species="Vo" vsurf=0
+# Vo2+
+#SPECIESCONTACT name=pass species="Vo2+" vsurf=0
+#SPECIESCONTACT name=gi2 species="Vo2+" vsurf=0
+#SPECIESCONTACT electrode.name=source species="Vo2+" vsurf=0
+#SPECIESCONTACT electrode.name=drain species="Vo2+" vsurf=0
+# contact
+CONTACT name=gate workfunction=4.53
+CONTACT name=source workfunction=4.16
+CONTACT name=drain workfunction=4.16
+
+# physical models
+MODELS bound.trap fermi srh temp=300 print
+
+# beam
+#photogeneration by light
+BEAM number=1 x.origin=0 y.origin=-1 angle=90 reflects=4 min.power=1e-16 \
+ front.refl wavelength=$wL parallel rays=21 
+
+# output
+OUTPUT band.temp charge con.band val.band qfn qfp recomb \
+ u.srh u.species u.trap traps traps.ft opt.intens species
+
+# probe / filling rate, reaction rate, concentration of ionic species
+PROBE x=0.0 y=-0.2501 material=IGZO ft.species="Vo"
+PROBE x=0.0 y=-0.2501 material=IGZO ft.species="Vo2+"
+PROBE x=0.0 y=-0.2501 material=IGZO e.trantrap 
+PROBE x=0.0 y=-0.2501 material=IGZO h.trantrap
+PROBE x=0.0 y=-0.2501 material=IGZO reaction.species="Vo"
+PROBE x=0.0 y=-0.2501 material=IGZO reaction.species="Vo2+"
+PROBE x=0.0 y=-0.2501 material=IGZO species.name="Vo"
+PROBE x=0.0 y=-0.2501 material=IGZO species.name="Vo2+" 
+
+
+#### NUMERICAL METHODS ###
+METHOD maxtrap=10 climit=1e-5 itlimit=50 species.mat=igzo
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SOLVE previous freezespecies
+#SAVE outf=$'name'_VD_init.str
+
+# Obtain initial threshold voltage
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+SOLVE vgate=0 vstep=2 vfinal=20 name=gate freezespecies
+
+LOG outfile="$'name'_VD_IdVg0.log" no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-5 name=gate freezespecies 
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg0.log"
+EXTRACT name="vt_0" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_0" curve(v."gate", i."drain") outfile="$'ver'_idvg0.dat"
+
+# NBIS
+SOLVE initial 
+SOLVE previous freezespecies
+
+## illumination 0.7 mWatt/cm^2
+SOLVE b1=$ipw freezespecies index.check
+SAVE outfile=$'name'_VD_ill_0.str
+
+set vs=$nvg+$vt_0
+
+# numerical method for transient simulation
+METHOD newton climit=1e-4 maxtraps=10 itlimit=50 dt.max=1e-7 \
+ tstep.incr=2 tol.time=1e-2 dvmax=0.1 lte.timestep norm.scaling.local
+LOG outfile=$'name'_VD_tr1.log no.trap
+SOLVE previous vgate=$vs ramptime=1e-9 tstop=1e-6 tstep=1e-10 
+
+## stressing
+METHOD newton climit=1e-4 maxtraps=10 itlimit=50 dt.max=1e3 \
+ tstep.incr=2 tol.time=1e-2 dvmax=0.1 lte.timestep norm.scaling.local
+SOLVE tstop=$ts1
+SAVE outfile=$'name'_VD_IdVg1.str
+#
+SOLVE tstop=$ts2
+SAVE outfile=$'name'_VD_IdVg2.str
+#
+SOLVE tstop=$ts3
+SAVE outfile=$'name'_VD_IdVg3.str
+#
+SOLVE tstop=$ts4
+SAVE outfile=$'name'_VD_IdVg4.str
+#
+SOLVE tstop=$ts5
+SAVE outfile=$'name'_VD_IdVg5.str
+LOG off
+
+# post IV curve
+SOLVE initial
+SOLVE previous
+SOLVE b1=$ipw freezespecies index.check
+
+# numerical method for post IV
+METHOD maxtrap=10 climit=1e-6 itlimit=50 species.mat=igzo dvmax=0.1
+
+## ts1 s
+LOAD infile=$'name'_VD_IdVg1.str master
+#SOLVE vgate=$vs previous
+SOLVE vstep=1 vfinal=20 name=gate freezespecies
+SOLVE vdrain=0.001 freezespecies
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+#
+LOG outfile=$'name'_VD_IdVg1.log no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-20 name=gate freezespecies
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg1.log"
+EXTRACT name="vt_1" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_1" curve(v."gate", i."drain") outfile="$'ver'_idvg1.dat"
+
+## ts2 s
+LOAD infile=$'name'_VD_IdVg2.str master
+#SOLVE vgate=$vs previous
+SOLVE vstep=1 vfinal=20 name=gate freezespecies
+SOLVE vdrain=0.001 freezespecies
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+#
+LOG outfile=$'name'_VD_IdVg2.log no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-20 name=gate freezespecies
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg2.log"
+EXTRACT name="vt_2" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_2" curve(v."gate", i."drain") outfile="$'ver'_idvg2.dat"
+
+## ts3 s
+LOAD infile=$'name'_VD_IdVg3.str master
+#SOLVE vgate=$vs previous
+SOLVE vstep=1 vfinal=20 name=gate freezespecies
+SOLVE vdrain=0.001 freezespecies
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+#
+LOG outfile=$'name'_VD_IdVg3.log no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-20 name=gate freezespecies
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg3.log"
+EXTRACT name="vt_3" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_3" curve(v."gate", i."drain") outfile="$'ver'_idvg3.dat"
+
+## ts4 s
+LOAD infile=$'name'_VD_IdVg4.str master
+#SOLVE vgate=$vs previous
+SOLVE vstep=1 vfinal=20 name=gate freezespecies
+SOLVE vdrain=0.001 freezespecies
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+#
+LOG outfile=$'name'_VD_IdVg4.log no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-20 name=gate freezespecies
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg4.log"
+EXTRACT name="vt_4" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_4" curve(v."gate", i."drain") outfile="$'ver'_idvg4.dat"
+
+## ts5 s
+LOAD infile=$'name'_VD_IdVg5.str master
+#SOLVE vgate=$vs previous
+SOLVE vstep=1 vfinal=20 name=gate freezespecies
+SOLVE vdrain=0.001 freezespecies
+SOLVE vdrain=0.01 freezespecies
+SOLVE vdrain=0.1 freezespecies
+#
+LOG outfile=$'name'_VD_IdVg5.log no.trap
+SOLVE vgate=20 vstep=-0.25 vfinal=-20 name=gate freezespecies
+LOG off
+
+EXTRACT init infile="$'name'_VD_IdVg5.log"
+EXTRACT name="vt_5" x.val from curve(v."gate", i."drain") where y.val=1e-10
+EXTRACT name="iv_5" curve(v."gate", i."drain") outfile="$'ver'_idvg5.dat"
+
+# vth shift
+SYSTEM rm $'ver'_dvth_vv.dat
+#
+SYSTEM echo "%Time[s] DVth[V]" >> $'ver'_dvth_vv.dat
+
+SET num=0
+LOOP steps=5
+SET num=$num + 1
+EXTRACT name="dvt" $vt_$'num' - $vt_0
+EXTRACT name="absdvt" abs($vt_$'num' - $vt_0)
+SET time=$ts$'num'
+SYSTEM echo "$'time' $'dvt'" >> $'ver'_dvth_vv.dat
+L.END
+
+#### VISUALIZATION ####
+# vo2+ conc; id-vg under NBIS
+victoryvisual $'name'_VD_ill_0.str:$'name'_str_vo2p_1a.set \
+ $'name'_VD_IdVg5.str:$'name'_str_vo2p_2a.set \
+ '($'name'_VD_IdVg0.log+$'name'_VD_IdVg1.log+$'name'_VD_IdVg2.log+$'name'_VD_IdVg3.log+$'name'_VD_IdVg4.log+$'name'_VD_IdVg5.log)' \
+ $'ver'_dvth_vv.dat:$'name'_dvth_vv.set
+
+QUIT

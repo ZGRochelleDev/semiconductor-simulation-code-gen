@@ -1,0 +1,32 @@
+
+
+.include SBCD.lib
+X1 FBACK GND VDD hipex_example_13_1
+
+
+V1 VDD GND DC 5
+
+.tran 10p 2u
+.IC V(FBACK)=0.01
+.SAVE V(FBACK)
+
+.include "hipex_example_13_1_hier.spice"
+
+
+
+.ALTER
+
+.include "hipex_example_13_1_c_hier.spice"
+X1 FBACK GND VDD hipex_example_13_1
+
+
+.ALTER
+
+.include "hipex_example_13_2_c_hier.spice"
+X1 FBACK GND VDD hipex_example_13_2
+
+
+.ALTER
+
+.include "hipex_example_13_3_c_hier.spice"
+X1 FBACK GND VDD hipex_example_13_3

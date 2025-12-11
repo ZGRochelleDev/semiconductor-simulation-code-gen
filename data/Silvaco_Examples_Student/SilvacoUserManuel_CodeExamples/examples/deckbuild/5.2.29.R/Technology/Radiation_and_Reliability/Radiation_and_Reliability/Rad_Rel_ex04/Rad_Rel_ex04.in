@@ -1,0 +1,169 @@
+# (c) Silvaco Inc., 2024
+
+# Proton Irradiation Damage in a CMOS Image Sensor
+
+#Required Modules:
+# Victory Process
+#  -3D Diffusion & Implantation 
+# Victory Mesh
+#  -3D Meshing
+# Victory Device
+#  -3D Simulatior
+#  -3D REM
+
+# Example Name
+SET name=“Rad_Rel_ex04”
+
+# Construct the Imager Structure
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT silicon layout="$'name'.lay" gasheight=1 depth=3 
+
+# option doping.off
+
+CARTESIAN mask="PWELL" spac=0.1 all.point 
+
+LINE X location=0     spacing=0.25
+LINE X location=0.5   spacing=0.125
+LINE X location=0.75  spacing=0.125
+LINE X location=1     spacing=0.125
+LINE X location=1.25  spacing=0.175
+LINE X location=1.5   spacing=0.125
+LINE X location=2     spacing=0.125
+LINE X location=2.5   spacing=0.25
+LINE X location=4.25  spacing=0.875
+LINE X location=6     spacing=0.25
+LINE X location=6.5   spacing=0.25
+
+LINE Y location=0     spacing=0.15
+LINE Y location=0.25  spacing=0.125
+LINE Y location=0.5   spacing=0.15
+LINE Y location=1     spacing=0.25
+LINE Y location=2     spacing=0.25
+LINE Y location=2.5   spacing=0.25
+LINE Y location=3     spacing=0.125
+LINE Y location=3.5   spacing=0.175
+LINE Y location=4     spacing=0.125
+LINE Y location=4.5   spacing=0.175
+LINE Y location=5     spacing=0.125
+LINE Y location=5.5   spacing=0.175
+LINE Y location=6     spacing=0.15
+LINE Y location=6.25  spacing=0.125
+LINE Y location=6.5   spacing=0.15
+
+LINE Z location=0 spac=0.002
+LINE Z location=0.9 spac=0.3
+LINE Z location=1.8 spac=0.1
+LINE Z location=3 spac=0.5
+
+ETCH silicon thick=2 max
+DOPING silicon boron=1e19 
+DEPOSIT silicon thick=2 phosphorus=1.5e15 max
+
+MASK "PWELL" reverse
+
+PROFILE infile="$'name'_0.dat" boron lstddev=0.01
+PROFILE infile="$'name'_1.dat" boron lstddev=0.01
+PROFILE infile="$'name'_2.dat" boron lstddev=0.01
+
+STRIP resist
+
+EXPORT 1D ZDIR x=4 y=2 structure="pwell_1D_ex.str"
+
+DEPOSIT oxide thick=0.006 max
+DEPOSIT polysilicon thick=0.2 max
+
+ETCH polysilicon thick=0.2 max mask="POLY"
+DOPING phosphorus=1e20 polysilicon 
+ELECTRODES "POLY" polysilicon
+
+DEPOSIT oxide thick=0.01 conformal
+
+MASK "NPLUS" reverse
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=27
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=117 
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=207 
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=297 
+STRIP resist
+
+EXPORT 1D ZDIR x=1 y=3 structure="nplus_1D_ex.str"
+EXPORT 2D x=1                  structure="nplus_2D_ex.str"
+
+MASK "BF2" reverse
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=27 
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=117
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=207
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=297
+STRIP resist
+
+EXPORT 1D ZDIR x=4 y=2 structure="bf2_1D_ex.str"
+
+DIFFUS time=2 temperature=1050 
+
+EXPORT 1D ZDIR x=4 y=2      structure="annealPA_1D_ex.str"
+EXPORT 1D ZDIR x=1 y=3      structure="annealPB_1D_ex.str"
+EXPORT 1D YDIR x=1 z=0.02  structure="annealLat_1D_ex.str"
+
+ETCH oxide thick=0.02 max mask="CONT" reverse
+
+MASK "CONT" reverse
+DEPOSIT aluminum thick=0.206 min
+STRIP resist
+ELECTRODES "CONT" aluminum
+
+SAVE name=$'name'_vp_0
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_vp_0
+
+REMESH conformal
+
+SAVE out=$'name'_0.str
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_0.str 
+
+MODELS consrh cvt fermi
+
+OUTPUT band.param con.band val.band
+
+PROBE n.conc    x=4.25 y=3.25 z=1     name=cis_conc
+PROBE potential x=1    y=4.5  z=0.002 name=fd_potential
+PROBE potential x=4.25 y=3.25 z=1     name=cis_potential
+
+METHOD pam.gmres norm.scaling.local
+
+SOLVE init
+SOLVE previous
+
+# Deplete the Image Sensor of Electrons
+LOG outfile=$'name'_0.log
+SOLVE vcgate=3.3 ramptime=1e-6 dt=1e-8 tstop=1e-6
+SOLVE tstop=2e-6 dt=1e-8
+
+# Dark Recovery Time
+SOLVE tstop=0.1 dt=1e-7
+METHOD constant.timestep
+SOLVE tstop=1 dt=0.05e-1
+
+GO internal
+
+LOAD infile=$'name'_1.in
+
+SWEEP parameter=fluence type=list data="1e10, 1e11, 1e12"
+
+victoryvisual \
+$'name'_0.str:$'name'_0.set \
+$'name'_0.log:$'name'_logs.set+\
+$'name'_1.log:$'name'_logs.set+\
+$'name'_2.log:$'name'_logs.set+\
+$'name'_3.log:$'name'_logs.set
+
+QUIT
+

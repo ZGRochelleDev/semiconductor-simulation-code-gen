@@ -1,0 +1,46 @@
+* SRAM: PULSE DURATION 0.01n
+
+.option itl1=500 gmin=1e-15 dcgmin=1e-15 itl4=10
+.option nomod nodeck numdgt=5 measraw=0
+*.option trtol=3.5 $lvltime=2
+
+vdd dd 0 dc 2 pulse 0 2 0 1n 1 1 1
+vss ss 0 dc 0
+
+.ic v(a)=2 v(b)=0
+
+* Impact on a node
+mp1  a b  dd  dd  P1 w=3.6u l=1.2u
+mn1  a b  ss  ss  N1 w=1.8u l=1.2u
+mp2  b a  dd  dd  P1 w=3.6u l=1.2u
+mn2  b a  ss  ss  N1 w=1.8u l=1.2u
+
+.tran 0.2n 20n 0 1n 
+.rad SEE Lf=5e-6
++ device=mn2 annotate=1
++ source=vup ; user-defined expr.
++ node=ng iseu=0.8e-3  ; => MOS switchs
+
+.probe all
+.probe @mn2[qdep] @mn2[iseu]
+.probe @mn2[vdsat] @mn2[vth] @mn2[vgs] @mn2[vds] 
+
+Vup up 0 exp 0 1 10n 5p 10.001n 100p
+Rup up 0 1 
+
+.include ./model.nmos
+.include ./model.pmos
+
+.measure tcross cross @mn2[vth] @mn2[vgs]
+.measure qcrit integral @mn2[iseu] from=1.00e-8 to=tcross
+.measure qdep integral @mn2[iseu] from=0 to=20n
+
+.measure tran qdeptot integral @mn2[iseu] from=0 to=20n
+.measure tran tc_vg cross @mn2[vth] @mn2[vgs]
+.measure tran t2_vd cross @mn2[vdsat] @mn2[vds]
+.measure tran tva8n point v(a) arg0=8n
+.measure tran tva17nn point v(a) arg0=17n
+.measure tran tvb8n point v(b) arg0=8n
+.measure tran tvb17nn point v(b) arg0=17n 
+
+.end

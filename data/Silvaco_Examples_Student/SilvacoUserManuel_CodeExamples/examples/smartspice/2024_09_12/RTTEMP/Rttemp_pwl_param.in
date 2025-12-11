@@ -1,0 +1,31 @@
+*    Example 2: .RTTEMP demonstrates switching the circuit temperature 
+*               during runtime with a PWL function.
+*               Input signal V(1) affects output signal v(6) taht changes
+*               according to PWL form as v(1).
+
+VIN  1 0  DC 0  SIN(0 0.1 50MEG) 
+VCC  8 0  DC 10
+VEE  9 0  DC -12
+RS1  1 2  1K
+RS2  5 0  1K
+RC1  3 8  10K
+RC2  4 8  10K
+RBIAS  7 8  20K
+CLOAD  3 4  5PF
+Q1  3 2 6  QNL
+Q2  4 5 6  QNL
+Q3  6 7 9  QNL
+Q4  7 7 9  QNL
+.MODEL QNL NPN(BF=80 RB=100 CCS=2PF TF=0.3NS TR=6NS CJE=3PF CJC=2PF
++   VA=50)
+.TRAN 1NS   1u   
+
+.OPTIONS nomod nodeck  method =gear
+.probe  temp v(6) v(1)
+
+.params t1=27 t2=50 t3=120
+.params time1=200n time2=600n time3=900n time4=1u dt=50n
+
+.rttemp PWL (0 t1 time1 t1 'time1+dt' t2 'time2' t2 'time2+dt' t3 time3 t3) ; warning if .rttemp statement exist before
+
+.END

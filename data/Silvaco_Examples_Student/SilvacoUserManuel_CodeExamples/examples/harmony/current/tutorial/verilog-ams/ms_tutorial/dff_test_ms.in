@@ -1,0 +1,107 @@
+* D:\MSNETLIST\DFF_TEST_MS  Tue May 03 10:10:18 2005
+
+**
+* Gateway 2.2.12.R Spice Netlist Generator
+**
+* Section name: SCHLR
+* Section timestamp: 03-May-2005 10:10:18.00
+*
+* Structdef name: DFF_TEST_MS
+* Structdef attribute: BUS_EXPANDED
+*
+X1 Q1_OUT NET7 D CLK SET RESET  DFF_SUB
+X2 Q2_OUT NET8 Q1_OUT CLK SET RESET  DFF_V
+X3 Q3_OUT NET9 Q2_OUT CLK SET RESET  DFF_SUB
+V1 D GND PULSE(0 5 0 2N 2N 3U 6U)   
+V2 CLK GND PULSE(0 5 0 2N 2N 2U 4U)   
+V5 SET GND PWL(0 0 500p 5)
+V6 RESET GND PULSE(5 0 0 2N 2N 5U 500U)
+*
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE V(D) V(Q3_OUT) V(Q1_OUT) V(Q2_OUT) V(CLK) V(RESET)
+
+********
+.INCLUDE "DFF_SUB.net"
+
+
+
+.TRAN 1n 25u
+
+
+.MODEL NCH NMOS (                                LEVEL   = 49
++VERSION = 3.1            TNOM    = 27             TOX     = 7.8E-9
++XJ      = 1E-7           NCH     = 2.2E17         VTH0    = 0.5441098
++K1      = 0.5562689      K2      = 0.0210765      K3      = 31.2803472
++K3B     = -7.3006022     W0      = 2.170403E-5    NLX     = 2.042016E-7
++DVT0W   = 0              DVT1W   = 0              DVT2W   = 0
++DVT0    = 2.4245283      DVT1    = 0.9476158      DVT2    = -0.2931515
++U0      = 426.3985482    UA      = -6.24559E-11   UB      = 1.68661E-18
++UC      = 4.184976E-11   VSAT    = 2E5            A0      = 0.9976406
++AGS     = 0.1331248      B0      = 1.162027E-6    B1      = 5E-6
++KETA    = 7.212098E-3    A1      = 0              A2      = 0.3641506
++RDSW    = 1.52115E3      PRWG    = -0.0958819     PRWB    = -0.0299314
++WR      = 1              WINT    = 1.51135E-7     LINT    = 0
++XL      = -5E-8          XW      = 1.5E-7         DWG     = -3.622534E-9
++DWB     = 5.170069E-9    VOFF    = -0.1003039     NFACTOR = 1.3172576
++CIT     = 0              CDSC    = 2.4E-4         CDSCD   = 0
++CDSCB   = 0              ETA0    = 0.5            ETAB    = 0.0106414
++DSUB    = 0.8512722      PCLM    = 1.5078852      PDIBLC1 = 5.484701E-4
++PDIBLC2 = 4.300788E-3    PDIBLCB = 0.0324425      DROUT   = 0.0737759
++PSCBE1  = 7.254878E8     PSCBE2  = 1E-3           PVAG    = 0
++DELTA   = 0.01           RSH     = 3.1            MOBMOD  = 1
++PRT     = 0              UTE     = -1.5           KT1     = -0.11
++KT1L    = 0              KT2     = 0.022          UA1     = 4.31E-9
++UB1     = -7.61E-18      UC1     = -5.6E-11       AT      = 3.3E4
++WL      = 0              WLN     = 1              WW      = 0
++WWN     = 1              WWL     = 0              LL      = 0
++LLN     = 1              LW      = 0              LWN     = 1
++LWL     = 0              CAPMOD  = 2              XPART   = 0.5
++CGDO    = 2.89E-10       CGSO    = 2.89E-10       CGBO    = 1E-12
++CJ      = 9.88548E-4     PB      = 0.8            MJ      = 0.3295262
++CJSW    = 3.612983E-10   MJSW    = 0.1122524         
++CF      = 0              PVTH0   = -0.0223924     PRDSW   = -129.6113937
++PK2     = 2.059439E-3    WKETA   = -7.070334E-3   LKETA   = -5.622289E-3    )
+*
+
+
+
+.MODEL PCH PMOS (                                LEVEL   = 49
++VERSION = 3.1            TNOM    = 27             TOX     = 7.8E-9
++XJ      = 1E-7           NCH     = 8.52E16        VTH0    = -0.6331081
++K1      = 0.4561396      K2      = -0.0152992     K3      = 47.5391149
++K3B     = -5             W0      = 3.663237E-6    NLX     = 2.662161E-7
++DVT0W   = 0              DVT1W   = 0              DVT2W   = 0
++DVT0    = 0.9862831      DVT1    = 0.5335535      DVT2    = -0.0566221
++U0      = 155.9435329    UA      = 1E-10          UB      = 2.039636E-18
++UC      = -9.79878E-12   VSAT    = 1.436909E5     A0      = 1.1491839
++AGS     = 0.3682852      B0      = 2.460608E-6    B1      = 5E-6
++KETA    = -6.696677E-3   A1      = 3.853112E-3    A2      = 0.359821
++RDSW    = 4E3            PRWG    = -0.1246249     PRWB    = 0.1266166
++WR      = 1              WINT    = 1.553385E-7    LINT    = 0
++XL      = -5E-8          XW      = 1.5E-7         DWG     = -1.448827E-8
++DWB     = 6.576995E-9    VOFF    = -0.1321356     NFACTOR = 2
++CIT     = 0              CDSC    = 2.4E-4         CDSCD   = 0
++CDSCB   = 0              ETA0    = 6.367777E-4    ETAB    = 9.234116E-5
++DSUB    = 0.0107218      PCLM    = 3.9210301      PDIBLC1 = 0.0471917
++PDIBLC2 = 3.517641E-3    PDIBLCB = -1E-3          DROUT   = 0.2600273
++PSCBE1  = 7.793589E10    PSCBE2  = 5.001673E-10   PVAG    = 1.7381414
++DELTA   = 0.01           RSH     = 2.5            MOBMOD  = 1
++PRT     = 0              UTE     = -1.5           KT1     = -0.11
++KT1L    = 0              KT2     = 0.022          UA1     = 4.31E-9
++UB1     = -7.61E-18      UC1     = -5.6E-11       AT      = 3.3E4
++WL      = 0              WLN     = 1              WW      = 0
++WWN     = 1              WWL     = 0              LL      = 0
++LLN     = 1              LW      = 0              LWN     = 1
++LWL     = 0              CAPMOD  = 2              XPART   = 0.5
++CGDO    = 2.56E-10       CGSO    = 2.56E-10       CGBO    = 1E-12
++CJ      = 1.427635E-3    PB      = 0.99           MJ      = 0.5509503
++CJSW    = 4.07712E-10    MJSW    = 0.3717951        
++CF      = 0              PVTH0   = 9.316568E-3    PRDSW   = 32.6822588
++PK2     = 1.550111E-3    WKETA   = 1.481295E-3    LKETA   = -5.195042E-4    )
+*
+
+.END

@@ -1,0 +1,160 @@
+.MODEL nmos NMOS (
++LEVEL    = 77             VERSION  = 106.2          GEOMOD   = 0              
++RGEOMOD  = 0              COVMOD   = 1              RDSMOD   = 0              
++GIDLMOD  = 0              RGATEMOD = 0              RBODYMOD = 0              
++IGCMOD   = 0              IGBMOD   = 0              PERMOD   = 1              
++TNOIMOD  = 0              EDGEFET  = 0              CVMOD    = 0              
++WPEMOD   = 0              ASYMMOD  = 0              SHMOD    = 0              
++MOBSCALE = 0              FNOIMOD  = 0              BINUNIT  = 1              
++LLONG    = 1e-05          WWIDE    = 1e-05          XL       = 0              
++XW       = 0              LINT     = -1.07771e-08   LL       = 0              
++LW       = 0              LWL      = 0              LLN      = 1              
++LWN      = 1              WINT     = -1.99785e-09   WL       = 0              
++WW       = 0              WWL      = 0              WLN      = 1              
++WWN      = 1              TOXE     = 1.08295e-09    DTOX     = 0              
++NDEP     = 1.14853e+24    NDEPL1   = 0.134547       
++NDEPLEXP1 = 1.78547
++NDEPL2   = 0              
++NDEPLEXP2 = 2
++NDEPW    = 0.0211212      NDEPWEXP = 1              NDEPWL   = 0              
++NDEPWLEXP = 1
++NGATE    = 0              EASUB    = 4.05           NI0SUB   = 1.1e+16        
++BG0SUB   = 1.17           EPSRSUB  = 11.9           EPSROX   = 3.9            
++XJ       = 1.5e-07        VFB      = -0.973671      VFBSDOFF = 0              
++NSD      = 1e+26          DVTP0    = 0              DVTP1    = 0              
++DVTP2    = 0              DVTP3    = 0              DVTP4    = 0              
++DVTP5    = 0              PHIN     = 6.64649e-05    ETA0     = 0.0267163      
++DSUB     = 0.192751       ETAB     = -0.07          ETABEXP  = 1              
++K2       = 0.0237184      K2L      = 0              K2LEXP   = 1              
++K2W      = 0              K2WEXP   = 1              K2WL     = 0              
++K2WLEXP  = 1              ADOS     = 0              BDOS     = 1              
++QM0      = 0.001          ETAQM    = 0.54           CIT      = 0              
++NFACTOR  = 0.0155065      NFACTORL = 0              
++NFACTORLEXP = 1
++NFACTORW = 0              
++NFACTORWEXP = 1
++NFACTORWL = 0
++NFACTORWLEXP = 1
++CDSCD    = 1e-09          CDSCDL   = 0              
++CDSCDLEXP = 1
++CDSCB    = 0              CDSCBL   = 0              
++CDSCBLEXP = 1
++VSAT     = 20899.6        VSATL    = 0              VSATLEXP = 1              
++VSATW    = 0              VSATWEXP = 1              VSATWL   = 0              
++VSATWLEXP = 1
++DELTA    = 0.246006       DELTAL   = 0              
++DELTALEXP = 1
++U0       = 0.0136776      U0L      = 0              U0LEXP   = 1              
++ETAMOB   = 1              UA       = 1.13921        UAL      = 0              
++UALEXP   = 1              UAW      = 0              UAWEXP   = 1              
++UAWL     = 0              UAWLEXP  = 1              EU       = 1.7978         
++EUL      = 0              EULEXP   = 1              EUW      = 0              
++EUWEXP   = 1              EUWL     = 0              EUWLEXP  = 1              
++UD       = 0.001          UDL      = 0              UDLEXP   = 1              
++UCS      = 2              UC       = -0.48109       UCL      = 0              
++UCLEXP   = 1              UCW      = 0              UCWEXP   = 1              
++UCWL     = 0              UCWLEXP  = 1              PCLM     = 0.0117916      
++PCLML    = 0              PCLMLEXP = 1              PCLMG    = 0              
++PSCBE1   = 7.16329e+08    PSCBE2   = 6.01536e-08    PDITS    = 0              
++PDITSL   = 0              PDITSD   = 0              RSH      = 0              
++PRWG     = 0.000142342    PRWB     = 0              PRWBL    = 0              
++PRWBLEXP = 1              WR       = 1              RSWMIN   = 0              
++RSW      = 10             RSWL     = 0              RSWLEXP  = 1              
++RDSWMIN  = 0              RDSW     = 0.201814       RDSWL    = 0              
++RDSWLEXP = 1              PSAT     = 1              PSATL    = 0              
++PSATLEXP = 1              PSATB    = 0              PSATX    = 1              
++PTWG     = 0.999664       PTWGL    = -0.999962      PTWGLEXP = 1.8756         
++PDIBLC   = 0.00740721     PDIBLCL  = 0.000998578    
++PDIBLCLEXP = 1.99993
++PDIBLCB  = 0              PVAG     = 9.99925        FPROUT   = 0              
++FPROUTL  = 0              
++FPROUTLEXP = 1
++ALPHA0   = 0              ALPHA0L  = 0              
++ALPHA0LEXP = 1
++BETA0    = 0              AIGBACC  = 0.0136         BIGBACC  = 0.00171        
++CIGBACC  = 0.075          NIGBACC  = 1              AIGBINV  = 0.0111         
++BIGBINV  = 0.000949       CIGBINV  = 0.006          EIGBINV  = 1.1            
++NIGBINV  = 3              DLCIG    = 0              POXEDGE  = 1              
++NTOX     = 1              TOXREF   = 3e-09          PIGCD    = 1              
++AIGCL    = 0              AIGCW    = 0              AIGSL    = 0              
++AIGSW    = 0              AIGDL    = 0              AIGDW    = 0              
++PIGCDL   = 0              AGIDL    = 0              AGIDLL   = 0              
++AGIDLW   = 0              BGIDL    = 2.3e+09        CGIDL    = 0.5            
++EGIDL    = 0.8            CF       = 0              CFRCOEFF = 1              
++CGSO     = 7.47458e-10    CGDO     = 7.47192e-10    CGBO     = 0              
++CGSL     = 2.5323e-10     CGDL     = 2.52362e-10    CKAPPAS  = 0.0250087      
++CKAPPAD  = 0.0259013      DMCG     = 0              DMDG     = 0              
++DMCGT    = 0              XGW      = 0              XGL      = 0              
++NGCON    = 1              RSHG     = 0.1            CJS      = 0.0005         
++CJSWS    = 5e-10          CJSWGS   = 0              PBS      = 1              
++PBSWS    = 1              MJS      = 0.5            MJSWS    = 0.33           
++JSS      = 0.0001         JSWS     = 0              JSWGS    = 0              
++NJS      = 1              IJTHSFWD = 0.1            IJTHSREV = 0.1            
++BVS      = 10             XJBVS    = 1              JTSS     = 0              
++JTSSWS   = 0              JTSSWGS  = 0              JTWEFF   = 0              
++NJTS     = 20             NJTSSW   = 20             NJTSSWG  = 20             
++VTSS     = 10             VTSSWS   = 10             VTSSWGS  = 10             
++XRCRG1   = 12             XRCRG2   = 1              RBPB     = 50             
++RBDB     = 50             RBSB     = 50             RBPS     = 50             
++RBPD     = 50             GBMIN    = 1e-12          RBPS0    = 50             
++RBPSL    = 0              RBPSW    = 0              RBPSNF   = 0              
++RBPD0    = 50             RBPDL    = 0              RBPDW    = 0              
++RBPDNF   = 0              RBPBX0   = 100            RBPBXL   = 0              
++RBPBXW   = 0              RBPBXNF  = 0              RBPBY0   = 100            
++RBPBYL   = 0              RBPBYW   = 0              RBPBYNF  = 0              
++RBSBX0   = 100            RBSBY0   = 100            RBDBX0   = 100            
++RBDBY0   = 100            RBSDBXL  = 0              RBSDBXW  = 0              
++RBSDBXNF = 0              RBSDBYL  = 0              RBSDBYW  = 0              
++RBSDBYNF = 0              EF       = 1              EM       = 4.1e+07        
++NOIA     = 6.25e+40       NOIB     = 3.125e+25      NOIC     = 8.75e+08       
++NTNOI    = 1              RNOIA    = 0.577          RNOIB    = 0.5164         
++RNOIC    = 0.395          TNOIA    = 0              TNOIB    = 0              
++TNOIC    = 0              TNOM     = 27             TBGASUB  = 0.000473       
++TBGBSUB  = 636            TNFACTOR = 0              UTE      = -0.439327      
++UTEL     = 0              UA1      = 0.00279872     UA1L     = 0              
++UC1      = -0.00970614    UD1      = 0              UD1L     = 0              
++UCSTE    = -0.004775      TETA0    = 0              PRT      = 0.000775442    
++AT       = -1.40792       ATL      = 0              TDELTA   = 0              
++PTWGT    = 0              PTWGTL   = 0              KT1      = 0.146069       
++KT1EXP   = 1              KT1L     = -5.51623e-11   KT2      = 0.00661853     
++IIT      = 0              IGT      = 2.5            TGIDL    = 0              
++TCJ      = 0              TCJSW    = 0              TCJSWG   = 0              
++TPB      = 0              TPBSW    = 0              TPBSWG   = 0              
++XTIS     = 3              XTSS     = 0.02           XTSSWS   = 0.02           
++XTSSWGS  = 0.02           TNJTS    = 0              TNJTSSW  = 0              
++TNJTSSWG = 0              SAREF    = 1e-06          SBREF    = 1e-06          
++WLOD     = 0              KU0      = 0              KVSAT    = 0              
++TKU0     = 0              KVTH0    = 0              STK2     = 0              
++LODK2    = 0              STETA0   = 0              LODETA0  = 0              
++WEB      = 0              WEC      = 0              KVTH0WE  = 0              
++K2WE     = 0              KU0WE    = 0              SCREF    = 1e-06          
++DLBIN    = 0              DWBIN    = 0              DLC      = 0              
++LLC      = 0              LWC      = 0              LWLC     = 0              
++DWC      = 0              WLC      = 0              WWC      = 0              
++WWLC     = 0              VFBCVL   = 0              
++VFBCVLEXP = 1
++VFBCVW   = 0              
++VFBCVWEXP = 1
++VFBCVWL  = 0              
++VFBCVWLEXP = 1
++K1       = 0.201207       K1L      = 0              K1LEXP   = 1              
++K1W      = 0              K1WEXP   = 1              K1WL     = 0              
++K1WLEXP  = 1              UP1      = 0              LP1      = 1e-08          
++UP2      = 0              LP2      = 1e-08          A1       = 0.0249974      
++A11      = 0              A2       = 0              A21      = 0              
++RTH0     = 0              CTH0     = 1e-05          WTH0     = 0              
++LKU0     = 0              WKU0     = 0              PKU0     = 0              
++LLODKU0  = 0              WLODKU0  = 0              LKVTH0   = 0              
++WKVTH0   = 0              PKVTH0   = 0              LLODVTH  = 0              
++WLODVTH  = 0              SSL0     = 400            SSL1     = 3.36e+08       
++SSL2     = 0.185          SSL3     = 0.3            SSL4     = 1.4            
++SSLEXP1  = 0.49           SSLEXP2  = 1.42           AVDSX    = 20             
++WEDGE    = 1e-08          
++DGAMMAEDGE = 0
++DGAMMAEDGEL = 0
++DGAMMAEDGELEXP = 1
++DVTEDGE  = 0              DVT0EDGE = 2.2            DVT1EDGE = 0.53           
++DVT2EDGE = 0              IGCLAMP  = 1              LP       = 1e-05          
++RNOIK    = 0              TNOIK    = 0              TNOIK2   = 0.1            
++K0       = 0              K01      = 0              M0       = 1              
++M01      = 0              LH       = 3e-08 )

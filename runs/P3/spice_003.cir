@@ -1,0 +1,8 @@
+* sin_series_rlc
+V1 in 1k SIN(0 1)
+R1 in n1 10
+L1 n1 n2
+C1 n2 0
+.transient 10ms
+.print trans V(n2)
+.end

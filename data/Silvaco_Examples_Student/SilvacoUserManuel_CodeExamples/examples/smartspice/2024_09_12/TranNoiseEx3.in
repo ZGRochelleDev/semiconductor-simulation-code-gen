@@ -1,0 +1,12 @@
+Example 3: Parallel RLC Circuit 
+.option nomod
+
+R1  2 0 1k
+L1  2 0 1uH  
+C1  2 0 1pF
+
+.IC v(2)=5V
+.tran 0.0001n 10n uic
++ NOISE NOISE_IC=ZERO 
+.probe k(2) v(2)
+.end

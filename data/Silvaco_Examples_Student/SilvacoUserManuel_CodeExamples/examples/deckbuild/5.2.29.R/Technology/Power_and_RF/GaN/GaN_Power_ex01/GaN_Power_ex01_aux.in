@@ -1,0 +1,50 @@
+# (c) Silvaco Inc., 2024
+# Test of piezoelectric sheet charge calculation
+
+# Required Modules:
+# Victory Device
+# -2D Simulator
+
+# Example name:
+set name=“GaN_Power_ex01” 
+
+GO victoryd simflags="-P 4"
+
+# switches for piezoelectric effect
+set pi1="polariz polar.scale=+1 calc.strain"
+set pi2="polariz polar.scale=+1"
+#
+set xc=0.50
+#
+###structure specification###
+MESH auto 
+X.MESH location=0.0 spacing=0.05
+X.MESH location=1.0 spacing=0.05
+#
+REGION thick=0.0100 sy=0.0100 bottom material=GaN      $pi2
+REGION thick=0.0100 sy=0.0005 bottom material=AlGaN    $pi1 x.comp=$xc 
+REGION thick=0.0100 sy=0.0100 bottom material=GaN      $pi2
+REGION thick=0.0100 sy=0.0005 bottom material=InGaN    $pi1 x.comp=$xc 
+REGION thick=0.0100 sy=0.0005 bottom material=GaN      $pi2 substrate
+#
+ELECTRODE number=1 name=anode top
+ELECTRODE number=2 name=cathode  substrate
+
+###material/physical models###
+MODELS print
+OUTPUT polar.charge
+
+###solution solving###
+
+SOLVE 
+SAVE outf=$'name'.str 
+
+victoryvisual  $'name'.str:$'name'.set
+
+EXTRACT init inf="$'name'.str"
+EXTRACT name="AlGaN_interface_charge" \
+     (1e-4/1.62019e-19) * area from curve(depth,impurity="polarization charge conc" material="All" x.val=0.5) where x.min=0.015 and x.max=0.025
+EXTRACT name="InGaN_interface_charge" \
+     (-1e-4/1.62019e-19) * area from curve(depth,impurity="polarization charge conc" material="All" x.val=0.5) where x.min=0.025 and x.max=0.035
+
+QUIT

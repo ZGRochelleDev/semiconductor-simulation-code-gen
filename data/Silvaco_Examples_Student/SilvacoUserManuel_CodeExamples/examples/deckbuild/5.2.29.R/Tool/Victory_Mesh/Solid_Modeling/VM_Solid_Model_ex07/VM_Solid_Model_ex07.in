@@ -1,0 +1,39 @@
+# (c) Silvaco Inc., 2024
+
+# SPLIT in 3D
+
+# In this example, a 3D pyramid is generated, split into two reusable parts
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+
+# Example Name
+SET name = "VM_Solid_Model_ex07"
+
+GO victorymesh simflags = "-P 4"
+
+# Create pyramid
+PYRAMID angle = 120 base.center = "0.5,0.5,0" length.x = 1 length.y = 1 material = "silicon" out = "pyramid"
+
+REMESH delaunay out = "pyramid"
+
+SAVE out = "$'name'_pyramid"
+
+
+# SPLIT the shape into two along the specified axis
+SPLIT axis = "X" offset = "0.3" out.a = "$'name'_l" out.b = "$'name'_r"
+
+# load in and remesh one part
+REMESH delaunay in="$'name'_l"
+SAVE out = "$'name'_left"
+
+# load in and remesh the second part
+REMESH delaunay in="$'name'_r"
+SAVE out = "$'name'_right"
+
+# VictoryVisual is used to generate the plots
+victoryvisual $'name'_pyramid.str $'name'_left.str $'name'_right.str
+
+QUIT

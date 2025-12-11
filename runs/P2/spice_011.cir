@@ -1,0 +1,9 @@
+*Bjt_amplifier_AC
+Vin in 0 AC 0
+Rc in out 2.2k
+Re in base 470
+base bias Rb1 in vcc 100k Rb2 in ground
+Cin base 1u
+.AC dec 100 1000000
+.Vout in 0
+.end

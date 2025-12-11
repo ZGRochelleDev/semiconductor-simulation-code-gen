@@ -1,0 +1,115 @@
+# (c) Silvaco Inc., 2024
+
+# Edge Field Emitting Vacuum Triode
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Other_Power_ex01” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon depth=0.2 gasheight=0.5 layout="$'name'_layout.lay" \
+ dopants=phosphorus dopingvalue=1e20
+
+LINE x location=0 spacing=0.01
+LINE x location=0.05 spacing=0.0005
+LINE x location=0.1 spacing=0.02
+LINE x location=0.15 spacing=0.0005
+LINE x location=0.2 spacing=0.01
+
+LINE y location=0 spacing=0.01
+LINE y location=0.05 spacing=0.0005
+LINE y location=0.1 spacing=0.01
+
+LINE z location=-0.5
+LINE z location=-0.035
+LINE z location=-0.025
+LINE z location=-0.005 spacing=0.0005
+LINE z location=-0.002
+LINE z location=0 spacing=0.0005
+LINE z location=0.015 spacing=0.005
+LINE z location=0.02
+LINE z location=0.2
+
+# Define Photolithography
+LITHOGRAPHY mask=hole wavelength=0.01 maskaperture=0.5 resultimage=$'name'.dat
+
+# Emitter
+ETCH material=silicon thick=0.02 mask=HOLE_LITHO max angle=60 deltacd=-0.009
+
+# Device Material Stack
+DEPOSIT material=oxide thick=0 max
+DEPOSIT material=aluminum thick=0.002 max
+ELECTRODE mask=GATE material=aluminum
+DEPOSIT material=silicon thick=0.003 max dopants=phosphorus dopingvalue=1e20
+DEPOSIT material=oxide thick=0.02 max
+
+# ETCH Stack
+ETCH material=oxide thick=0.021 max mask=HOLE_LITHO reverse
+ETCH material=silicon thick=0.024 max mask=HOLE_LITHO reverse
+ETCH material=aluminum thick=0.026 max mask=HOLE_LITHO reverse
+ETCH material=oxide thick=0.015 min mask=HOLE_LITHO reverse
+
+# Gate ELECTRODE
+DEPOSIT material=vacuum thick=0 max
+DEPOSIT material=aluminum thick=0.01 max
+ELECTRODE mask=COL material=aluminum
+ELECTRODE material=silicon substrate
+
+# SAVE simulation status for REMESHing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH conformal
+
+SAVE out=$'name'_VM_Conf
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4 -128"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Conf.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL material=vacuum affinity=0 permittivity=1.0
+MODELS sc.zaidman srh
+
+#### NUMERICAL METHODS ####  
+METHOD climit=1e-6 cx.tol=1e-20 px.tol=1e-20 cr.tol=1e-30 pr.tol=1e-40
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# Simulate "I off" Curve with Vgate=0
+LOG outfile=$'name'_VD_Vc.log
+SOLVE vstep=0.5 vfinal=20 name=collector
+LOG off
+SAVE outfile=$'name'_VD_Vc20_Vg0.str
+
+# Simulate Gate Voltage Ramp on Conduction Current
+LOG outfile=$'name'_VD_Vg.log
+SOLVE vgate=0 vstep=0.5 vfinal=19 name=gate
+LOG off
+SAVE outfile=$'name'_VD_Vc20_Vg19.str
+
+victoryvisual \
+$'name'_VM_Conf.str:$'name'_VM_Conf.set \
+$'name'_VD_Vc.log:$'name'_VD_Vc.set \
+$'name'_VD_Vg.log:$'name'_VD_Vg.set
+
+QUIT

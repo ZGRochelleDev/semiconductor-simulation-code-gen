@@ -1,0 +1,294 @@
+# (c) Silvaco Inc., 2024
+
+# 2D simulation of large-signal output power for a 180nm PD-SOI NMOSFET
+
+# Required Modules
+#  Victory Process
+#   -2D Implantation & Diffusion
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+set name=“SOI_ex06” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+# Position of the 2D cut on the layout:
+set Ycut=0.63
+
+INIT material=silicon layout=$'name'.lay depth=2 gasheight=1 resolution=0.01 \
+   dopants=boron dopingvalues=1e15 from=0 to=1.26 at=$Ycut
+ 
+LINE x location=0  spacing=0.09
+LINE x location=0.09 spacing=0.09
+LINE x location=0.27 spacing=0.09
+LINE x location=0.54 spacing=0.01
+LINE x location=0.63 spacing=0.02
+LINE x location=0.72 spacing=0.01
+LINE x location=0.99 spacing=0.09
+LINE x location=1.17 spacing=0.09
+LINE x location=1.26 spacing=0.09
+
+LINE y location=0  spacing=0.09
+LINE y location=0.18 spacing=0.09
+LINE y location=0.27 spacing=0.09
+LINE y location=0.36 spacing=0.09
+LINE y location=0.54 spacing=0.09
+LINE y location=0.72 spacing=0.09
+LINE y location=0.9 spacing=0.09
+LINE y location=1.08 spacing=0.09
+LINE y location=1.26 spacing=0.09
+
+LINE z location=-0.4038 spacing=0.01
+LINE z location=-0.3838 spacing=0.01
+LINE z location=-0.2938 spacing=0.02
+LINE z location=-0.2038 spacing=0.00095
+LINE z location=-0.2  spacing=0.00095
+LINE z location=-0.15  spacing=0.02
+LINE z location=-0.1  spacing=0.01
+LINE z location=-0.05  spacing=0.02
+LINE z location=0    spacing=0.01
+LINE z location=0.2   spacing=0.05
+LINE z location=2    spacing=0.5
+
+# Create Buried Oxide
+DEPOSIT material=oxide thickness=0.1 max
+
+# Create Active Silicon Film
+DEPOSIT material=silicon thickness=0.1 max
+
+# Trench Etch
+ETCH material=silicon thickness=0.15 max mask=ACTIVE
+ETCH material=oxide  thickness=0.15 max mask=ACTIVE
+ETCH material=silicon thickness=0.2 dry mask=ACTIVE angle=86 deltacd=0.0002
+
+# Grow Gate Oxide (Tox=3.8nm) - No point in doing real oxidation
+DEPOSIT material=oxide thickness=0.0038 max
+
+####==========================================================
+#### IMPLANTATION - for more accurate (but slower) simulation
+#### uncomment the " # bca n.ion=..." lines below
+####==========================================================
+
+# Vt Adjust Implant
+set vt_dose=9e12
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=27 
+    # bca n.ion=1e4
+#IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=207 
+    # bca n.ion=1e4
+
+extract name="Vt-adjust IMPLANT dose [1/cm2] " $vt_dose
+
+DIFFUSE time=2 temperature=1000 
+
+# Poly Gate
+DEPOSIT material=polysilicon thickness=0.09 max
+ETCH material=polysilicon thickness=0.1 max mask=GATE
+
+#export structure=before_LDD_implant.str
+
+# LDD Implant
+IMPLANT arsenic energy=10 dose=5.2e12 tilt=7 rotation=27 
+    # bca n.ion=1e4
+IMPLANT arsenic energy=10 dose=5.2e12 tilt=7 rotation=207 
+    # bca n.ion=1e4
+
+DIFFUSE time=2 temperature=1000
+
+# Spacer
+DEPOSIT material=nitride thick=0.09 conformal curved
+
+# Spacer around Poly Gate
+ETCH material=nitride thickness=0.1 max mask=GATE deltacd=0.09
+ETCH material=nitride thickness=0.1 max mask=GATE reverse
+DEPOSIT material=polysilicon thickness=0 max
+ETCH material=polysilicon mask=GATE thick=0.3 max
+
+# SD Implant
+IMPLANT arsenic energy=20 dose=1e15 tilt=0 rotation=0
+    #  bca n.ion=4e5
+DIFFUSE time=2 temperature=1000
+
+# ETCH Polysilicon
+ETCH material=polysilicon thickness=0.3 max mask=P_PLUS
+ETCH material=nitride thickness=0.3 max mask=P_PLUS
+
+# P well CONTACT Implant
+MASK mask=P_PLUS deltacd=0.09
+# IMPLANT boron energy=5 dose=1e14 tilt=0 rotation=0 bca n.ion=4e5
+STRIP material=barrier
+DIFFUSE time=0.417 temperature=1000
+
+# CONTACT Etch
+MASK mask=CONT reverse
+ETCH material=oxide thickness=0.0538 min
+DEPOSIT material=aluminum thickness=0.2038 min
+STRIP material=barrier
+Electrodes mask=CONT material=aluminum
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# LOAD simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH conformal
+
+SAVE out=$'name'_VD.str
+
+GO victorydevice simflags="-P 4"
+
+# set filenames
+set logbase="$name"_1_rf
+set logsuffix=".log"
+set pwrlog="$logbase"_power$"logsuffix"
+
+# frequency
+set frequency=1e9
+
+# 2^n samples in transient waveform
+set samples=32
+
+# calclate the period and initial time step
+set period=1/$frequency
+set timestep=$period/$samples
+
+# number of amplitude steps in the power file
+set numsteps=20
+
+# start amplitude
+set amp0=4e-3
+
+# final amplitude
+set ampfinal=4e-1
+
+# calculate amplitude step
+set ampstep=pow(($ampfinal/$amp0),1/($numsteps-1))
+
+MESH infile=$'name'_VD.str width=192
+ELECTRODE name=substrate bottom
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+
+MODELS fermi print
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+
+IMPACT selb bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+
+# apply 50 ohm resistor to drain (outport)
+CONTACT name=drain resistance=50 ohms
+
+set index=0
+set ampbias=$amp0
+loop steps=$numsteps
+ set index=$index+1
+#need use at least two waves and perform the Fourier analysis on the last wave to  ensures more accurate Fourier analysis 
+ WAVEFORM number=$index sinusoid frequency=$frequency amplitude=$ampbias elec.name=gate num.samples=$samples time.sample log.sample periods.num.samples=2
+ set ampbias=$ampbias*$ampstep
+l.end
+
+SOLVE init
+SOLVE previous
+SOLVE vstep=0.05 vfinal=2 name=drain prev
+SAVE outfile="$name"_1.str
+
+set index=0
+set logfilelist=" "
+loop steps=$numsteps
+ set index=$index+1
+ LOAD infile="$name"_1.str
+ SOLVE previous
+ set logfile="$logbase""$index""$logsuffix"
+ set logfilelist="$logfilelist""$logfile"" "
+ LOG outfile=$logfile
+ SOLVE tstop=(2.01*($period))  tstep=$timestep wave$index 
+ LOG off
+l.end
+
+# convert time domain data into frequency domain and calculate the powers on the last wave
+FOURIER infile.list="$logfilelist" outfile="$pwrlog" inport=gate outport=drain num.harmonic=5 fundamental=$frequency period=2 num.samples=$samples
+
+GO victorydevice simflags="-P 4"
+
+# set filenames
+set logbase="$name"_2_rf
+set logsuffix=".log"
+set pwrlog="$logbase"_power$"logsuffix"
+
+# frequency
+set frequency=1e9
+
+# 2^n samples in transient waveform
+set samples=32
+
+# calclate the period and initial time step
+set period=1/$frequency
+set timestep=$period/$samples
+
+# number of voltage steps in the power file
+set numsteps=21
+
+# start voltage
+set vstart=0
+
+# final voltage
+set vfinal=2
+
+# calculate voltage step
+set vstep=($vfinal-$vstart)/($numsteps-1)
+
+# set wave amplitude
+set amplitude=0.2
+
+MESH infile=$'name'_VD.str width=192
+ELECTRODE name=substrate bottom
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+
+MODELS fermi print
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+
+IMPACT selb bn1=8e6 bn2=8e6 bp1=8e6 bp2=8e6
+
+# apply 50 ohm resistor to drain (outport)
+CONTACT name=drain resistance=50 ohms
+
+WAVEFORM number=1 sinusoid frequency=$frequency amplitude=$amplitude elec.name=gate num.samples=$samples time.sample log.sample periods.num.samples=2
+
+SOLVE init
+SOLVE previous
+
+set index=0
+set vbias=$vstart
+set logfilelist=" "
+loop steps=$numsteps
+ set index=$index+1
+ SOLVE vdrain=$vbias vgate=0
+ set logfile="$logbase""$index""$logsuffix"
+ set logfilelist="$logfilelist""$logfile"" "
+ LOG outfile=$logfile
+ SOLVE tstop=(2.01*($period)) tstep=$timestep wave1 
+ LOG off
+ set vbias=$vbias+$vstep
+l.end
+
+# convert time domain data into frequency domain and calculate the powers
+FOURIER infile.list="$logfilelist" outfile="$pwrlog" inport=gate outport=drain num.harmonic=5 fundamental=$frequency elec.bias period=2 num.samples=$samples
+
+victoryvisual \
+$'name'_1_rf_power.log:$'name'_1_rf_power.set \
+$'name'_2_rf_power.log:$'name'_2_rf_power.set 
+
+QUIT
+
+
+
+
+

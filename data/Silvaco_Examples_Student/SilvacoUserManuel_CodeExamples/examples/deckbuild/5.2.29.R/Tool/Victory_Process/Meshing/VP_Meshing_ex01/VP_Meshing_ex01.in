@@ -1,0 +1,57 @@
+# (c) Silvaco Inc., 2024
+
+# Effect of RESOLUTION on material regions
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name=“VP_Meshing_ex01” 
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.009 - Coarse - features are not so sharp
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.009,0.009 meshdepth=1 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+# EXPORT statement creates a structure that is for 
+# visualization only - cannot be used for device simulation
+EXPORT name=$'name'_VP_0p009
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.005 - finer than 0.009, features are
+# starting to sharpen
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.005,0.005 meshdepth=1 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+EXPORT name=$'name'_VP_0p005
+
+####### PROCESS SIMULATION ####### 
+# RESOLUTION=0.001 - fine mesh, sharp features
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0.9 to=1.1 depth=0.1 \
+resolution=0.001,0.001 meshdepth=1 gasheight=0.05 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+DEPOSIT left.to=1 max material=oxide thickness=0.01
+
+EXPORT name=$'name'_VP_0p001
+
+victoryvisual \
+$'name'_VP_0p009.str \
+$'name'_VP_0p005.str \
+$'name'_VP_0p001.str \
+$'name'_VP_0p009.str+$'name'_VP_0p005.str+$'name'_VP_0p001.str
+
+QUIT

@@ -1,0 +1,112 @@
+# (c) Silvaco Inc., 2024
+
+# 4H-SiC Schottky Diode DLTS simulation
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name="SiC_Power_ex05"
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 2"
+
+SET temp1=245
+SET temp2=400
+SET dtemp=5
+SET nstep=($'temp2'-$'temp1')/$'dtemp'+1
+
+LOOP steps=$'nstep'
+
+ASSIGN name=temper n.value=$'temp1' delta=$'dtemp'
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0 spacing=0.5
+X.MESH location=1 spacing=0.5
+
+Y.MESH location=0   spacing=0.001
+Y.MESH location=5   spacing=0.1
+Y.MESH location=10  spacing=0.5
+Y.MESH location=11  spacing=0.1
+Y.MESH location=12  spacing=0.1
+
+REGION number=1 material=4H-SiC
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+DOPING concentration=5e14 n.type uniform
+DOPING concentration=1e20 n.type uniform y.min=11
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL material=4H-SiC taun0=5e-10 taup0=1e-10 m.dsn=0.4 m.dsp=2.5 \
+   eg300=3.25 egalpha=9.06e-4 egbeta=2.03e3
+# affinity=3.6
+MODELS print temp=$'temper' bound.trap
+
+# Trap - Ec-Et=660 meV
+TRAP region=1 acceptor energy.level=0.66 density=1.0e13 degeneracy.factor=1 \
+   sign=5.6e-15 sigp=5.6e-15
+
+# Schottky barrier height is set to 1.2eV (affinity + 1.2) 
+CONTACT name=anode workfunc=4.8
+
+OUTPUT band.param band.temp
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 ir.tol=1e-22 tol.time=1e9 dt.max=2e5
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+SOLVE vstep=-1 vfinal=-8 name=anode 
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_tran_$'temper'K.log
+
+# Transient with AC analysis
+SOLVE vanode=0.0 ramptime=1e-9 tstep=1e-10 tfinal=1e-2 \
+   ac.analysis frequency=1e5
+SOLVE vanode=-8 ramptime=1e-9 tstep=1e-10 tfinal=1.0 \
+   ac.analysis frequency=1e5 
+
+LOG off
+
+L.END
+
+
+# DBInternal to extract DLTS signals 
+
+# launch "internal"
+GO internal
+
+# load "slave" deck
+LOAD inf=$'name'_extract.in
+
+# enable slave deck to launch in separate deckbuild window
+#OPTIONS ^ascii
+
+# store run-time output for each experiment
+#LOG outfile=runtime_
+
+# Sweep temperature
+SWEEP parameter=temper type=linear range="$'temp1', $'temp2', $'nstep'"
+
+# save data extracted in each experiment
+SAVE type=sdb outfile=$'name'_DLTS.log
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$"name"_VD_tran_280K.log:$"name"_Tran.set+\
+$"name"_VD_tran_300K.log:$"name"_Tran.set+\
+$"name"_VD_tran_310K.log:$"name"_Tran.set+\
+$"name"_VD_tran_320K.log:$"name"_Tran.set \
+$"name"_DLTS.log:$"name"_DLTS.set
+
+QUIT

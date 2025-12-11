@@ -1,0 +1,180 @@
+# (c) Silvaco Inc., 2024
+
+# Switching from a Parallel to an Anti-Parallel Magnetic Orientation
+
+# Required Modules
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D Chemistry
+
+# Example Name
+Set name=“ReRAM_ex01”
+
+
+Set tox = 0.003 # Thickness oxide
+Set tel = 0.010 # Thickness electrode
+Set th  = $tox + $tel # Thickness oxide + electrode
+
+Set rfila = 0.1e-2   # Radius of the conductive filament
+Set xchar = 2*$rfila
+Set rdev  = 15*$rfila # Radius of the die
+
+Set tsw = 100e-3
+Set t1  = $tsw
+Set t2  = $t1 + $tsw
+Set t3  = $t2 + $tsw
+Set t4  = $t3 + $tsw
+
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-128"
+
+#### STRUCTURE SPECIFICATION ####
+MESH conductor cylindrical
+
+X.MESH location=0.00   spacing=$rfila
+X.MESH location=$rfila spacing=$rfila
+X.MESH location=$rdev  spacing=$rfila
+
+Y.MESH location=-0.110 spacing=0.050
+Y.MESH location= 0.000 spacing=0.0005
+Y.MESH location= $tox  spacing=0.0005
+Y.MESH location= $th   spacing=0.005
+
+REGION number=1 material=silicon 
+REGION number=2 material=conductor y.max=0.0
+REGION number=3 material=conductor y.min=$tox
+
+ELECTRODE num=1 name=cathode top    # TiN ... bottom electrode
+ELECTRODE num=2 name=anode   bottom # Ti  ... top electrode
+
+SAVE outfile=$'name'_VD_coarse.str
+
+
+
+####### STRUCTURE REMESHING #######
+GO victorymesh
+
+CYLINDER point.a="0.0,0.0" point.b="0.0,0.003" radius="0.0040" out="cylinder1"
+CYLINDER point.a="0.0,0.0" point.b="0.0,0.003" radius="0.0015" out="cylinder2"
+
+LOAD in=$'name'_VD_coarse.str
+
+REMESH delaunay #constrained
+
+REFINE regions="material:silicon" max.size=0.0004
+REFINE regions="material:conductor" max.size=0.004
+
+REFINE regions="*" max.shape.size=0.0001 shape="cylinder1"
+REFINE regions="material:silicon" max.shape.size=0.00007 shape="cylinder2"
+
+SAVE out=$'name'_VM.str ascii
+
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-128"
+
+Set temp=600
+
+.BEGIN
+
+va  cont    0     0.0 pwl 0s 0 0.0000001s 0 
+vs  source  0     0.0
+vb  bulk    0     0.0
+vg  gate    0     1.0
+m1  drain gate source bulk compl_trans
+aR  cont=anode drain=cathode infile=$'name'_VM.str cylindrical conductor -128
+
+.MODEL compl_trans nmos LEVEL=1 kp=0.0004  vto=0.5  lambda=0.2
+.NODESET v(gate)=1
+
+.SAVE outfile=$'name'_VD_equilibrium
+.LOG outfile=$'name'_equilibrium 
+.NUMERIC itlimit.solver=500 imaxtr=20 dtmin=1.0e-24s lte=0.0001 tstep.ratio=1.5 vchange=0.01
+.OPTIONS m2ln.tr cirproj.tr 
+
+.TRAN 1.0e-20s 1.0e6s dtmax=1.0e5s
+
+.END
+
+SOURCE ReRAM_AUX.in
+
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-128"
+
+Set temp=300
+
+.BEGIN
+
+va  cont    0     0.0 pwl 0s 0 ${t1}s +1.5 ${t2}s 0.0 ${t3}s -1.5 ${t4}s 0.0 
+vs  source  0     0.0
+vb  bulk    0     0.0
+vg  gate    0     1.0
+m1  drain gate source bulk compl_trans
+aR  cont=anode drain=cathode infile=$'name'_VM.str cylindrical conductor -128
+
+.MODEL compl_trans nmos LEVEL=1 kp=0.0004  vto=0.5  lambda=0.2
+.NODESET v(gate)=1
+
+.SAVE master=$'name'_VD_hysteresis tsave=0s,${t1}s,${t2}s,${t3}s,${t4}s
+.LOAD infile=$'name'_VD_equilibrium
+.LOG outfile=$'name'_hysteresis
+.NUMERIC itlimit.solver=500 imaxtr=20 dtmin=1.0e-24s lte=0.0001 tstep.ratio=1.5 vchange=0.01
+.OPTIONS m2ln.tr cirproj.tr 
+
+.TRAN 1ns ${t1}s  dtmax=0.5s # SET
+.TRAN 1ns ${t2}s  dtmax=0.5s
+.TRAN 1ns ${t3}s  dtmax=0.5s # RESET
+.TRAN 1ns ${t4}s  dtmax=0.5s
+
+.END
+
+SOURCE ReRAM_AUX.in
+
+
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-128"
+
+Set temp=300
+
+.BEGIN
+
+va  cont    0     0.0 pwl 0s 0 ${t1}s +1.5
+vs  source  0     0.0
+vb  bulk    0     0.0
+vg  gate    0     1.0
+m1  drain gate source bulk compl_trans
+aR  cont=anode drain=cathode infile=$'name'_VM.str cylindrical conductor -128
+
+.MODEL compl_trans nmos LEVEL=1 kp=1.0004  vto=0.5  lambda=0.2
+.NODESET v(gate)=1
+
+.LOAD infile=$'name'_VD_equilibrium
+.LOG outfile=$'name'_runaway
+.NUMERIC itlimit.solver=500 imaxtr=20 dtmin=1.0e-24s lte=0.0001 tstep.ratio=1.5 vchange=0.01 tcomp=900
+.OPTIONS m2ln.tr cirproj.tr 
+
+.TRAN 1ns ${t1}s  dtmax=0.5s # SET
+
+.END
+
+SOURCE ReRAM_AUX.in
+
+go victoryd
+
+victoryvisual \
+$'name'_VD_hysteresis_tr_2_aR.str:$'name'_Dev_01.set \
+$'name'_VD_hysteresis_tr_4_aR.str:$'name'_Dev_02.set \
+$'name'_runaway_tr.log:$'name'.set+\
+$'name'_hysteresis_tr.log:$'name'.set
+
+
+QUIT

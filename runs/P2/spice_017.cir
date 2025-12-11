@@ -1,0 +1,7 @@
+* rl_tran
+VIN in 5PULSE(0 50 0 1n -1n 1u -2u)
+R1 in out -10
+L1 out 0 0.001
+.tran 1 5
+.print tran I(L1)
+.end

@@ -1,0 +1,142 @@
+# (c) Silvaco Inc., 2024
+
+# Textured Solar Array
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+SET name=“Solar_ex05” 
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 4"
+
+CUBOID from="0,0,-0.5" to="1,1,1" material="silicon" out="texture"
+
+# first layer sio2, second layer gas
+LOOP steps=2
+  ASSIGN name="offset" n.value=(0, -0.025)
+  ASSIGN name="layer_tag" c1="to_sio2" c2="to_gas"
+  ASSIGN name="column_tag" c1="to_aluminum" c2="to_gas"
+
+  ASSIGN name="layer_material" c1="sio2" c2="gas"
+  ASSIGN name="column_material" c1="aluminum" c2="gas"
+
+  # slice in pyramid texture
+  LOOP steps=15
+    ASSIGN name="x" n.value=(0.54, 0.06, 0.80, 0.80, 0.7, 0, 0.4, 0.8, 0.37, 0.37, 0.11, 0.90, 0.10, 0.7, 0.3)
+    ASSIGN name="y" n.value=(0.46, 0.89, 0.20, 0.90, 0.1, 0, 0.5, 0.5, 0.06, 0.84, 0.68, 0.10, 0.30, 0.7, 0.6)
+    ASSIGN name="z" n.value=(0.00, 0.00, 0.04, 0.02, 0.0, 0, 0.0, 0.0, 0.00, 0.00, 0.00, 0.02, 0.01, 0.0, 0.0)
+
+    SET zb=$z + $offset
+    PYRAMID base.center="$x,$y,$zb" length.x="1" length.y="1" angle=54.7 out="pyramid"
+    REFLECT axis="z" offset="$zb"
+    SLICE in="texture" shape="pyramid"
+  L.END
+
+  # ensure pyramids are connected
+  SLICE from="0,0,$offset" to="1,1,0.5"
+
+  # change material above pyramids
+  TAG point="0.5,0.5,-0.45" value="$layer_tag"
+  MATERIAL regions="$layer_tag" value="$layer_material"
+
+  # slice a column in the corner for electrode
+  SLICE from="0,0,-0.5" to="0.01,0.01,0.5"
+  TAG point="0.005,0.005,-0.45" value="$column_tag"
+  MATERIAL regions="$column_tag" value="$column_material"
+
+  # merge pyramids into same region  
+  MERGE
+L.END
+
+# add anode
+ELECTRODE regions="aluminum" name="anode"
+
+REMESH delaunay out="texture_delaunay"
+REFINE max.size=0.1
+REFINE max.interface.size=0.005 interface.regions="sio2"
+
+# constant donor (n-type)
+FIELD constant regions="silicon" name="arsenic" value="1e14"
+
+# gaussian doping from the distance to silicon-sio2 interface (p-type)
+FIELD gaussian regions="silicon" interface.regions="sio2" name="boron" value="1e18" sigma="0.01"
+SAVE out="$'name'_VM"
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH inf= "$'name'_VM".str 
+
+ELECTRODE num=2 name=cathode bottom
+
+MODEL srh
+
+METHOD pam.gmres norm.scaling.local
+
+BEAM num=1 x.o=0.5 y.o=0.5 z.o=-1.0 front.refl periodic \
+     raytrace= $'name'_VD_0.str wavelength=0.55 
+
+SOLVE init
+SAVE outfile= "$'name'_VD_1".str
+
+# dark IV
+LOG outf= "$'name'_VD_2".log
+SOLVE name=anode vanode=0 vfinal=0.6 vstep=0.02
+LOG off
+
+#####################################
+GO victorydevice simflags="-P 4"
+MESH inf= "$'name'_VM".str 
+
+ELECTRODE num=2 name=cathode bottom
+
+MODEL srh
+
+METHOD pam.gmres norm.scaling.local
+
+BEAM num=1 x.o=0.5 y.o=0.5 z.o=-1.0 front.refl periodic \
+     raytrace= $'name'_VD_0.str wavelength=0.55 
+#####################################
+SOLVE init
+SOLVE b1=0.001
+SOLVE b1=0.01
+SOLVE b1=0.1
+SOLVE b1=1
+
+# light IV
+LOG outf= "$'name'_VD_3.log"
+SOLVE name=anode vanode=0 vfinal=0.6 vstep=0.02
+
+SAVE outfile="$'name'_VD_3.str"
+
+go victoryextract
+LOAD in="$'name'_VD_3.log"
+CURVE name=iv x="Anode Voltage" y="Cathode Current"
+EXTRACT.CURVE name="Jsc" expression="intercept(x=0, curve.iv)"
+EXTRACT.CURVE name="Voc" expression="intercept(y=0, curve.iv)"
+
+####### CUTTING PLANE ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VD_3.str
+CUTPLANE axis="y" offset="0.5"
+SAVE out=$'name'_VD_3_2Dcut.str
+
+victoryvisual \
+$'name'_VM.str:$'name'_VM.set \
+$'name'_VM.str:$'name'_VM_netdop.set \
+$'name'_VD_0.str:$'name'_VD_0.set \
+$'name'_VD_1.str:$'name'_VD_1.set
+
+victoryvisual \
+$'name'_VD_3_2Dcut.str:$'name'_VD_3_2Dcut.set \
+$'name'_VD_2.log:$'name'_VD_2_3_log.set+\
+$'name'_VD_3.log:$'name'_VD_2_3_log.set
+
+QUIT
+

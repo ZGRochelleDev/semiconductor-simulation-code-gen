@@ -1,0 +1,62 @@
+# (c) Silvaco Inc., 2024
+
+# User-defined Photo-Generation Rate
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+Set name="Photodiode_ex02"
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+Title 
+#
+Mesh space.mult=4.00 
+#
+X.MESH location=0.00 spacing=0.25
+X.MESH location=10.0 spacing=0.25
+#
+Y.MESH location=0.00 spacing=0.05
+Y.MESH location=5.00 spacing=0.20
+Y.MESH location=10.0 spacing=0.05
+
+# Regions and electrodes
+REGION number=1 material=Silicon
+
+ELECTRODE number=1 name=anode x.min=0.0 x.max=10.0 y.max=0.0
+ELECTRODE number=2 name=cathode bottom
+
+# Device doping
+DOPING uniform concentration=1e14 n.type
+DOPING gaussian peak=0.00 characteristic=0.1 concentration=1e18 p.type 
+DOPING gaussian peak=10.0 characteristic=0.1 concentration=1e18 n.type 
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL taup0=2.e-6 taun0=2.e-6 
+MODELS srh auger conmob fldmob print 
+
+# BEAM DEFINITION
+# To run the built in model comment out the line with f.radiate in it.
+# The results should match.
+#
+BEAM number=1 x.origin=5.0 y.origin=-1.0 angle=90.0 \
+ wavelength=0.6019 save.rays f.radiate=$'name'.lib
+
+#### SOLUTION SOLVING ####
+#	
+SOLVE initial 
+SOLVE previous
+METHOD newton 
+SOLVE b1=0.000001
+SAVE outfile=$'name'_VD.str
+SAVE outf=$'name'_VD.str 
+#
+victoryvisual $'name'_VD.str:$'name'_VD.set
+
+
+QUIT

@@ -1,0 +1,486 @@
+# (c) Silvaco Inc., 2024
+
+# SiC Planar DMOS, 1200V, 25A Process and Device Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+SET name=SiC_Power_ex09
+
+####### PROCESS SIMULATION #######
+
+GO victoryprocess simflags="-P 4"
+
+# Length of PWell
+SET Lpw=2.2
+
+# Length of Jfet Region
+SET Ljfet=1.2
+
+# Total device length
+SET Ltot=$Lpw+$Ljfet
+
+# For device simulation scale area of device to 2000umx2500um = 0.05 cm2
+# Area is typical for a base die 25A device, requires a WIDTH of:
+SET WID_0p05cm2=5E6/($Ltot)
+
+##### Initialisation Module ##### 
+
+# Initialize Structure
+INIT material=4h-SiC dopants=nitrogen dopingvalues=5e18 \
+ from="0" to=$Ltot at=0 gasheight=20 depth=2 resolution=0.04 meshdepth=3 \
+ sub.ori=<0001> sub.rot=0 sub.miscut.theta=4 sub.miscut.phi=90
+
+# Set segregation between SiC/Oxide and SiC/gas to zero
+SOURCE $'name'_par.txt
+
+# PPlus Source Mask
+SPECIFYMASKPOLY RECT LB="-10,-10" RT="0.6,10" mask="PPlus" ISTRANSPARENT=False
+
+# PWell Mask
+SPECIFYMASKPOLY RECT LB="-10,-10" RT="$Lpw,10" mask="PWell" ISTRANSPARENT=False
+
+# Volume mesh
+LINE X location=0 spacing=0.05
+LINE X location=$Lpw spacing=0.02
+LINE X location=$Ltot spacing=0.02
+
+# Fine surface mesh, no smaller than 0.02
+LINE Z location=-14.1 spacing=0.02
+LINE Z location=-14.05 spacing=0.02
+
+LINE Z location=-14 spacing=0.02
+LINE Z location=-13.8 spacing=0.02
+
+# Mesh over junction, uniform 0.05
+LINE Z location=-13.5 spacing=0.05
+LINE Z location=-12.5 spacing=0.05
+
+LINE Z location=-11.5 spacing=0.2
+LINE Z location=-7 spacing=2
+LINE Z location=-2 spacing=0.2
+LINE Z location=0 spacing=0.1
+LINE Z location=2 spacing=0.2
+
+# NDrift Doping
+SET ndrift=0.9E16
+
+# NDrift Epitaxy - simplified through DEPOSIT
+DEPOSIT material=SiC-4H thickness=14 dopants=nitrogen dopingvalues=$ndrift max
+
+# Sacrificial Screen Oxide - 0.05um
+DIFFUSE time=158 temperature=1200 dry
+
+SAVE name=$'name'_SacScrOx conformalstr VISUALSTR.NOBACKGROUND
+
+# Extract SacOx thickness
+GO victoryextract
+LOAD IN="$'name'_SacScrOx_exVC.str"
+EXTRACT.THICKNESS name="$'name'_VE_SacScrOx" REGIONS=oxide NTH=1
+
+# Load simulation status back in and continue
+GO victoryprocess simflags="-P 4"
+LOAD name=$'name'_SacScrOx 
+
+##### JFET_Implant_Module ##### 
+# Blanket JFET / Vth Adjust
+
+SET JFImpD1=1e12
+SET JFImpE1=200
+SET JFImpD2=1e12
+SET JFImpE2=100
+SET JFImpD3=1e12
+SET JFImpE3=50 
+SET JFImpD4=1e12
+SET JFImpE4=10
+
+IMPLANT nitrogen dose=$JFImpD1 energy=$JFImpE1 bca n.ion=300000 rotation=0 tilt=0
+IMPLANT nitrogen dose=$JFImpD2 energy=$JFImpE2 bca n.ion=300000 rotation=0 tilt=0
+IMPLANT nitrogen dose=$JFImpD3 energy=$JFImpE3 bca n.ion=300000 rotation=0 tilt=0 
+IMPLANT nitrogen dose=$JFImpD4 energy=$JFImpE4 bca n.ion=300000 rotation=0 tilt=0
+
+##### Spacer Stack #####
+
+DEPOSIT material=polysilicon thickness=1.2 max mask="PWell" 
+DEPOSIT material=oxide thickness=0.5 max mask="PWell" 
+
+##### PWell Implant #####
+
+SET PWImpD1=2e14
+SET PWImpE1=500
+SET PWImpD2=1e13
+SET PWImpE2=250
+SET PWImpD3=1e12
+SET PWImpE3=100 
+SET PWImpD4=1e11
+SET PWImpE4=50
+
+IMPLANT aluminum dose=$PWImpD1 energy=$PWImpE1 bca n.ion=500000 rotation=0 tilt=0
+IMPLANT aluminum dose=$PWImpD2 energy=$PWImpE2 bca n.ion=500000 rotation=0 tilt=0
+IMPLANT aluminum dose=$PWImpD3 energy=$PWImpE3 bca n.ion=500000 rotation=0 tilt=0
+IMPLANT aluminum dose=$PWImpD4 energy=$PWImpE4 bca n.ion=500000 rotation=0 tilt=0
+
+##### Channel Spacer Module ##### 
+# Oxide spacer time 780mins = 8000A, Lchannel ~0.35um
+SET OxSpTim=780
+
+# Grow spacer oxide - defines channel length
+DIFFUSE time=$OxSpTim temperature=1200 dry 
+
+# Save simulation status
+SAVE name=$'name'_SpacerOx conformalstr VISUALSTR.NOBACKGROUND
+
+# Extract spacer oxide thickness and min/max bounds
+GO victoryextract
+LOAD IN="$'name'_SpacerOx_exVC.str"
+EXTRACT.THICKNESS name="$'name'_VE_SpacerOx" REGIONS=oxide NTH=1 z.val=-14.5
+EXTRACT.BOUND name="$'name'_VE_SpacerOx_min" min regions=oxide z.val=-14.5 nth=1
+EXTRACT.BOUND name="$'name'_VE_SpacerOx_max" max regions=oxide z.val=-14.5 nth=1
+
+# Load simulation status back in and continue
+GO victoryprocess simflags="-P 4"
+LOAD name=$'name'_SpacerOx
+
+##### Source Doping N/PPlus Module ##### 
+
+# Blanket NPlus implant
+IMPLANT phosphorus dose=4e15 energy=100 bca n.ion=100000 rotation=0 tilt=0
+IMPLANT phosphorus dose=2e15 energy=30 bca n.ion=100000 rotation=0 tilt=0
+IMPLANT phosphorus dose=2e15 energy=7.5 bca n.ion=100000 rotation=0 tilt=0
+
+# Remove everything except SiC
+ETCH all.materials.but=SiC-4H completely
+
+# Mask for PPlus
+DEPOSIT material=oxide thickness=2 max mask=PPlus
+
+# Add a chamfer on mask corner to represent mask edge erosion
+ETCH material=oxide thickness=0.5 max mask=PPlus deltacd=0.4 angle=45
+
+# Etch through NPlus for PPlus implant
+# (alternatively mask on NPlus or counter dope NPlus)
+ETCH material=SiC-4H dry thick=0.3
+
+# Implant PPlus
+IMPLANT aluminum dose=1e15 energy=250 bca n.ion=200000 rotation=0 tilt=0
+IMPLANT aluminum dose=5e14 energy=100 bca n.ion=200000 rotation=0 tilt=0
+IMPLANT aluminum dose=1e14 energy=50 bca n.ion=200000 rotation=0 tilt=0
+
+# Remove the hard mask (the last layer deposited)
+ETCH lastdepo
+
+##### Activation Anneal Module #####
+
+# Activation anneal
+DIFFUSE time=10 temperature=1700
+
+##### Gate Oxidation Module #####
+
+# Grow gate oxide
+DIFFUSE time=158 temperature=1200 dry
+
+# Save simulation status
+SAVE name=$'name'_GateOx conformalstr VISUALSTR.NOBACKGROUND
+
+# Extract gate oxide thickness
+GO victoryextract
+LOAD IN="$'name'_GateOx_exVC.str"
+EXTRACT.THICKNESS name="$'name'_VE_GateOx" REGIONS=oxide NTH=1 x.val=3.2
+
+# Check Gate Length
+# Extract left junction
+EXTRACT.DEPTH name="$'name'_VE_GL" z.val=-13.92 field=net value=0 regions="sic-4h" nth=1
+# Extract right junction
+EXTRACT.DEPTH name="$'name'_VE_GR" z.val=-13.92 field=net value=0 regions="sic-4h" nth=2
+
+# Calculate Gate Length
+EXTRACT.VDOE name="$'name'_VE_Lg" expression="$$'name'_VE_GR"-"$$'name'_VE_GL"
+
+# Load simulation status back in and continue
+GO victoryprocess simflags="-P 4"
+LOAD name=$'name'_GateOx
+
+# Spacer edge extracted earlier, reference Gate Mask edge to this location
+
+SET Lgate=$${name}_VE_SpacerOx_min-0.2
+SPECIFYMASKPOLY RECT LB="$Lgate, -10" RT="$Ltot, 10" mask="gate"
+
+# Gate stack
+DEPOSIT material=polysilicon thickness=0.5 max mask="gate"
+DEPOSIT material=oxide thickness=0.5 max
+
+##### Electrode Module #####
+
+# Open gate stack for Alu Contact
+ETCH material=oxide max mask="PPlus" deltacd=0.4
+DEPOSIT material=aluminum thickness=1 conformal
+
+# Label electrodes
+ELECTRODE name=source x=0.2 z=-14.2
+ELECTRODE name=gate x=$Ltot-0.1 z=-14.2
+ELECTRODE name=drain substrate
+
+SAVE name=$'name'_VP_Fin_sv conformalstr VISUALSTR.NOBACKGROUND
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_Fin_sv
+
+# Slice into SiC and Oxide to give a fine interface mesh for channel
+OFFSET interface.regions="sic-4h" other.interface.regions="oxide" delta="0.001" num.intervals=3 multiplier=1.5
+OFFSET interface.regions="oxide" other.interface.regions="sic-4h" delta="0.002"
+
+# Mesh type used
+REMESH delaunay
+
+# Increase sampling - for sharp corners
+REFINE max.distance=0.001 regions="*"
+
+# Base mesh
+REFINE max.size=0.2
+
+# Refinement in material regions
+REFINE region="aluminum" max.size=0.1
+REFINE region="polysilicon" max.size=0.1
+
+# Refine at SiO2 / SiC interface
+REFINE interface.regions="4H-SiC" other.interface.regions="sio2" \
+ regions="4h-SiC,sio2" max.interface.size=0.005 max.interface.distance.size=0.2 \
+ max.interface.distance=1 grading="linear" 
+
+# Junction refinement
+REFINE max.junction.size=0.01 max.junction.distance.size=0.2 \ 
+ max.junction.distance=2 grading="linear" 
+
+# Donor refinement
+REFINE impurity="donor" max.impurity.gradient=0.25 \
+ min.impurity.size=0.05
+
+# Merge like materials into one (generated by OFFSET)
+MERGE
+
+SAVE out=$'name'_VM.str
+
+####### DEVICE SIMULATION #######
+
+#### Threshold Voltage Simulation ####
+GO victoryd simflags="-P 4 -160"
+
+#### STRUCTURE SPECIFICATION ####
+
+# load and scale area
+MESH infile=$'name'_VM.str width=$WID_0p05cm2
+
+#### MATERIAL/PHYSICAL MODELS ####  
+
+# Add traps/charge
+INTERFACE r1material=4H-SiC r2material=SiO2 s.i qf=2e12
+
+INTDEFECT r1material=4H-SiC r2material=SiO2 \
+ nga=1.12e12 ega=-0.05 wga=0.2 \
+ nta=3e11 wta=0.66 \
+ ntd=4e11 wtd=0.88 \
+ ngd=4e11 egd=0.06 wgd=0.2 \ 
+ numa=50 numd=50 tfile=$'name'_traps.dat
+
+# Models
+MODELS material=4H-SiC temperature=300 fermidirac incomplete \
+ bgn srh auger print fldmob 
+
+MOBILITY material=4H-SiC n.lcrit=2.0e-6 p.lcrit=2.0e-6 altcvt.n
+MATERIAL material=4H-SiC ni.min=2
+
+CONTACT name=gate workfunction=4.2
+
+# Add substrate resistance, assuming 200um substrate of 5E18
+# resistance specified in Ohm.um
+CONTACT name=drain resistance=21.7E3
+
+# Vth is measured by ramping gate and drain together 
+# (and measuring at a specified current - see EXTRACT statement)
+CONTACT name=gate common=drain 
+
+#### NUMERICAL METHODS ####  
+
+# High interface charge requires larger number of iterations to settle on SOLVE INIT
+# tighten numerics for SiC
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=1000
+
+SOLVE init
+SOLVE previous
+
+# Reduce number of iterations now SOLVE INIT has been calculated
+
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=100
+
+#### SOLUTION SOLVING #### 
+
+# Starting logging data on electrodes
+LOG outf=$'name'_VD_IdVg.log
+
+SOLVE name=drain vdrain=0 vstep=0.1 vfinal=20 previous compliance=25 cname=drain
+
+# Save biased structure
+SAVE outf=$'name'_VD_IdVg.str
+
+# Extract Vth = voltage on gate at a drain current of 5 mA
+GO victoryextract
+LOAD IN="$'name'_VD_IdVg.log"
+curve name=$'name'_VE_IdVg x="Gate Voltage" y="Drain Current"
+extract.curve name="$'name'_Vth" expression="intercept(y=5e-3, curve.$'name'_VE_IdVg)"
+
+#### On-state Simulation ####
+GO victoryd simflags="-P 4 -160"
+
+#### STRUCTURE SPECIFICATION ####
+
+# load and scale area
+MESH infile=$'name'_VM.str width=$WID_0p05cm2
+
+# Add traps/charge
+INTERFACE r1material=4H-SiC r2material=SiO2 s.i qf=2e12
+
+INTDEFECT r1material=4H-SiC r2material=SiO2 \
+ nga=1.12e12 ega=-0.05 wga=0.2 \
+ nta=3e11 wta=0.66 \
+ ntd=4e11 wtd=0.88 \
+ ngd=4e11 egd=0.06 wgd=0.2 \ 
+ numa=50 numd=50 tfile=$'name'_traps.dat
+
+# Models
+MODELS material=4H-SiC temperature=300 fermidirac incomplete \
+ bgn srh auger print fldmob 
+
+MOBILITY material=4H-SiC n.lcrit=2.0e-6 p.lcrit=2.0e-6 altcvt.n
+MATERIAL material=4H-SiC ni.min=2
+
+CONTACT name=gate workfunction=4.2 
+
+# Add substrate resistance, assuming 200um substrate of 5E18
+# resistance specified in Ohm.um
+CONTACT name=drain resistance=21.7E3
+
+# High interface charge requires larger number of iterations to settle on SOLVE INIT
+# tighten numerics for SiC
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=1000
+
+SOLVE init
+SOLVE previous
+
+# Reduce number of iterations now SOLVE INIT has been calculated
+
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=100
+
+# IdVd curve, ramp Vg to 20V before logging data
+SOLVE name=gate vgate=0 vstep=0.1 vfinal=15 previous
+
+# Log current/voltage now at a gate voltage of 20V
+LOG outf=$'name'_VD_IdVd.log
+
+# Ramp drain voltage to 20V
+SOLVE name=drain vdrain=0 vstep=0.25 vfinal=20 previous
+
+# Save biased structure
+SAVE outf=$'name'_VD_IdVd.str
+
+
+# Rdson @ 25A
+GO victoryextract
+LOAD IN="$'name'_VD_IdVd.log"
+# First forward voltage drop at 25 A
+CURVE name=$'name'_VE_IdVd x="Drain Voltage" y="Drain Current"
+EXTRACT.CURVE name="$'name'_Von" expression="intercept(y=25, curve.$'name'_VE_IdVd)"
+
+# Calculate resistance in mOhm
+EXTRACT.VDOE name="$'name'_Rdson_mOhm" expression="($$'name'_Von/25)/1e-3"
+
+#### Breakdown Voltage Simulation ####
+GO victoryd simflags="-P 4 -160"
+
+# load and scale area
+MESH infile=$'name'_VM.str width=$WID_0p05cm2
+
+# Add traps/charge
+INTERFACE r1material=4H-SiC r2material=SiO2 s.i qf=2e12
+
+INTDEFECT r1material=4H-SiC r2material=SiO2 \
+ nga=1.12e12 ega=-0.05 wga=0.2 \
+ nta=3e11 wta=0.66 \
+ ntd=4e11 wtd=0.88 \
+ ngd=4e11 egd=0.06 wgd=0.2 \ 
+ numa=50 numd=50 tfile=$'name'_Ref_traps.dat
+
+# Models
+MODELS material=4H-SiC temperature=300 fermidirac incomplete \
+ bgn srh auger print fldmob 
+
+MOBILITY material=4H-SiC n.lcrit=2.0e-6 p.lcrit=2.0e-6 altcvt.n
+MATERIAL material=4H-SiC ni.min=2
+
+# Turn on II for breakdown (Aniso / Hatakeyama)
+IMPACT aniso sic4h0001
+
+CONTACT name=gate workfunction=4.2 
+
+# Add substrate resistance, assuming 200um substrate of 5E18
+# resistance specified in Ohm.um
+CONTACT name=drain resistance=21.7E3
+
+# High interface charge requires larger number of iterations to settle on SOLVE INIT
+# tighten numerics for SiC
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=1000
+
+SOLVE init
+SOLVE previous
+
+# Reduce number of iterations now SOLVE INIT has been calculated
+
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=100
+
+# Start logging data
+LOG outf=$'name'_VD_BV.log
+
+# Ramp voltage, small steps at first
+SOLVE name=drain vstep=0.2 vfinal=2 previous
+SOLVE name=drain vstep=2 vfinal=10 previous
+SOLVE name=drain vstep=5 vfinal=50 previous
+SOLVE name=drain vstep=10 vfinal=100 previous
+
+# Compliance set at 5E-14A
+SOLVE name=drain vstep=10 vfinal=2000 previous compliance=5e-14 cname=drain
+
+# Move to current boundary for final ramp - enables snapback to be captured
+CONTACT name=drain current
+SOLVE previous
+SOLVE istep=1.05 imult ifinal=1e-13 name=drain previous
+
+# Save at breakdown
+SAVE outf=$'name'_VD_BV.str
+
+# Extract voltage at 1E-13A = breakdown voltage
+GO victoryextract
+LOAD IN="$'name'_VD_BV.log"
+CURVE name=$'name'_VE_BV x="Drain Voltage" y="Drain Current"
+EXTRACT.CURVE name="$'name'_BV" expression="intercept(y=1e-13, curve.$'name'_VE_BV)"
+
+####### VISUALIZATION OF RESULTS #######
+# Plot the structure and mesh
+victoryvisual \
+$'name'_VM.str \
+$'name'_VM.str:$'name'_Dop.set
+
+victoryvisual \
+$'name'_VD_IdVg.log \
+$'name'_VD_IdVd.log \
+$'name'_VD_BV.log
+
+QUIT
+

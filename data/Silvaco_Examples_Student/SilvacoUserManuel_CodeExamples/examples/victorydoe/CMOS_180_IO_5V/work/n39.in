@@ -1,0 +1,12 @@
+source n3.var
+source n0c3.var
+go internal
+#vpm_title = VE_BVdss
+
+extract init infile = n35_VD_BVds.log
+extract name = "BVds" x.val from curve(abs(v."drain"),abs(i."drain")) where y.val = 1e-6 datafile = "n39.result"
+extract name = "Idoff" y.val from curve(abs(v."drain"),abs(i."drain")) where x.val = 1.1*$Vdd datafile = "n39.result"
+
+
+#quit 
+system echo finished

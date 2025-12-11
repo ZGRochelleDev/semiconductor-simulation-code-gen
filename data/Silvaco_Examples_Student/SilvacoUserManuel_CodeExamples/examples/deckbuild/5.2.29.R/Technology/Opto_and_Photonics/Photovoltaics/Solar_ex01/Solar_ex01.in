@@ -1,0 +1,204 @@
+# (c) Silvaco Inc., 2024
+
+# Solar Cell Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation 
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example N# (c) Silvaco Inc., 2024# (c) Silvaco Inc., 2023ame
+SET name=“Solar_ex01” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# CREATE SOLAR CELL IN VICTORYPROCESS
+
+INIT meshdepth=2 material=silicon orientation=100 from=0.00 to=10 depth=50 gasheight=2.15 resolution=0.025,0.05 dopants="boron" dopingvalues="1.0e14"
+LINE x location=0.00 	spacing=1
+LINE x location=8.0 	spacing=0.2
+LINE x location=10 	spacing=1
+
+LINE y location=-0.15	spacing=0.02
+LINE y location=0.00 	spacing=0.02
+LINE y location=0.25 	spacing=0.02
+LINE y location=1 	spacing=0.1
+LINE y location=50 	spacing=10
+
+# deposit oxide coating
+DEPOSIT material=oxide thickness=0.05 max
+
+# implant n+ layer
+IMPLANT phos dose=1e15 energy=29
+# drive-in
+DIFFUSE time=5 temperature=900 verbose
+
+# form contact
+ETCH material=oxide right.to=8 max
+# DIVISIONS is ignored unless INSERTNEWLINE is specified.
+# More preferable method of setting the volume mesh is explicit
+# LINE and LINE REMOVE commands
+DEPOSIT conformal material=aluminum thickness=0.1
+ETCH material=aluminum left.to=8 max
+
+# Reflect to get complete structure
+MIRROR mirror="+x"
+
+# set electrodes for ATLAS
+ELECTRODE name=cathode x=10
+ELECTRODE name=anode substrate
+
+SAVE name="$"name"_VP_sv.str" 
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in="$"name"_VP_sv"
+
+REMESH conformal
+
+SAVE out="$"name"_VM.str"
+
+GO victoryextract
+LOAD in="$"name"_VM.str"
+EXTRACT.DEPTH name=junc_depth x.val=0.1 field=net value=0 region=silicon 
+
+# FIRST VICTORY DEVICE RUN TO FIND SHORT CIRCUIT CURRENT AND OPEN CIRCUIT VOLTAGE
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_VM.str
+
+# set contact material to be opaque
+MATERIAL material=Aluminum imag.index=1000
+MATERIAL material=silicon taun0=1e-6 taup0=1e-6
+
+# set light beam using solar spectrum from external file
+BEAM num=1 x.origin=10.0 y.origin=-2.0 angle=90.0 power.file=$"name".spec
+
+# saves optical intensity to solution files
+OUTPUT opt.int
+
+MODELS conmob fldmob consrh print
+
+SOLVE init
+SOLVE previous
+
+# get short circuit current
+LOG outf=$"name"_0.log
+SOLVE b1=1
+SAVE outf=$"name"_1.str
+
+# get open circuit voltage
+SOLVE init
+SOLVE previous
+#LOG outf=$"name"_0.log
+CONTACT name=cathode current
+SOLVE previous
+SOLVE icathode=0 b1=0
+SOLVE icathode=0 b1=1e-6 lmult lit.step=10 nsteps=6
+
+SAVE outf=$"name"_2.str
+
+GO victoryextract
+LOAD in="$'name'_0.log"
+EXTRACT.LOG expression=max(abs(Cathode Current)) name="short_circuit_current"
+EXTRACT.LOG expression=max(abs(Cathode Int. Voltage)) name="open_circuit_voltage"
+
+# SECOND VICTORY DEVICE RUN FOR SPECTRAL RESPONSE
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_VM.str
+
+# set contact material to be opaque
+MATERIAL material=aluminum imag.index=1000
+MATERIAL material=silicon taun0=1e-6 taup0=1e-6
+
+# set monochromatic light beam for spectral analysis
+BEAM  num=1 x.origin=10.0 y.origin=-2.0 angle=90.0  
+
+# saves optical intensity to solution files
+OUTPUT opt.int
+
+MODELS conmob fldmob consrh print  
+
+# spectral response
+SOLVE init
+SOLVE previous
+SOLVE previous b1=0
+LOG outf=$"name"_2.log
+SOLVE b1=1 beam=1 lambda=0.3 wstep=0.025 wfinal=1.0
+
+# The "Available photo current" accounts for absorption in semiconductor regions only. 
+# Users interested in the overall absorption need to calculate EQE as:
+# EQE=I anode / I Source Photo Current * Absorption
+GO victoryextract
+LOAD in="$'name'_2.log" 
+CURVE name=IQE x="optical wavelength" y="-(Anode Current)/(available photo current)"
+EXTRACT.CSV csvfile="$'name'_IQE"
+CURVE name=EQE x="optical wavelength" y="-(Anode Current)/(source photo current)"
+EXTRACT.CSV csvfile="$'name'_EQE"
+CURVE name=EQE2 x="optical wavelength" y="-(Anode Current)/((source photo current)*(Absorption))"
+EXTRACT.CSV csvfile="$'name'_EQE2"
+
+# THIRD RUN FOR I-V CHARACTERISTICS
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_VM.str
+
+# set contact material to be opaque
+MATERIAL material=aluminum imag.index=1000
+MATERIAL material=silicon taun0=1e-6 taup0=1e-6
+
+# set light beam using solar spectrum from external file
+BEAM num=1 x.origin=10.0 y.origin=-2.0 angle=90.0 power.file=$"name".spec
+
+# saves optical intensity to solution files
+OUTPUT opt.int
+
+# saves beam intensity to the log files
+PROBE name=inten beam=1 intensity
+
+MODELS conmob fldmob consrh
+
+SOLVE init
+SOLVE previous
+LOG outfile=$"name"_3.log
+SOLVE vcathode=-0.01 vstep=-0.01 vfinal=-1*$open_circuit_voltage name=cathode
+LOG off
+
+SOLVE init
+SOLVE previous
+SOLVE b1=1
+LOG outfile=$"name"_4.log
+SOLVE vcathode=-0.01 vstep=-0.01 vfinal=-1*$open_circuit_voltage \
+      name=cathode b1=1
+LOG off 
+
+go victoryextract
+LOAD in="$'name'_4.log"
+EXTRACT.VDOE name="Jsc (mA/cm2)" expression="$short_circuit_current*1e08*1e03/20"
+CURVE name="power" x="Cathode Voltage" y="(Cathode Voltage)*(Cathode Current)*(-1)" 
+EXTRACT.CSV csvfile="$'name'_P"
+EXTRACT.CURVE name="Pmax" expression=maxyy(curve.power)
+EXTRACT.CURVE name="V_Pmax" expression="intercept(y=$'Pmax', curve.power)"
+EXTRACT.VDOE name="Fill Factor" expression="($'Pmax'/($'short_circuit_current'*$'open_circuit_voltage'))"
+EXTRACT.LOG name="intens" expression="max(inten)"
+EXTRACT.VDOE name="Eff" expression="($Pmax/($'intens'*20/1e8))"
+
+victoryvisual \
+$"name"_2.str:$"name"_str.set \
+$"name"_2.log:$"name"_log.set \
+$"name"_3.log:$"name"_3_4.set+\
+$"name"_4.log:$"name"_3_4.set \
+$"name"_P.csv \
+$"name"_IQE.csv+\
+$"name"_EQE2.csv
+
+QUIT

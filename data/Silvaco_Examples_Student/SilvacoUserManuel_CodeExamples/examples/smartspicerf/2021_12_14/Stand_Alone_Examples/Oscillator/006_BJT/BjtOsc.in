@@ -1,0 +1,31 @@
+* BJT ecp oscillator
+
+Vc1  vc1 gnd   dc=5
+Vc2  vc2 gnd   dc=5
+Iee1 e   gnd   dc=1mA
+Iee2 e2  gnd   dc=1mA
+I2   b   gnd   mag1=80mA
+Q1   vc1   b   e   vc1 npn1
+Q2   c   gnd   e   c   npn1
+Q11   vc2   d   e2  vc2 npn1
+Q21   vc2 gnd   e2  vc2 npn1
+L1   vc2   c   l=1uH
+C2   b   gnd   c=3nF
+CL1  c   d     c=272.7pF
+CL2  d   gnd   c=3nF
+R1   b   gnd   r=10k
+R2   d   gnd   r=10k
+
+.model npn1 npn bf=80 cjs=2pf expli=200mA
++ tf=0.3ns tr=6ns cje=3pf cjc=2pf vaf=50
++ rb=100
+
+.HARM
++  FUND1=10MegHz
++  nharm1=31
++  annotate=3 
++  waves 
+
+.PROBE HARM_WF v(e)
+.OPTIONS NOMOD ACCT=2
+.END

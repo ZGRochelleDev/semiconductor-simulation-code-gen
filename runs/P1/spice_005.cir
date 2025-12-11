@@ -1,0 +1,16 @@
+COMPONENTS
+    V1 1V DC
+    C1 10n DC
+    R1 1k DC
+END COMPONENTS
+
+SOURCE
+    V1 = 1V
+    C1 = 10n
+    R1 = 1k
+END SOURCE
+
+ANALYSIS
+    .AC DEC 100 1MHz
+    .PRINT VOUT
+.END

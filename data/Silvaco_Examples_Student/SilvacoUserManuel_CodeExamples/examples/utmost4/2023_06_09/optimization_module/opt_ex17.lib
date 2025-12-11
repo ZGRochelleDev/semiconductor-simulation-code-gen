@@ -1,0 +1,25 @@
+.MODEL npn_mextram NPN (
++LEVEL    = 504            TNOM     = 27             MULT     = 1              
++DTA      = 0              EXMOD    = 0              EXPHI    = 1              
++EXAVL    = 0              SELFT    = 0              IS       = 8.60708e-17    
++IK       = 0.00195507     VER      = 19.3323        VEF      = 32.5963        
++BF       = 36.236         IBF      = 7.50703e-13    MLF      = 2.94231        
++XIBI     = 0              BRI      = 0.893107       IBR      = 4.61092e-11    
++VLR      = 0.536101       XEXT     = 0.63           WAVL     = 1.1e-06        
++VAVL     = 3              SFH      = 0.3            RE       = 1.85427        
++RBC      = 216.715        RBV      = 14.05          RCC      = 0.1            
++RCV      = 0.1            SCRCV    = 1250           IHC      = 0.004          
++AXI      = 0.3            CJE      = 3.58966e-14    VDE      = 0.687559       
++PE       = 0.313848       XCJE     = 0              CJC      = 5.24888e-14    
++VDC      = 0.554759       PC       = 0.349356       XP       = 0.00331876     
++MC       = 0.5            XCJC     = 1              MTAU     = 1              
++TAUE     = 2e-12          TAUB     = 4.2e-12        TEPI     = 4.1e-11        
++TAUR     = 5.2e-10        XREC     = 0              AQBO     = 0.3            
++AE       = 0              AB       = 1              AEPI     = 2.5            
++AEX      = 0.62           AC       = 2              DVGBF    = 0.05           
++DVGBR    = 0.045          VGB      = 1.17           VGC      = 1.18           
++VGJ      = 1.15           DVGTE    = 0.05           AF       = 2              
++KF       = 2e-11          KFN      = 2e-11          ISS      = 4.8e-17        
++IKS      = 0.00025        CJS      = 7.0283e-13     VDS      = 0.57862        
++PS       = 0.0509052      VGS      = 1.2            AS       = 1.58           
++RTH      = 300            CTH      = 3e-09 )

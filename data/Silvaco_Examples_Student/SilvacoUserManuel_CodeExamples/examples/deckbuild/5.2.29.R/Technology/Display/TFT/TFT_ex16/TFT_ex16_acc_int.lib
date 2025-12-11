@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <math.h>
+#include "template.h"
+
+/*
+ * TFT acceptor trap density as function of energy
+ * Statement: INTDEFECTS
+ * Parameter: F.TFTACC
+ * Arguments:
+ * energy     energy relative to conduction band (eV)
+ * eg         band gap (eV)
+ * *density   tft acceptor trap density (cm^-3)
+ * *sigmae    donor trap electron capture cross-section
+ * *sigmah    donor trap hole capture cross-section
+ */
+int inttftacc(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	double f=CIgetGlobalDouble("acc_int_shallow");
+
+	
+	*density = f*1.2e15*exp( -energy/0.0175) + 1.2e13*exp(-energy/0.181);
+	*sigmae=1.0e-15;
+	*sigmah=1.0e-15;
+
+	return(0);
+}
+
+

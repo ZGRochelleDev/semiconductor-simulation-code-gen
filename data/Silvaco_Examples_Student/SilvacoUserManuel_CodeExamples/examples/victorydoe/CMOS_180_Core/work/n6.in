@@ -1,0 +1,61 @@
+source n2.var
+source n0c2.var
+GO victoryprocess simflags="-P 4"
+#vpm_title = VP_Poly
+load name = n2_VP_Well
+
+## ---------------------------------- ##
+## ------------ GOX Loop ---------- ##
+## -----------------------------------##
+
+# Local Parameters: OED (may adjust for calibration purpose) 
+
+# GOX1: IO thick oxide
+DIFFUSE time = 10 min temperature = 600 t.final = 900 f.n2 = 10 pressure = 1
+DIFFUSE time = 20 min temperature = 900 f.o2 = 10 pressure = 1
+DIFFUSE time = 10 min temperature = 900 t.final = 600 f.n2 = 10 pressure = 1
+
+extract name = "TGOx1" thickness material = "SiO~2" mat.occno = 1 x.val = $Lgate/4 datafile = "n6.result"
+STRIP material = oxide 
+
+# GOX2: IO thin oxide
+DIFFUSE time = 10 min temperature = 600 t.final = 800 f.n2 = 10 pressure = 1
+DIFFUSE time = 70 min temperature = 800 f.o2 = 10 pressure = 1
+DIFFUSE time = 10 min temperature = 800 t.final = 600 f.n2 = 10 pressure = 1
+
+extract name = "TGOx2" thickness material = "SiO~2" mat.occno = 1 x.val = $Lgate/4 datafile = "n6.result"
+STRIP material = oxide 
+
+# GOX3: core oxide 
+DIFFUSE time = 10 min temperature = 600 t.final = 800 f.n2 = 10 pressure = 1
+DIFFUSE time = 50 min temperature = 800 f.o2 = 10 pressure = 1
+DIFFUSE time = 10 min temperature = 800 t.final = 600 f.n2 = 10 pressure = 1
+
+extract name = "TGOx3" thickness material = "SiO~2" mat.occno = 1 x.val = $Lgate/4 datafile = "n6.result"
+STRIP material = oxide 
+
+# precisely control the Oxide thickness 
+DEPOSIT min material = oxide thickness = 0.0035 
+
+## ---------------------------------- ##
+## ------------ Poly Loop ----------- ##
+## -----------------------------------##
+
+# Local Parameters: OED (may adjust for calibration purpose) 
+
+# mesh Adjustment 
+LINE x location = $Lgate/2 spacing = 0.01 
+
+# Poly 
+DEPOSIT conformal material = polySilicon thickness = 0.2
+ETCH dry material = "polySilicon,oxide" thickness = 0.2135 right.to.x = $Lgate/2
+
+# PolyReOX
+DIFFUSE time = 10 sec temperature = 600 t.final = 1000 f.n2 = 10 pressure = 1 
+DIFFUSE time = 20 sec temperature = 1000 f.o2 = 10 pressure = 1 
+DIFFUSE time = 10 sec temperature = 1000 t.final = 600 f.n2 = 10 pressure = 1 
+
+extract name = "TpolyReOx" thickness material = "SiO~2" mat.occno = 1 x.val = $Lgate/4 datafile = "n6.result"
+extract name = "TGOxReOx" thickness material = "SiO~2" mat.occno = 2 x.val = $Lgate/4 datafile = "n6.result"
+
+save name = n6_VP_Poly conformalstr

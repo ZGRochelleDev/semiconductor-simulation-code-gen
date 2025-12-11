@@ -1,0 +1,249 @@
+# (c) Silvaco Inc., 2024
+
+# Recessed Gate Pseudomorphic HEMT DC Characterization
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Other_Power_ex06” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Process to create structure is emulated in Victory Process
+INIT material=AlGaAs depth=0.36 gasheight=1 resolution=0.01 \
+   separate.layers meshdepth=2 from=0 to=4.5 at=0 \
+   dopant=boron dopingvalue=1e14
+
+LINE x location=0      spacing=0.2
+LINE x location=0.6    spacing=0.2
+LINE x location=1      spacing=0.05
+LINE x location=1.1    spacing=0.05
+LINE x location=1.5    spacing=0.05
+LINE x location=1.75   spacing=0.02
+LINE x location=2      spacing=0.05
+LINE x location=2.25   spacing=0.02
+LINE x location=2.5    spacing=0.05
+LINE x location=2.9    spacing=0.05
+LINE x location=3.2    spacing=0.1
+LINE x location=3.5    spacing=0.1
+LINE x location=3.9    spacing=0.2
+LINE x location=4.5    spacing=0.2
+
+LINE z location=-0.158 spacing=0.01
+LINE z location=-0.128 spacing=0.01
+LINE z location=-0.108 spacing=0.003
+LINE z location=-0.098 spacing=0.0002
+LINE z location=-0.088 spacing=0.003
+LINE z location=-0.074 spacing=0.005
+LINE z location=-0.069 spacing=0.005
+LINE z location=-0.06  spacing=0.0005
+LINE z location=-0.059 spacing=0.0005
+LINE z location=-0.056 spacing=0.0002
+LINE z location=-0.049 spacing=0.001
+LINE z location=-0.042 spacing=0.0002
+LINE z location=-0.039 spacing=0.0005
+LINE z location=-0.038 spacing=0.0005
+line z location=-0.02  spacing=0.01
+LINE z location=0      spacing=0.01
+LINE z location=0.1    spacing=0.05
+LINE z location=0.36   spacing=0.05
+
+# For niche materials it is requirted that the dopant type (acceptor/donor) is
+# specified for the dopants used
+IMPURITY material="AlGaAs" quantity="boron" acceptor
+IMPURITY material="AlGaAs" quantity="phosphorus" donor
+
+IMPURITY material="InGaAs" quantity="phosphorus" donor
+IMPURITY material="GaAs" quantity="phosphorus" donor
+
+DEPOSIT material=AlGaAs thickness=0.038 max x.comp=0.22 \
+   dopant=boron dopingvalue=1e14
+
+DEPOSIT material=AlGaAs thickness=0.001 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=2e18
+
+DEPOSIT material=AlGaAs thickness=0.003 max x.comp=0.22 \
+   dopant=boron dopingvalue=1.5e14
+
+DEPOSIT material=InGaAs thickness=0.014 max x.comp=0.78 \
+   dopant=phosphorus dopingvalue=5e15
+
+DEPOSIT material=AlGaAs thickness=0.003 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=5e15
+
+DEPOSIT material=AlGaAs thickness=0.001 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=8e18
+
+DEPOSIT material=AlGaAs thickness=0.038 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=5e15
+
+DEPOSIT material=GaAs thickness=0.05 max outside.x="1.1,2.9" \
+   angle=7.125 ref.z=-0.148 dopant=phosphorus dopingvalue=2E18
+
+DEPOSIT material=gold thickness=0.01 dry outside.x="1,1.75" \
+   outside.x="2.25,3.5"
+
+MASK material=barrier between.x="1,3.5"
+PROFILE infile=$'name'_prof.dat phosphorus
+STRIP material=barrier 
+
+ELECTRODE name=drain x=4 z=-0.15
+ELECTRODE name=source x=0.5 z=-0.15
+ELECTRODE name=gate x=2 z=-0.1
+
+# Save simulation status
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# load simulation status
+LOAD in=$'name'_VP_sv separate
+
+REMESH conformal
+
+SAVE out=$'name'_VM_Conf.str
+
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+# Thermionic emission model for hetero-interface
+INTERFACE s.s thermionic tunnel
+
+# Define material parameters on material-by-material basis 
+MATERIAL material=GaAs align=0.6
+MATERIAL material=AlGaAs align=0.6 
+MATERIAL material=InGaAs align=0.6 mun0=12000 mup0=2000 vsat=2.e7 \
+   taun0=1.e-8 taup0=1.e-8 
+
+# Define physical models on material-by material basis
+MODELS material=GaAs consrh fldmob evsatmod=0 cubic35 print 
+MODELS material=AlGaAs consrh fldmob evsatmod=0 cubic35 print 
+MODELS material=InGaAs srh fldmob evsatmod=0 cubic35 print
+
+MOBILITY material=GaAs n.sotoodeh p.sotoodeh
+MOBILITY material=AlGaAs n.sotoodeh p.sotoodeh
+
+# Define the workfunction for the gate contact
+CONTACT name=gate workfunction=4.55
+
+# Include bands potential, and current flowlines into output 
+OUTPUT con.band val.band flowlines 
+
+#### SOLUTION SOLVING #### 
+# Initial solution
+SOLVE init 
+SOLVE previous
+SAVE outfile=$'name'_VD_Init.str
+
+# Apply a set of biases at the gate and save solutions for use later
+SOLVE vstep=-0.05 vfinal=-0.2 name=gate 
+SAVE outfile=$'name'_VD_Vgm0p2.str
+SOLVE vstep=-0.05 vfinal=-0.4 name=gate 
+SAVE outfile=$'name'_VD_Vgm0p4.str
+
+# Calculate ID-VD characteristic
+# re-load saved solution at vgate=0
+LOAD infile=$'name'_VD_Init.str
+
+LOG outfile=$'name'_VD_IdVd_Vg0p0.log
+
+SOLVE vdrain=0.001 prev
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05 vstep=0.05 vfinal=1 name=drain
+SOLVE vstep=0.1 vfinal=2.0 name=drain
+SAVE outfile=$'name'_VD_Vg0p0_Vd2p0.str
+
+LOG off
+
+# Calculate ID-VD characteristic
+# re-load saved solution at vgate=-0.2
+LOAD infile=$'name'_VD_Vgm0p2.str
+
+LOG outfile=$'name'_VD_IdVd_Vgm0p2.log
+
+SOLVE vdrain=0.001 prev
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05 vstep=0.05 vfinal=1 name=drain
+SOLVE vstep=0.1 vfinal=2.0 name=drain
+SAVE outfile=$'name'_VD_Vgm0p2_Vd2p0.str
+
+LOG off
+
+# Calculate ID-VD characteristic
+# re-load saved solution at vgate=-0.4
+LOAD infile=$'name'_VD_Vgm0p4.str
+
+LOG outfile=$'name'_VD_IdVd_Vgm0p4.log
+
+SOLVE vdrain=0.001 prev
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05 vstep=0.05 vfinal=1 name=drain
+SOLVE vstep=0.1 vfinal=2.0 name=drain
+SAVE outfile=$'name'_VD_Vgm0p4_Vd2p0.str
+
+LOG off
+
+# Calculate ID-VG characteristics at VD=2.0 V
+# Simultaneously apply small signal perturbation to get AC parameters
+ 
+LOAD infile=$'name'_VD_Vg0p0_Vd2p0.str
+
+LOG outfile=$'name'_VD_Vth.log
+
+SOLVE vgate=0 vstep=-0.025 vfinal=-1.5 name=gate ac freq=1e6 
+SAVE outfile=$'name'_VD_Vgm1p5_Vd2p0.str
+
+GO victoryextract
+LOAD in="$'name'_VD_Vth.log"
+CURVE name=IV x="Gate Voltage" y="Drain Current"
+EXTRACT.CURVE name="Vt" expression="intercept(y=0, max(slope(curve.IV)))"
+
+# Maximum saturation current
+EXTRACT.LOG name="Idss" expression="max(Drain Current)"
+
+# Gate voltage Vg@Idss*0.3 at Id=0.3Idss 
+EXTRACT.CURVE name="Vgs@0.3Idss" expression="intercept(y=$'Idss'*0.3, curve.IV)"
+
+# Maximum gate-source capacitance
+EXTRACT.LOG name="Cgs_max" expression="max(abs(C Gate>Source))"
+
+# Gate-source capacitance at Vg=0
+CURVE name=CV x="Gate Voltage" y="abs(C Gate>Source)"
+EXTRACT.CURVE name="Cgs_Vgs0" expression="intercept(x=0, curve.CV)"
+
+# Gate-source capacitance at Id=0.3Idss
+EXTRACT.CURVE name="Cgs@0.3Idss" expression="intercept(x=$'Vgs@0.3Idss', curve.CV)"
+
+# Maximum transconductance
+EXTRACT.LOG name="Gm_max" expression="max(abs(G Drain>Gate))"
+
+# Transconductance at Vg=0
+CURVE name=GV x="Gate Voltage" y="abs(G Drain>Gate)"
+EXTRACT.CURVE name="Gm_Vgs0" expression="intercept(x=0, curve.GV)"
+
+# Transconductance at Id=0.3Idss
+EXTRACT.CURVE name="Gm_Vgs@0.3Idss" expression="intercept(x=$'Vgs@0.3Idss', curve.GV)"
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VD_Init.str:$'name'_EConc.set \
+$'name'_VD_IdVd_Vg0p0.log+\
+$'name'_VD_IdVd_Vgm0p2.log+\
+$'name'_VD_IdVd_Vgm0p4.log \
+$'name'_VD_Vth.log
+
+QUIT

@@ -1,0 +1,45 @@
+* Eight Bit DAC
+
+.verilog "dac.va"
+.verilog "dff.va"
+
+* Input Waveform
+* Clock 
+vclk clk 0 pulse(0 5 0u 1n 1n 0.5u 1u)
+
+* Instance D Flip Flop Ripple Counter
+YVLG_dff1  clk d1 q1  d1  dff tdelay=0n ttransit=0.001p
+YVLG_dff2  q1  d2 q2  d2  dff tdelay=0n ttransit=0.001p
+YVLG_dff3  q2  d3 q3  d3  dff tdelay=0n ttransit=0.001p
+YVLG_dff4  q3  d4 q4  d4  dff tdelay=0n ttransit=0.001p
+YVLG_dff5  q4  d5 q5  d5  dff tdelay=0n ttransit=0.001p
+YVLG_dff6  q5  d6 q6  d6  dff tdelay=0n ttransit=0.001p
+YVLG_dff7  q6  d7 q7  d7  dff tdelay=0n ttransit=0.001p
+YVLG_dff8  q7  d8 q8  d8  dff tdelay=0n ttransit=0.001p
+
+* Instance DAC
+YVLG_DAC q8 q7 q6 q5 q4 q3 q2 q1 out dac bit=8
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 10n 270u 1u STORE=10
+
+* For plotting only - all DAC output <=1!
+* LSB
+.let BIT1='v(q1)/5+6'
+.let BIT2='v(q2)/5+8'
+.let BIT3='v(q3)/5+10'
+.let BIT4='v(q4)/5+12'
+.let BIT5='v(q5)/5+14'
+.let BIT6='v(q6)/5+16'
+.let BIT7='v(q7)/5+18'
+.let BIT8='v(q8)/5+20'
+* MSB
+
+* Plot Waveforms
+*.iplot v(out) BIT1 BIT2 BIT3 BIT4 BIT5 BIT6 BIT7 BIT8
+.save v(out) BIT1 BIT2 BIT3 BIT4 BIT5 BIT6 BIT7 BIT8
+
+.end

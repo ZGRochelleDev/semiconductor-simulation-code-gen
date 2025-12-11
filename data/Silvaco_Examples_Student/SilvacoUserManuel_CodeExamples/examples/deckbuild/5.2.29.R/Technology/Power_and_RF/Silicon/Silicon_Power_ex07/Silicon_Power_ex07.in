@@ -1,0 +1,279 @@
+# (c) Silvaco Inc., 2024
+
+# Modeling Low-Voltage Power MOSFET
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=Silicon_Power_ex07
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=1.7 depth=3 gasheight=8 \
+  orientation=100 resolution="0.05,0.05" meshdepth=3 surface.z=3.5 \
+  dopants="phosphorus" resistivity=0.001
+
+LINE x location=0    spacing=0.1
+LINE x location=0.65 spacing=0.025
+LINE x location=0.7  spacing=0.025
+LINE x location=0.75 spacing=0.025
+LINE x location=1    spacing=0.02
+LINE x location=1.7  spacing=0.1
+
+LINE z location=-1  spacing=0.2
+LINE z location=0   spacing=0.001
+LINE z location=0.2 spacing=0.05
+LINE z location=0.5 spacing=0.1
+LINE z location=0.9 spacing=0.1
+LINE z location=1   spacing=0.05
+LINE z location=3.5 spacing=0.2
+LINE z location=6.5 spacing=1
+
+EPITAXY time=480 temperature=1000 thickness=3.5 \
+  dopants="phosphorus" dopingvalues="2.7e16"
+
+DEPOSIT conformal material=oxide thickness=0.047
+
+DEPOSIT conformal material=polysilicon thickness=0.3
+
+DEPOSIT conformal material=barrier thickness=2 
+ 
+ETCH material=barrier left.to.x=0.7 dry thickness=2
+ETCH material=polysilicon left.to.x=0.7 dry thickness=0.3
+
+IMPLANT boron dose=1.8e14 energy=120 s.oxide=0.047 lateral.std.dev=0.125
+
+ETCH material=barrier dry
+
+IMPLANT arsenic dose=1e15 energy=80 s.oxide=0.047 
+
+DEPOSIT conformal material=oxide thick=0.05 
+
+DIFFUSE time=60 temperature=1000
+
+ETCH material=oxide left.to=0.65 dry thickness=0.1
+
+DEPOSIT conformal material=aluminum thickness=0.5
+
+ETCH material=aluminum right.to.x=0.75 dry thickness=0.5
+
+ELECTRODES name=source x=0.4 z=-0.2
+ELECTRODES name=gate x=1 z=-0.2
+ELECTRODES name=drain substrate
+
+SAVE name=$'name'_VP_sv conformalstr
+
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+REMESH conformal simplex.minimal spacing=0.1
+
+REFINE regions="material:sio2" max.size=0.025 
+REFINE regions="material:aluminum, material:polysilicon"  max.size=0.1
+REFINE interface.regions="material:silicon" \
+  other.interface.regions="material:sio2" \
+  max.interface.size=0.005 max.interface.size.distance=0 \
+  grading="sqrt2"
+REFINE regions="insulator, conductor" interface.regions="material:silicon" \
+  other.interface.regions="material:sio2" \
+  max.interface.size=0.005 max.interface.size.distance=0 \
+  grading="linear"
+REFINE max.junction.size=0.03 grading="sqrt2"
+REFINE impurity="donor" min.impurity.size=0.03 max.impurity.factor=1
+
+SAVE out=$'name'_VM_conf.str
+
+
+####### DEVICE SIMULATION #######
+# Id-Vg and Id-Vd Characteristics 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_conf.str width=2e6
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+CONTACT name=gate workfunction=4.37
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+# Set Vd to 25V for Id-Vg simulation
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5
+SOLVE vdrain=1 vstep=1 vfinal=25 name=drain
+
+# Id-Vg characteristics with Vg=25V 
+LOG outfile=$'name'_VD_Vth.log
+
+# Voltage ramp
+SOLVE vgate=0.1 previous
+SOLVE vgate=0.2 vstep=0.2 vfinal=4 name=gate
+
+LOG off
+
+# Id-Vd characteristics with Vg=3, 4, 5, 10V
+LOAD infile=$'name'_VD_init.str
+
+SOLVE vgate=0.5 vstep=0.5 vfinal=3 name=gate
+SAVE outfile=$'name'_VD_Vg3V_Vd0V.str
+SOLVE vstep=0.5 vfinal=4 name=gate
+SAVE outfile=$'name'_VD_Vg4V_Vd0V.str
+SOLVE vstep=0.5 vfinal=5 name=gate
+SAVE outfile=$'name'_VD_Vg5V_Vd0V.str
+SOLVE vstep=0.5 vfinal=10 name=gate
+
+# Id-Vd with Vg=10V
+LOG outfile=$'name'_VD_IdVd_Vg10V.log
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.2 vstep=0.2 vfinal=5 name=drain
+LOG off
+
+# Id-Vd with Vg=5V
+LOAD infile=$'name'_VD_Vg5V_Vd0V.str master
+
+LOG outfile=$'name'_VD_IdVd_Vg5V.log
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.2 vstep=0.2 vfinal=5 name=drain
+LOG off
+
+# Id-Vd with Vg=4V
+LOAD infile=$'name'_VD_Vg4V_Vd0V.str master
+
+LOG outfile=$'name'_VD_IdVd_Vg4V.log
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.2 vstep=0.2 vfinal=5 name=drain
+LOG off
+
+# Id-Vd with Vg=3V
+LOAD infile=$'name'_VD_Vg3V_Vd0V.str master
+
+LOG outfile=$'name'_VD_IdVd_Vg3V.log
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.2 vstep=0.2 vfinal=5 name=drain
+LOG off
+
+
+# Breakdown simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_conf.str width=2e6
+
+ELECTRODE name=body x.maximum=0 y.minimum=0.3 y.maximum=0.6
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+CONTACT name=gate workfunction=4.37
+
+IMPACT selberherr 
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 maxtraps=10 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_BV.log
+
+# Voltage ramp
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.2
+SOLVE vdrain=1
+SOLVE vstep=1 vfinal=60 name=drain cname=drain compliance=1
+
+SAVE outfile=$'name'_VD_BV.str
+
+
+# Body Drain diode characteristic
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_conf.str width=2e6
+
+ELECTRODE name=body x.maximum=0 y.minimum=0.3 y.maximum=0.6
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+CONTACT name=gate workfunction=4.37
+CONTACT name=drain resistance=5e3
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BodyDi.log
+SOLVE vdrain=-0.01 previous
+SOLVE vdrain=-0.1 vstep=-0.1 vfinal=-1.4 name=drain
+
+
+# Capacitances simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_conf.str width=2e6
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+CONTACT name=gate workfunction=4.37
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_Cap.log
+SOLVE vstep=0.2 vfinal=4 name=drain ac.analysis frequency=1e6
+SOLVE vstep=1 vfinal=15 name=drain ac.analysis frequency=1e6 
+LOG OFF
+
+go victoryextract
+LOAD in=$'name'_VD_Cap.log
+CURVE name="Cgd" x="abs(Drain Voltage)" y="abs(C Gate>Drain)"
+EXTRACT.CSV csvfile="Crss.csv"
+
+CURVE name="Ciss" x="abs(Drain Voltage)" y="abs(C Gate>Source)+abs(C Gate>Drain)"
+EXTRACT.CSV csvfile="Ciss.csv"
+
+CURVE name="Coss" x="abs(Drain Voltage)" y="abs(C Drain>Source)+abs(C Gate>Drain)"
+EXTRACT.CSV csvfile="Coss.csv"
+
+victoryvisual  \
+$'name'_VM_conf.str:$'name'_Struct.set \
+$'name'_VD_Vth.log \
+$'name'_VD_IdVd_Vg10V.log+\
+$'name'_VD_IdVd_Vg5V.log+\
+$'name'_VD_IdVd_Vg4V.log+\
+$'name'_VD_IdVd_Vg3V.log \
+$'name'_VD_BV.log:$'name'_BV.set
+
+victoryvisual \
+$'name'_VD_BV.str:$'name'_BV_ii.set \ 
+$'name'_VD_BodyDi.log:$'name'_BodyDi.set \
+Crss.dat:$'name'_CV.set+\
+Ciss.dat:$'name'_CV.set+\
+Coss.dat:$'name'_CV.set
+
+victoryvisual \
+$'name'_VD_BV.str:$'name'_BV_ii.set \ 
+$'name'_VD_BodyDi.log:$'name'_BodyDi.set \
+Crss.csv+\
+Ciss.csv+\
+Coss.csv
+
+
+QUIT

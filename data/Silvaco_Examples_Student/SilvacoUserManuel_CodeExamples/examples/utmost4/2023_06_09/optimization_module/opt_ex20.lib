@@ -1,0 +1,67 @@
+.PARAM PTOX = 8.73738e-10 
+.MODEL nmos NMOS (
++LEVEL    = 56             TR       = 27             SWGEO    = 1              
++SWIGATE  = 0              SWIMPACT = 0              SWGIDL   = 0              
++SWJUNCAP = 0              LVARO    = 0              LVARL    = 0              
++LVARW    = 0              LAP      = 1.73759e-07    WVARO    = 0              
++WVARL    = 0              WVARW    = 0              WOT      = 1.59113e-08    
++VFBO     = -0.873628      VFBL     = 0.0260506      VFBW     = -0.0024195     
++VFBLW    = 0              STVFBO   = 3.70246e-05    STVFBL   = 4.40129e-05    
++STVFBW   = -7.66642e-06   STVFBLW  = 0              TOXO     = PTOX           
++DPHIBO   = -0.306597      NSUBO    = 2.08956e+24    NSUBW    = 0              
++WSEG     = 1e-08          NPCK     = 1e+23          NPCKW    = 0              
++WSEGP    = 1e-08          LPCK     = 1e-08          LPCKW    = 0              
++VNSUBO   = 0              NSLPO    = 0.05           DNSUBO   = 0.0648936      
++NPO      = 0              NPL      = 0              QMC      = 1              
++CTO      = 0.300462       CTL      = 0.00610663     CTLEXP   = 1.15           
++TOXOVO   = PTOX           LOV      = 2.16979e-08    NOVO     = 1.22905e+27    
++FOL1     = -0.000469853   FOL2     = 0              CFL      = -0.00973405    
++CFLEXP   = 2              CFW      = 0              CFBO     = 0              
++UO       = 0.00842081     FBET1    = 0              FBET1W   = 0              
++LP1      = 1e-08          LP1W     = 0              FBET2    = 0              
++LP2      = 1e-08          BETW1    = 0              BETW2    = 0              
++WBET     = 1e-09          STBETO   = 1.02346        STBETL   = 0              
++STBETW   = 0              STBETLW  = 0              MUEO     = 0.5            
++MUEW     = 0              STMUEO   = 0              THEMUO   = 2.69452        
++STTHEMUO = -0.118481      CSO      = 0              CSW      = 0              
++STCSO    = 0              XCORO    = 0              XCORL    = 0              
++XCORW    = 0              XCORLW   = 0              STXCORO  = 0              
++RSW1     = 4799.52        RSW2     = 0              STRSO    = -0.783527      
++RSBO     = 0.482705       RSGO     = 1.65925        THESATO  = 3.15511        
++THESATL  = 0              THESATW  = 0              
++STTHESATO = 0.220262
++THESATBO = 0              THESATGO = 0              AXO      = 18             
++AXL      = 0.4            ALPL     = 0.0079078      ALPLEXP  = 1              
++ALPW     = 0              ALP1L1   = 0.0569832      ALP1L2   = 0              
++ALP1LEXP = 0              ALP1W    = 0              ALP2L1   = 1.45816        
++ALP2L2   = 0              ALP2W    = 0              VPO      = 1.62201        
++A1O      = 1              A1W      = 0              A2O      = 10             
++STA2O    = 0              A3O      = 0              A3L      = 0              
++A3W      = 0              A4O      = 0              A4W      = 0              
++GCOO     = 0              IGINVLW  = 0              IGOVW    = 0              
++GC2O     = 0.375          GC3O     = 0.063          CHIBO    = 3.1            
++STIGO    = 2              AGIDLW   = 0              BGIDLO   = 41             
++STBGIDLO = 0              CGIDLO   = 0              CGBOVL   = 0              
++CFRW     = 0              NFALW    = 8e+22          NFBLW    = 3e+07          
++NFCLW    = 0              DTA      = 0              TRJ      = 21             
++IMAX     = 1000           CJORBOT  = 0.001          CJORSTI  = 1e-09          
++CJORGAT  = 1e-09          VBIRBOT  = 1              VBIRSTI  = 1              
++VBIRGAT  = 1              PBOT     = 0.5            PSTI     = 0.5            
++PGAT     = 0.5            PHIGBOT  = 1.16           PHIGSTI  = 1.16           
++PHIGGAT  = 1.16           
++IDSATRBOT = 1e-12
++IDSATRSTI = 1e-18
++IDSATRGAT = 1e-18
++XJUNSTI  = 1e-07          XJUNGAT  = 1e-07          CSRHBOT  = 100            
++CSRHSTI  = 0.0001         CSRHGAT  = 0.0001         CTATBOT  = 100            
++CTATSTI  = 0.0001         CTATGAT  = 0.0001         
++MEFFTATBOT = 0.25
++MEFFTATSTI = 0.25
++MEFFTATGAT = 0.25
++CBBTBOT  = 1e-12          CBBTSTI  = 1e-18          CBBTGAT  = 1e-18          
++FBBTRBOT = 1e+09          FBBTRSTI = 1e+09          FBBTRGAT = 1e+09          
++STFBBTBOT = -0.001
++STFBBTSTI = -0.001
++STFBBTGAT = -0.001
++VBRBOT   = 10             VBRSTI   = 10             VBRGAT   = 10             
++PBRBOT   = 4              PBRSTI   = 4              PBRGAT   = 4 )

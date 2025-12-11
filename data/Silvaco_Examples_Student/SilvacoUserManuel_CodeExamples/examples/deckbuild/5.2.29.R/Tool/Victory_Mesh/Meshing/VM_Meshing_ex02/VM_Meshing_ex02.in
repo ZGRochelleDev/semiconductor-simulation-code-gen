@@ -1,0 +1,111 @@
+# (c) Silvaco Inc., 2024
+
+# Junction refinement - varying the grading
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+
+# Example Name
+Set name=“VM_Meshing_ex02” 
+
+####### PROCESS SIMULATION ####### 
+# Makes simple block of silicon with an analytic gaussian profile
+# to use in the Victory Mesh example
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=1 \
+resolution=0.01,0.01 meshdepth=2 gasheight=1 \
+c.phosphorus=1E13 
+
+# No LINE statement specified for volume (doping) mesh
+# therefore geometry mesh (from RESOLUTION) is used. 
+
+MASK outside.x="0.8,1.2"
+DOPING boron conc=1E20 peak=0 gauss.sigma=0.05 lateral.sigma=0.05
+STRIP
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_sv
+
+# Delaunay junction refinement with LINEAR grading
+# approx. 600 mesh points
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Envokes junction refinment - LINEAR grading
+REFINE max.junction.size=0.01 regions="*" grading="linear"
+
+SAVE out="$'name'_VM_Junc_linear"
+
+# Delaunay junction refinement with SQRT2 grading
+# approx. 730 mesh points
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Envokes junction refinment - SQRT2 grading
+REFINE max.junction.size=0.01 regions="*" grading="sqrt2"
+
+SAVE out="$'name'_VM_Junc_sqrt2"
+
+# Delaunay junction refinement with SQRT3 grading
+# approx. 800 mesh points
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Envokes junction refinment - SQRT3 grading
+REFINE max.junction.size=0.01 regions="*" grading="sqrt3"
+
+SAVE out="$'name'_VM_Junc_sqrt3"
+
+# Delaunay junction refinement with EXPONENTIAL grading
+# approx. 1200 mesh points
+
+# EXPONENTIAL grading is the default so no need to specify
+# included here for completness
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Envokes junction refinement - EXPONENTIAL grading (default, no 
+# actual need to have the statement)
+REFINE max.junction.size=0.01 regions="*" grading="exponential"
+
+SAVE out="$'name'_VM_Junc_exp"
+
+victoryvisual \
+$'name'_VM_Junc_linear.str:$'name'_Mesh.set \
+$'name'_VM_Junc_sqrt2.str:$'name'_Mesh.set \
+$'name'_VM_Junc_sqrt3.str:$'name'_Mesh.set \
+$'name'_VM_Junc_exp.str:$'name'_Mesh.set
+
+QUIT

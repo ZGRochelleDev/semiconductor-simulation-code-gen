@@ -1,0 +1,40 @@
+* Pipelined ADC : 8 Bits.
+
+.verilog "adc.va"
+
+* Input Waveform
+vin       in  0 sin   (2.5 2.5 500k 0 0 )
+
+* Clock Signal
+vclk      clk 0 pulse (0 5 10n 1n 1n 5n 10n)
+
+* Instance ADC
+YVLG_ADC  in clk bit7 bit6 bit5 bit4 bit3 bit2 bit1 bit0 adc bit=8 fullScale=5
+
+* Output Loading
+RLoadMSB  bit7 0 1MEG
+RLoadbit7 bit6 0 1MEG
+RLoadbit6 bit5 0 1MEG
+RLoadbit5 bit4 0 1MEG
+RLoadbit4 bit3 0 1MEG
+RLoadbit3 bit2 0 1MEG
+RLoadbit2 bit1 0 1MEG
+RLoadlsb  bit0 0 1MEG
+
+* Analysis
+.tran 1n 2u
+
+* For output 
+.let	7bit='v(bit7)/5+20'
+.let	6bit='v(bit6)/5+18'
+.let	5bit='v(bit5)/5+16'
+.let	4bit='v(bit4)/5+14'
+.let	3bit='v(bit3)/5+12'
+.let	2bit='v(bit2)/5+10'
+.let	1bit ='v(bit1)/5+8'
+.let	0bit ='v(bit0)/5+6'
+
+* Plot Waveforms
+.iplot v(in) v(clk) 7bit 6bit 5bit 4bit 3bit 2bit 1bit 0bit 
+
+.end

@@ -1,0 +1,13 @@
+Answer:
+**Required:**
+
+We need to write an ngspice-compatible spicetext that represents a dc voltage divider with $R_1=1\ \mathrm{k\Omega}$ and $R_2=2\ \mathrm{k\ \Omega}$. Then, we need to run an operating point analysis on this circuit and print the dc voltage at node $\text{out}$.
+
+<span style="color:#4257B2">**How can we represent this circuit using ngspice?**</span>
+**Introduction:**
+
+In this problem, we are required to create an ngspice-compatible spice netlist for a dc voltage divider with given values of resistors. We will then perform an operating point analysis on the circuit and display the output voltage at node $\text{o}$.
+
+<span style=" color:#4257b2">**What do we need to know about ngspice?** </span>
+
+Ngspice is a software tool

@@ -1,0 +1,452 @@
+# (c) Silvaco Inc., 2024
+
+# Pinned Photo Diode
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+SET name=“CIS_CCD_ex06” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+
+INIT meshdepth=2 material=silicon boron resistivity=100 orientation=100 \
+     from=-2 to=7.3 depth=7 gasheight=8.606 resolution=0.1 flow.dim=2d_xz
+
+LINE x location=-2    spacing=0.5
+LINE x location=-1.04 spacing=0.2
+LINE x location=-0.61 spacing=0.2
+LINE x location=0     spacing=0.02
+LINE x location=0.1   spacing=0.02
+LINE x location=0.75  spacing=0.1
+LINE x location=2.08  spacing=0.5
+LINE x location=2.58  spacing=0.5
+LINE x location=3.08  spacing=0.5
+LINE x location=4.4   spacing=0.05
+LINE x location=5.05  spacing=0.1
+LINE x location=5.7   spacing=0.05
+LINE x location=6.2   spacing=0.05
+LINE x location=7.3   spacing=0.5
+
+LINE z loc=0    spac=0.001
+LINE z loc=0.1  spac=0.01
+LINE z loc=0.6  spac=0.03
+LINE z loc=0.8  spac=0.03
+LINE z loc=0.87 spac=0.03
+LINE z loc=1 spac=0.1
+LINE z loc=2 spac=0.1
+LINE z loc=3 spac=0.1
+LINE z loc=5 spac=0.15
+LINE z loc=7 spac=0.15
+
+# Initial Oxide plus Vt Adjust Implant 
+DEPOSIT conformal material=oxide thick=0.016
+
+DEPOSIT material=barrier thickness=0.2 max
+
+ETCH material=barrier left.to=4.7 max thickness=1
+
+IMPLANT boron energy=5 dose=2.5e12 \
+	tilt=0 rotation=0 bca n.ion=100000
+
+ETCH material=barrier left.to=5.2 max thickness=1
+
+IMPLANT boron energy=5 dose=2.5e12 \
+	tilt=0 rotation=0 bca n.ion=100000
+
+STRIP material=barrier
+
+ETCH material=oxide thickness=0.008 max 
+DEPOSIT conformal material=polysilicon thick=0.3
+DEPOSIT conformal material=barrier thick=0.4
+ETCH between=0.75,4.4 material=barrier thickness=1 dry
+ETCH material=polysilicon dry thick=0.35
+
+# Buried N- Implant - Implant for PPD well
+IMPLANT phosphorus energy=200 dose=1e12 tilt=30 rotation=0 bca n.ion=100000
+
+IMPLANT phosphorus energy=160 dose=1e11	tilt=0 rotation=0 bca n.ion=100000
+
+SAVE name=$'name'_0 conformalstr
+
+ETCH material=barrier left.to=2.5 max thickness=1
+ETCH material=polysilicon dry thick=0.35
+
+# Trench
+DEPOSIT conformal material=barrier thickness=1
+ETCH between=-0.61,0 material=barrier thickness=1.5 dry
+ETCH material=oxide dry thick=0.3
+ETCH material=silicon dry thick=0.65
+
+ETCH material=barrier max thick=1.2
+ETCH material=barrier left.to.x=4.2 max thick=0.2
+
+#P-implant for STI 
+IMPLANT boron energy=80 dose=7e13 tilt=5 rotation=0 bca n.ion=200000
+
+IMPLANT boron energy=80 dose=7e13 tilt=5 rotation=180 bca n.ion=200000
+
+IMPLANT boron energy=160 dose=7e13 tilt=5 rotation=0 bca n.ion=200000
+
+IMPLANT boron energy=160 dose=7e13 tilt=5 rotation=180 bca n.ion=200000
+
+IMPLANT boron energy=200 dose=7e13 tilt=0 rotation=0 bca n.ion=200000
+
+STRIP material=barrier
+
+# P+ Implant
+IMPLANT bf2 energy=10 dose=5e13	tilt=7 rotation=27 bca n.ion=100000
+
+IMPLANT bf2 energy=10 dose=5e13	tilt=7 rotation=207 bca n.ion=100000
+
+# Drain Isolation Implant
+DEPOSIT conformal material=barrier thick=0.4
+
+ETCH material=barrier right.to=5.7 dry thickness=2
+ETCH material=polysilicon dry thick=0.35
+
+IMPLANT boron energy=160 dose=7e13 tilt=0 rotation=0 bca n.ion=100000
+
+IMPLANT phosphorus energy=30 dose=7e13 tilt=7 rotation=207 bca n.ion=100000
+
+STRIP material=barrier
+
+# Spacer
+DEPOSIT conformal material=nitride thick=0.3
+ETCH material=nitride dry thick=0.3
+
+# Oxide
+DEPOSIT conformal material=oxide thick=0.3 
+DEPOSIT conformal material=barrier thick=0.4 
+ETCH material=barrier right.to=5.05 dry thickness=2
+ETCH material=oxide dry thick=0.3
+
+# Nsd and Iso Implant
+IMPLANT phosphorus energy=80 dose=2e16 tilt=7 rotation=207 bca n.ion=100000
+IMPLANT boron energy=160 dose=6e13 tilt=30 rotation=0 bca n.ion=100000
+
+ETCH material=barrier dry
+DEPOSIT conformal material=oxide thick=0.004 divisions=2
+
+# Activation - set diffusion time to achieve 0.2um P-plus diffusion
+DIFFUSE verbose time=5 temperature=1050 f.n2=10
+
+# Contacts
+ETCH material=oxide dry thick=0.012
+DEPOSIT conformal material=aluminum thick=0.004
+ETCH material=aluminum left.to=6.2 dry thickness=1
+ELECTRODE name=gate x=5.1 z=-0.2
+ELECTRODE name=drain x=6.5
+ELECTRODE name=substrate substrate
+
+DEPOSIT conformal material=oxide thick=0.05
+DEPOSIT conformal material=nitride thick=0.04
+DEPOSIT conformal material=oxide thick=0.15
+DEPOSIT conformal material=oxynitride thick=0.15
+
+# Metal2
+DEPOSIT conformal material=aluminum thick=0.3 
+ETCH between=1,3 material=aluminum thickness=1 dry
+ETCH material=aluminum right.to=3.5 dry thickness=1
+ETCH material=aluminum left.to=-0.5 dry thickness=1
+ELECTRODE name=1 x=0 z=-0.8
+ELECTRODE name=2 x=3.5 z=-0.8
+
+DEPOSIT conformal material=oxide thick=0.1
+DEPOSIT conformal material=nitride thick=0.2
+
+# Metal3
+DEPOSIT conformal material=aluminum thick=0.3
+ETCH between=0,4 material=aluminum thickness=1 dry
+ELECTRODE name=3 x=-1 z=-1.2
+ELECTRODE name=4 x=6 z=-1.2
+
+# Color Filter
+DEPOSIT conformal material="CF" thick=0.2
+
+# Lens
+DEPOSIT conformal material=nitride thick=1.5
+ETCH material=nitride left.to=1.5 dry thickness=3
+ETCH material=nitride right.to=2.5 dry thickness=3
+DEPOSIT conformal material=nitride thick=1.5
+ETCH material=nitride dry thick=1.6
+
+#conformalstr flag below: When this parameter is set to ON, .str file is created as well by VICTORY MESH using conformal remeshing. 
+SAVE name=$'name'_1_sv conformalstr
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_1_sv
+REMESH conformal
+SAVE out=$'name'_1.str
+
+####### DEVICE SIMULATION ####### 
+
+# Section#1: Saturated D.C. IV Characteristics - for Vth of Transfer Mosfet (TG)
+
+#Since PPD is a "floating" source for Transfer MOSFET, we probe a point in the TG channel \
+region to obtain potential and electron conc in it.The probed quantities are stored in \
+the log file and can be visualized in Tonyplot as an IV plot.
+
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_1.str width=1
+
+MATERIAL material="CF" sopra=sion0.nk user.group=insulator user.default=oxide
+
+MODELS consrh cvt fermi print
+OUTPUT band.param con.band val.band recomb
+METHOD climit=1e-4
+
+PROBE name="electron_conc_channel" n.conc x=5 y=0.001
+PROBE name="potential_channel" potential x=5 y=0.001
+
+
+SOLVE init
+SOLVE previous
+SOLVE vdrain=0.02
+SOLVE vdrain=0.3 vstep=0.3 vfinal=3.3 name=drain
+LOG outfile=$'name'_1.log
+SOLVE vgate=0 vstep=0.05 vfinal=3.3 name=gate 
+LOG off
+SAVE outfile=$'name'_1_1.str
+
+#**************************************************************************************************************************************
+#Section#2: Pinning Voltage + Equilibrium Full well Capacity
+
+#Defining 2 physical PPD parameters being extracted below:
+
+#1. Equilibrium full well capacity (EFWC)= Total electron concentration \
+	in the PPD well at equilibrium state, i.e. just after solve prev,\
+	when all electrodes are at 0V.
+
+#2. Pinning voltage (Vpin) = maximum variation of electrostatic potential \
+	inthe PPD well, i.e. deviation of the conduction band from equilibrium \
+	(solve prev) and at full depletion(i.e. Vd=3.3 & Vg=3.3)
+
+GO victorydevice simflags="-P 80 -P 4"
+MESH infile=$'name'_1.str width=1
+
+MODELS srh cvt fermi
+MATERIAL material=silicon taun0=1e-3 taup0=1e-3
+MATERIAL material=oxynitride sopra=sio2.nk
+MATERIAL material=aluminum sopra=al.nk
+MATERIAL material="CF" sopra=sion0.nk user.group=insulator user.default=oxide
+
+#Probes to get potential and electron concentration in PPD well
+#These values are stored in log file and can be visualized in Tonyplot.
+
+PROBE integrated name="net_elec_PPD" n.conc x.min=1 x.max=5 y.max=0.936 y.min=0.211
+PROBE name="V_PPD" potential x=3.5 y=0.5
+PROBE name="electron_conc" n.conc x=3.5 y=0.5
+
+METHOD climit=1e-5
+
+OUTPUT band.param con.band val.band recomb
+
+SOLVE init
+SOLVE previous
+SAVE outf=$'name'_2_0.str
+
+SOLVE vdrain=3.3 dt=1e-9 ramptime=1e-7 tfinal=2e-7
+SAVE outf=$'name'_2_1.str
+
+contact name=drain current
+SOLVE vgate=-0.5 dt=1e-9 ramptime=1e-7 tfinal=4e-7
+
+LOG outf=$'name'_2.log
+SOLVE vgate=3.3  dt=1e-9 ramptime=1e-7 tfinal=6e-7
+LOG off
+SAVE outf=$'name'_2_2.str
+
+
+#We sweep gate back to 0V to verify that the PPD is well isolated and \
+	that there is no leakage current. On VictoryVisual, plot structure \
+	"$'name'_2_3.str"; do a cutline vertically through the \
+	PPD well and plot electron concentration and donor concentration. \
+	If the PPD well is well isolated, the electron conc will still be \
+	much lower than the donor conc.
+
+SOLVE vgate=0  dt=1e-9 ramptime=1e-7 tfinal=8e-7
+SAVE outf=$'name'_2_3.str
+
+go victoryextract
+#Equilibrium full well capacity
+LOAD in=$'name'_2_0.str
+EXTRACT.DEPTH.MINMAX name=EFWC max x.val=3.5 field="electron conc" regions=silicon value
+
+#Pinning voltage
+EXTRACT.DEPTH.MINMAX name=Ec_prev min x.val=3.5 field="conduction band energy" regions=silicon value
+LOAD in=$'name'_2_2.str
+EXTRACT.DEPTH.MINMAX name=Ec_depleted min x.val=3.5 field="conduction band energy" regions=silicon value
+EXTRACT.VDOE name="Vpin" expression=$Ec_prev-$Ec_depleted
+
+# Section#3: Dark Transient and Light current
+
+GO victorydevice simflags="-P 80 -P 4"
+
+MESH infile=$'name'_1.str width=1
+
+MODELS srh cvt fermi
+MATERIAL material=silicon taun0=1e-3 taup0=1e-3
+MATERIAL material="CF" sopra=sion0.nk user.group=insulator user.default=oxide
+METHOD climit=1e-4
+
+PROBE name="V_IS" potential       x=3.5 y=0.5
+PROBE name="electron_conc" n.conc x=3.5 y=0.5 
+
+PROBE name="electron_conc_channel" n.conc x=5.05 y=0.0048
+PROBE name="pot_channel" potential x=5.05 y=0.0048
+
+OUTPUT band.param con.band val.band recomb
+
+METHOD climit=1e-5
+
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_3.log
+SOLVE vdrain=3.3 dt=1e-9 ramptime=1e-7 tfinal=2e-7
+SOLVE vgate=3.3  dt=1e-9 ramptime=1e-7 tfinal=4e-7
+SAVE outfile=$'name'_3_1.str
+
+SOLVE vgate=0   dt=1e-9 ramptime=1e-7 tfinal=6e-7
+SAVE outfile=$'name'_3_2.str
+SOLVE tfinal=1
+LOG off
+
+
+BEAM num=1 x.origin=2 y.origin=-5 angle=90 wavelength=0.530 \
+     reflects=1 metal.reflect con.reflect save.rays ray.check
+
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_4.log
+
+SOLVE vdrain=3.3 dt=1e-9 ramptime=1e-7 tfinal=2e-7 b1=0.001
+SOLVE vgate=3.3  dt=1e-9 ramptime=1e-7 tfinal=4e-7 b1=0.001
+SOLVE vgate=0    dt=1e-9 ramptime=1e-7 tfinal=6e-7 b1=0.001
+SOLVE dt=1e-8 tfinal=1e-4 b1=0.001
+SOLVE tfinal=1   b1=0.001
+LOG off
+
+#***********************************Example Extension****************************************
+
+#Below: Extended example to run pixel in operation. This is representative of image sensors \
+used in phone camera like application, i.e. no shutter. To simulate shutter like behavior, \
+turn b1=0 once your exposure time is reached and remove b1=0.001 from the solve statements \
+in the transfer operation.
+
+
+# Section#4: Transient with Green Light - Pixel in operation 
+
+GO victorydevice simflags="-P 80 -P 4"
+
+MESH infile=$'name'_1.str width=1
+
+MODELS srh cvt fermi
+MATERIAL material=silicon taun0=1e-3 taup0=1e-3
+MATERIAL MATERIAL=oxynitride sopra=sio2.nk
+MATERIAL material=aluminum sopra=al.nk
+MATERIAL material="CF" sopra=sion0.nk user.group=insulator user.default=oxide
+
+BEAM num=1 x.origin=2 y.origin=-5 angle=90 wavelength=0.53 \
+     reflects=1 metal.reflect con.reflect save.rays ray.check
+
+PROBE name="V_IS" potential       x=3.5 y=0.5
+PROBE name="electron_conc_ppd" n.conc x=3.5 y=0.5
+
+PROBE name="electron_conc_channel" n.conc x=5.05 y=0.0048
+PROBE name="pot_channel" potential x=5.05 y=0.0048
+
+METHOD climit=1e-5
+
+OUTPUT band.param con.band val.band recomb
+
+SOLVE init
+SOLVE previous
+SAVE outf=$'name'_4_0.str
+
+#Prepping Pixel
+LOG outfile=$'name'_5.log
+SOLVE vdrain=3.3 dt=1e-9 ramptime=1e-7 tfinal=2e-7 
+SOLVE vgate=3.3  dt=1e-9 ramptime=1e-7 tfinal=4e-7 
+
+#PPD is now drained out as TG is ON and VDD is high
+SAVE outf=$'name'_4_1.str
+
+#Isolating PPD by closing Transfer Gate.
+
+SOLVE vgate=0    dt=1e-9 ramptime=1e-7 tfinal=6e-7 
+SAVE outf=$'name'_4_2.str
+
+#Setting operation parameters
+set intensity=0.001
+set exp_time=100e-6
+set transfer_time=$exp_time + 50e-6
+
+#LIGHT ON - collecting charge
+LOG outfile=$'name'_6.log
+
+SOLVE b1=$intensity ramp.lit dt=1e-6 ramptime=1e-7 tfinal=6e-7+$exp_time
+
+SAVE outf=$'name'_4_3.str
+
+#FLOATING DRAIN
+contact name=drain current
+
+#Transfer charge
+
+SOLVE vgate=3.3 ramptime=1e-6 tstep=1e-7 tstop=6e-7+$transfer_time b1=0.001
+SAVE outf=$'name'_4_4.str
+
+SOLVE vgate=0 ramptime=1e-6 tstep=1e-7 tstop=6e-7+$transfer_time+1e-6 b1=0.001
+SAVE outf=$'name'_4_5.str
+solve vgate=0 tstop=1e-3 b1=0.001
+
+LOG off
+
+GO victoryextract
+#Extracting Charge transfer efficiency (CTE)=Qout/QPPD
+LOAD in="$'name'_4_2.str"
+EXTRACT.REGION.CONCENTRATION name="PPD_isolated_elec" regions=silicon field="Electron conc" \
+	box.pa="0.7, 0.21" box.pb="5.1, 1"
+LOAD in="$'name'_4_3.str"
+EXTRACT.REGION.CONCENTRATION name="lightOn_elec" regions=silicon field="Electron conc" \
+	box.pa="0.7, 0.21" box.pb="5.1, 1"
+LOAD in="$'name'_4_4.str"
+EXTRACT.REGION.CONCENTRATION name="After_transfer_elec" regions=silicon field="Electron conc" \
+	box.pa="0.7, 0.21" box.pb="5.1, 1"
+#QPPD = Qlight-Qisolated
+EXTRACT.VDOE name="QPPD" expression=$lightOn_elec-$PPD_isolated_elec
+
+#Qout=QPPD-Q at 3.3V
+EXTRACT.VDOE name="Qout" expression=$QPPD-$After_transfer_elec
+EXTRACT.VDOE name="CTE" expression=$Qout/$QPPD
+
+
+# Device simulation: Vth, EFWC, isolated PPD, dark vs light current
+victoryvisual \
+$'name'_1.log:$'name'_1_Vth_setting.set \
+$'name'_2_0.str:$'name'_EConc.set \
+$'name'_2_3.str:$'name'_EConc.set 
+
+# Device simulation: sensor operation. Showing charge transfer
+victoryvisual \
+$'name'_4_2.str:$'name'_EConc.set \
+$'name'_4_3.str:$'name'_EConc.set \
+$'name'_4_4.str:$'name'_EConc.set \
+$'name'_3.log:$'name'.set+\
+$'name'_4.log:$'name'.set
+
+QUIT

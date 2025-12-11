@@ -1,0 +1,204 @@
+# (c) Silvaco Inc., 2024
+
+# Normally-on GaN HEMT - structure build, IdVg & IdVd
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=GaN_Power_ex08
+
+GO victoryprocess simflags="-P 4"
+
+SET xcomp=0.25
+
+INIT material=silicon orientation=111 from=0 to=10 depth=3 gasheight=5 \
+ resolution="0.01,0.01" meshdepth=3
+
+LINE x location=0 		spacing=1 
+LINE x location=1 		spacing=1 
+LINE x location=1.75 		spacing=1
+LINE x location=2.45	 	spacing=1
+LINE x location=2.5 		spacing=1
+LINE x location=2.75 		spacing=1  
+LINE x location=3 		spacing=1
+LINE x location=3.05	 	spacing=1 
+LINE x location=6 		spacing=1
+LINE x location=9 		spacing=1
+LINE x location=10 		spacing=1
+
+LINE z location=-1.275		spacing=0.015
+LINE z location=-1.225 		spacing=0.015
+LINE z location=-1.125 		spacing=0.008
+LINE z location=-1.1 		spacing=0.005
+LINE z location=-0.1 		spacing=0.1
+LINE z location=0 		spacing=0.025
+LINE z location=3 		spacing=1
+
+DEPOSIT max material=AlN thickness=0.10 
+DEPOSIT max material=GaN thickness=1 
+DEPOSIT max material=AlGaN thickness=0.025 x.comp=0.30 
+DEPOSIT max material=nitride 	thickness=0.05
+
+ETCH material="nitride" angle=85 min thick=0.075 between.x="2.5,3"
+
+DEPOSIT conformal material=aluminum thickness=0.1 between.x="2.2,3.2"
+
+ETCH outside.x="1,9" thickness=0.075 dry
+
+DEPOSIT aluminum thickness=0.075 min
+
+ELECTRODES name=gate x=2.7 z=-1.15
+ELECTRODES name=source x=0.5 z=-1.15
+ELECTRODES name=drain x=9.5 z=-1.15
+ELECTRODES substrate
+
+SAVE name=$"name"_structure conformalstr
+
+
+############## REMESHING SIMULATION ####################
+
+GO victorymesh simflags="-P 4"
+
+CUBOID from="0.75,-1.15" to="1.25,-1.05" out="source_corner"
+CUBOID from="8.75,-1.15" to="9.25,-1.05" out="drain_corner"
+CUBOID from="2.45,-1.15" to="2.5,-1.05" out="gate_left"
+CUBOID from="2.95,-1.15" to="3.00,-1.05" out="gate_right"
+
+LOAD in=$"name"_structure
+REMESH conformal simplex.minimal
+REFINE regions="*" max.size=0.5
+
+REFINE region="GaN,AlGaN, Si3N4" \
+ shape="source_corner" \
+ max.shape.size=0.05 \
+ max.shape.size.distance=0.055 \
+ max.shape.distance=0.3 \
+ max.shape.distance.size=0.33 \
+ grading="linear"
+
+
+REFINE region="GaN,AlGaN,Si3N4" \
+ shape="drain_corner" \
+ max.shape.size=0.05 \
+ max.shape.size.distance=0.055 \
+ max.shape.distance=0.3 \
+ max.shape.distance.size=0.33 \
+ grading="linear"
+
+REFINE region="GaN,AlGaN, Si3N4" \
+ shape="gate_right" \
+ max.shape.size=0.05 \
+ max.shape.size.distance=0.055 \
+ max.shape.distance=0.3 \
+ max.shape.distance.size=0.33 \
+ grading="linear"
+
+REFINE region="GaN,AlGaN, Si3N4" \
+ shape="gate_left" \
+ max.shape.size=0.05 \
+ max.shape.size.distance=0.055 \
+ max.shape.distance=0.3 \
+ max.shape.distance.size=0.33 \
+ grading="linear"
+
+SAVE out=$"name"_struct_mesh.str
+
+################# DEVICE SIMULATION #################
+
+#Simulating IdVg for different Vds
+
+GO victoryd simflags="-P 4 -160"
+ 
+MESH infile=$"name"_struct_mesh.str width=100
+ 
+REGION modify coord.region="5,-0.5" substrate 
+
+ELECTRODE name=bottom substrate
+
+INTERFACE s.s thermionic
+
+# Carbon trap
+set acc_energy=1.5
+TRAP acceptor e.level=$acc_energy density=1e16 degen.fac=1 sign=1e-13 sigp=1e-13 material=gan
+
+CONTACT name=gate work=4.9
+CONTACT name=source work=2.5
+CONTACT name=drain work=2.5
+
+MODELS srh fldmob print
+MOBILITY material=GaN albrct.n gansat.n
+MODELS polarization calc.strain polar.scale=0.8 print
+
+OUTPUT con.band val.band charge polar.charge band.par qss
+
+METHOD direct
+
+OUTPUT qss con.band val.band e.mobility charge polar.charge TRAPS TRAPS.FT band.param e.vel ex.vel ey.vel QFN
+
+set Vd=1
+
+SOLVE init
+SOLVE previous
+
+# DC
+SOLVE vdrain=0 vstep=0.1 vfinal=$Vd name=drain
+SAVE outf=$"name"_VD_1.str
+
+LOG outf=$"name"_VD_IV_Vds_$"Vd".log
+SOLVE vgate=0 vstep=-0.1 vfinal=-6 name=gate
+
+SAVE outf=$"name"_VD_2.str
+
+LOG off
+
+#Simulating IdVd for different Vgs
+
+SOLVE init
+SOLVE previous 
+
+SAVE outfile=$"name"_VD_IdVd_0.str
+
+LOOP steps=3
+
+ASSIGN name=Vg n.value=(-1,-2, -4.0 ) print
+
+LOAD infile=$"name"_VD_IdVd_0.str master
+
+SOLVE previous
+
+SOLVE name=gate vstep=-0.1 vfinal=$Vg
+SAVE outfile=$"name"_VD_Vg_$"Vg".str
+
+LOG outfile=$"name"_VD_IdVd_$'Vg'V.log
+SOLVE vdrain=0.0
+SOLVE name=drain vstep=0.2 vfinal=5
+SOLVE name=drain vstep=0.5 vfinal=15
+
+log off
+
+SAVE outfile = $"name"_VD_IdVd_Vg$"Vg"V_Vd15.str
+
+L.END
+
+GO victoryextract
+
+LOAD in="$"name"_VD_IV_Vds_$"Vd".log"
+CURVE name=iv x="Gate Voltage" y="Drain Current"
+CURVE name="gm" expression="derivative(curve.iv)"
+EXTRACT.CSV csvfile="$'name'_gm_Vds$'Vd'V.csv"
+
+victoryvisual \
+$"name"_VD_IdVd_0.str \
+$"name"_VD_IV_Vds_$"Vd".log \
+$"name"_gm_Vds$"Vd"V.csv \
+$"name"_VD_IdVd_-1V.log+\
+$"name"_VD_IdVd_-2V.log+\
+$"name"_VD_IdVd_-4V.log
+
+QUIT

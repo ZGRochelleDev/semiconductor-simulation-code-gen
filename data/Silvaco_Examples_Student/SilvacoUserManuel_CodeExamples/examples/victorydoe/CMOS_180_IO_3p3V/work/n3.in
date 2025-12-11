@@ -1,0 +1,65 @@
+GO victoryprocess
+#vpm_title = VP_Well
+
+#global_var
+
+set type = "PMOS"
+
+set Lgate = 0.35
+set Lsd = 0.3
+set Ldomain = $Lgate/2+$Lsd # Simulation Domain (Half Device Pitch) 
+#global_var
+
+
+init material = silicon orientation = 100 sub.rot = 45 dopants = boron resistivity = 10 depth = 5.0 gasheight = 1.0 from = 0.0 to = $Ldomain resolution = 0.01 meshdepth = 3 
+
+LINE x location = 0 spacing = $Lgate/20 
+LINE x location = $Ldomain spacing = $Lsd/10 
+
+LINE z location = -0.2 spacing = 0.05 
+LINE z location = 0.0 spacing = 0.002 
+LINE z location = 0.01 spacing = 0.002 
+LINE z location = 0.5 spacing = 0.05 
+LINE z location = 2.0 spacing = 0.1 
+LINE z location = 5.0 spacing = 0.3 
+
+#option run.geometry 
+#option doping.off
+
+# load calibration file: 
+# Please CONTACT your FAE support team to get the latest calibration file for CMOS simulation. 
+#SOURCE CMOS_calibration_XXX 
+SOURCE AdvCaliCMOS_Twodim_v3
+
+# Re-set Global Model & Parameters: 
+
+## ---------------------------------- ##
+## ------------ Well Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material = oxide thickness = 0.01 
+
+if cond = ($type = "PMOS") 
+# NWell 
+IMPLANT phosphorus energy = 400 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT phosphorus energy = 300 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT phosphorus energy = 200 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT phosphorus energy = 70 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+if.end 
+
+if cond = ($type = "NMOS") 
+# PWell 
+IMPLANT boron energy = 200 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT boron energy = 150 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT boron energy = 100 dose = 5.0e12 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+IMPLANT boron energy = 20 dose = 1.0e13 tilt = 0 rotation = 22 bca n.ion = 5000 plus.n
+if.end 
+
+# Well RTA 
+DIFFUSE time = 10 seconds temperature = 600 t.final = 1000 
+DIFFUSE time = 20 seconds temperature = 1000 
+DIFFUSE time = 10 seconds temperature = 1000 t.final = 600 
+
+ETCH dry material = oxide thickness = 0.011
+
+save name = n3_VP_Well conformalstr

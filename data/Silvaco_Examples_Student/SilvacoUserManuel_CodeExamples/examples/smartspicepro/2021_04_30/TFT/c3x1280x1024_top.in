@@ -1,0 +1,1193 @@
+* /home/tft/c3x1280x1024_top
+* Gateway 3.4.1.R Spice Netlist Generator
+* Simulation timestamp: 05-Jul-2016 14:38:30
+* Workspace name:       /tft/tft.workspace
+* Simulation name:      /tft/c3x1280x1024_top.schlr
+
+* Schematic name: c3x1280x1024_top
+X16 datap datam scan<768> scan<769> scan<770> scan<771> scan<772> scan<773>
++  scan<774> scan<775> scan<776> scan<777> scan<778> scan<779> scan<780> scan<781>
++  scan<782> scan<783> scan<784> scan<785> scan<786> scan<787> scan<788> scan<789>
++  scan<790> scan<791> scan<792> scan<793> scan<794> scan<795> scan<796> scan<797>
++  scan<798> scan<799> scan<800> scan<801> scan<802> scan<803> scan<804> scan<805>
++  scan<806> scan<807> scan<808> scan<809> scan<810> scan<811> scan<812> scan<813>
++  scan<814> scan<815> scan<816> scan<817> scan<818> scan<819> scan<820> scan<821>
++  scan<822> scan<823> scan<824> scan<825> scan<826> scan<827> scan<828> scan<829>
++  scan<830> scan<831> scan<832> scan<833> scan<834> scan<835> scan<836> scan<837>
++  scan<838> scan<839> scan<840> scan<841> scan<842> scan<843> scan<844> scan<845>
++  scan<846> scan<847> scan<848> scan<849> scan<850> scan<851> scan<852> scan<853>
++  scan<854> scan<855> scan<856> scan<857> scan<858> scan<859> scan<860> scan<861>
++  scan<862> scan<863> scan<864> scan<865> scan<866> scan<867> scan<868> scan<869>
++  scan<870> scan<871> scan<872> scan<873> scan<874> scan<875> scan<876> scan<877>
++  scan<878> scan<879> scan<880> scan<881> scan<882> scan<883> scan<884> scan<885>
++  scan<886> scan<887> scan<888> scan<889> scan<890> scan<891> scan<892> scan<893>
++  scan<894> scan<895> scan<896> scan<897> scan<898> scan<899> scan<900> scan<901>
++  scan<902> scan<903> scan<904> scan<905> scan<906> scan<907> scan<908> scan<909>
++  scan<910> scan<911> scan<912> scan<913> scan<914> scan<915> scan<916> scan<917>
++  scan<918> scan<919> scan<920> scan<921> scan<922> scan<923> scan<924> scan<925>
++  scan<926> scan<927> scan<928> scan<929> scan<930> scan<931> scan<932> scan<933>
++  scan<934> scan<935> scan<936> scan<937> scan<938> scan<939> scan<940> scan<941>
++  scan<942> scan<943> scan<944> scan<945> scan<946> scan<947> scan<948> scan<949>
++  scan<950> scan<951> scan<952> scan<953> scan<954> scan<955> scan<956> scan<957>
++  scan<958> scan<959> scan<960> scan<961> scan<962> scan<963> scan<964> scan<965>
++  scan<966> scan<967> scan<968> scan<969> scan<970> scan<971> scan<972> scan<973>
++  scan<974> scan<975> scan<976> scan<977> scan<978> scan<979> scan<980> scan<981>
++  scan<982> scan<983> scan<984> scan<985> scan<986> scan<987> scan<988> scan<989>
++  scan<990> scan<991> scan<992> scan<993> scan<994> scan<995> scan<996> scan<997>
++  scan<998> scan<999> scan<1000> scan<1001> scan<1002> scan<1003> scan<1004>
++  scan<1005> scan<1006> scan<1007> scan<1008> scan<1009> scan<1010> scan<1011>
++  scan<1012> scan<1013> scan<1014> scan<1015> scan<1016> scan<1017> scan<1018>
++ scan<1019> scan<1020> scan<1021> scan<1022> scan<1023> vcom c3x320x256
+X12 datam datap scan<512> scan<513> scan<514> scan<515> scan<516> scan<517>
++  scan<518> scan<519> scan<520> scan<521> scan<522> scan<523> scan<524> scan<525>
++  scan<526> scan<527> scan<528> scan<529> scan<530> scan<531> scan<532> scan<533>
++  scan<534> scan<535> scan<536> scan<537> scan<538> scan<539> scan<540> scan<541>
++  scan<542> scan<543> scan<544> scan<545> scan<546> scan<547> scan<548> scan<549>
++  scan<550> scan<551> scan<552> scan<553> scan<554> scan<555> scan<556> scan<557>
++  scan<558> scan<559> scan<560> scan<561> scan<562> scan<563> scan<564> scan<565>
++  scan<566> scan<567> scan<568> scan<569> scan<570> scan<571> scan<572> scan<573>
++  scan<574> scan<575> scan<576> scan<577> scan<578> scan<579> scan<580> scan<581>
++  scan<582> scan<583> scan<584> scan<585> scan<586> scan<587> scan<588> scan<589>
++  scan<590> scan<591> scan<592> scan<593> scan<594> scan<595> scan<596> scan<597>
++  scan<598> scan<599> scan<600> scan<601> scan<602> scan<603> scan<604> scan<605>
++  scan<606> scan<607> scan<608> scan<609> scan<610> scan<611> scan<612> scan<613>
++  scan<614> scan<615> scan<616> scan<617> scan<618> scan<619> scan<620> scan<621>
++  scan<622> scan<623> scan<624> scan<625> scan<626> scan<627> scan<628> scan<629>
++  scan<630> scan<631> scan<632> scan<633> scan<634> scan<635> scan<636> scan<637>
++  scan<638> scan<639> scan<640> scan<641> scan<642> scan<643> scan<644> scan<645>
++  scan<646> scan<647> scan<648> scan<649> scan<650> scan<651> scan<652> scan<653>
++  scan<654> scan<655> scan<656> scan<657> scan<658> scan<659> scan<660> scan<661>
++  scan<662> scan<663> scan<664> scan<665> scan<666> scan<667> scan<668> scan<669>
++  scan<670> scan<671> scan<672> scan<673> scan<674> scan<675> scan<676> scan<677>
++  scan<678> scan<679> scan<680> scan<681> scan<682> scan<683> scan<684> scan<685>
++  scan<686> scan<687> scan<688> scan<689> scan<690> scan<691> scan<692> scan<693>
++  scan<694> scan<695> scan<696> scan<697> scan<698> scan<699> scan<700> scan<701>
++  scan<702> scan<703> scan<704> scan<705> scan<706> scan<707> scan<708> scan<709>
++  scan<710> scan<711> scan<712> scan<713> scan<714> scan<715> scan<716> scan<717>
++  scan<718> scan<719> scan<720> scan<721> scan<722> scan<723> scan<724> scan<725>
++  scan<726> scan<727> scan<728> scan<729> scan<730> scan<731> scan<732> scan<733>
++  scan<734> scan<735> scan<736> scan<737> scan<738> scan<739> scan<740> scan<741>
++  scan<742> scan<743> scan<744> scan<745> scan<746> scan<747> scan<748> scan<749>
++  scan<750> scan<751> scan<752> scan<753> scan<754> scan<755> scan<756> scan<757>
++  scan<758> scan<759> scan<760> scan<761> scan<762> scan<763> scan<764> scan<765>
++ scan<766> scan<767> vcom c3x320x256
+X8 datap datam scan<256> scan<257> scan<258> scan<259> scan<260> scan<261>
++  scan<262> scan<263> scan<264> scan<265> scan<266> scan<267> scan<268> scan<269>
++  scan<270> scan<271> scan<272> scan<273> scan<274> scan<275> scan<276> scan<277>
++  scan<278> scan<279> scan<280> scan<281> scan<282> scan<283> scan<284> scan<285>
++  scan<286> scan<287> scan<288> scan<289> scan<290> scan<291> scan<292> scan<293>
++  scan<294> scan<295> scan<296> scan<297> scan<298> scan<299> scan<300> scan<301>
++  scan<302> scan<303> scan<304> scan<305> scan<306> scan<307> scan<308> scan<309>
++  scan<310> scan<311> scan<312> scan<313> scan<314> scan<315> scan<316> scan<317>
++  scan<318> scan<319> scan<320> scan<321> scan<322> scan<323> scan<324> scan<325>
++  scan<326> scan<327> scan<328> scan<329> scan<330> scan<331> scan<332> scan<333>
++  scan<334> scan<335> scan<336> scan<337> scan<338> scan<339> scan<340> scan<341>
++  scan<342> scan<343> scan<344> scan<345> scan<346> scan<347> scan<348> scan<349>
++  scan<350> scan<351> scan<352> scan<353> scan<354> scan<355> scan<356> scan<357>
++  scan<358> scan<359> scan<360> scan<361> scan<362> scan<363> scan<364> scan<365>
++  scan<366> scan<367> scan<368> scan<369> scan<370> scan<371> scan<372> scan<373>
++  scan<374> scan<375> scan<376> scan<377> scan<378> scan<379> scan<380> scan<381>
++  scan<382> scan<383> scan<384> scan<385> scan<386> scan<387> scan<388> scan<389>
++  scan<390> scan<391> scan<392> scan<393> scan<394> scan<395> scan<396> scan<397>
++  scan<398> scan<399> scan<400> scan<401> scan<402> scan<403> scan<404> scan<405>
++  scan<406> scan<407> scan<408> scan<409> scan<410> scan<411> scan<412> scan<413>
++  scan<414> scan<415> scan<416> scan<417> scan<418> scan<419> scan<420> scan<421>
++  scan<422> scan<423> scan<424> scan<425> scan<426> scan<427> scan<428> scan<429>
++  scan<430> scan<431> scan<432> scan<433> scan<434> scan<435> scan<436> scan<437>
++  scan<438> scan<439> scan<440> scan<441> scan<442> scan<443> scan<444> scan<445>
++  scan<446> scan<447> scan<448> scan<449> scan<450> scan<451> scan<452> scan<453>
++  scan<454> scan<455> scan<456> scan<457> scan<458> scan<459> scan<460> scan<461>
++  scan<462> scan<463> scan<464> scan<465> scan<466> scan<467> scan<468> scan<469>
++  scan<470> scan<471> scan<472> scan<473> scan<474> scan<475> scan<476> scan<477>
++  scan<478> scan<479> scan<480> scan<481> scan<482> scan<483> scan<484> scan<485>
++  scan<486> scan<487> scan<488> scan<489> scan<490> scan<491> scan<492> scan<493>
++  scan<494> scan<495> scan<496> scan<497> scan<498> scan<499> scan<500> scan<501>
++  scan<502> scan<503> scan<504> scan<505> scan<506> scan<507> scan<508> scan<509>
++ scan<510> scan<511> vcom c3x320x256
+X4 datam datap scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++  scan<62> scan<63> scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> scan<128> scan<129>
++  scan<130> scan<131> scan<132> scan<133> scan<134> scan<135> scan<136> scan<137>
++  scan<138> scan<139> scan<140> scan<141> scan<142> scan<143> scan<144> scan<145>
++  scan<146> scan<147> scan<148> scan<149> scan<150> scan<151> scan<152> scan<153>
++  scan<154> scan<155> scan<156> scan<157> scan<158> scan<159> scan<160> scan<161>
++  scan<162> scan<163> scan<164> scan<165> scan<166> scan<167> scan<168> scan<169>
++  scan<170> scan<171> scan<172> scan<173> scan<174> scan<175> scan<176> scan<177>
++  scan<178> scan<179> scan<180> scan<181> scan<182> scan<183> scan<184> scan<185>
++  scan<186> scan<187> scan<188> scan<189> scan<190> scan<191> scan<192> scan<193>
++  scan<194> scan<195> scan<196> scan<197> scan<198> scan<199> scan<200> scan<201>
++  scan<202> scan<203> scan<204> scan<205> scan<206> scan<207> scan<208> scan<209>
++  scan<210> scan<211> scan<212> scan<213> scan<214> scan<215> scan<216> scan<217>
++  scan<218> scan<219> scan<220> scan<221> scan<222> scan<223> scan<224> scan<225>
++  scan<226> scan<227> scan<228> scan<229> scan<230> scan<231> scan<232> scan<233>
++  scan<234> scan<235> scan<236> scan<237> scan<238> scan<239> scan<240> scan<241>
++  scan<242> scan<243> scan<244> scan<245> scan<246> scan<247> scan<248> scan<249>
++ scan<250> scan<251> scan<252> scan<253> scan<254> scan<255> vcom c3x320x256
+X15 datam datap scan<768> scan<769> scan<770> scan<771> scan<772> scan<773>
++  scan<774> scan<775> scan<776> scan<777> scan<778> scan<779> scan<780> scan<781>
++  scan<782> scan<783> scan<784> scan<785> scan<786> scan<787> scan<788> scan<789>
++  scan<790> scan<791> scan<792> scan<793> scan<794> scan<795> scan<796> scan<797>
++  scan<798> scan<799> scan<800> scan<801> scan<802> scan<803> scan<804> scan<805>
++  scan<806> scan<807> scan<808> scan<809> scan<810> scan<811> scan<812> scan<813>
++  scan<814> scan<815> scan<816> scan<817> scan<818> scan<819> scan<820> scan<821>
++  scan<822> scan<823> scan<824> scan<825> scan<826> scan<827> scan<828> scan<829>
++  scan<830> scan<831> scan<832> scan<833> scan<834> scan<835> scan<836> scan<837>
++  scan<838> scan<839> scan<840> scan<841> scan<842> scan<843> scan<844> scan<845>
++  scan<846> scan<847> scan<848> scan<849> scan<850> scan<851> scan<852> scan<853>
++  scan<854> scan<855> scan<856> scan<857> scan<858> scan<859> scan<860> scan<861>
++  scan<862> scan<863> scan<864> scan<865> scan<866> scan<867> scan<868> scan<869>
++  scan<870> scan<871> scan<872> scan<873> scan<874> scan<875> scan<876> scan<877>
++  scan<878> scan<879> scan<880> scan<881> scan<882> scan<883> scan<884> scan<885>
++  scan<886> scan<887> scan<888> scan<889> scan<890> scan<891> scan<892> scan<893>
++  scan<894> scan<895> scan<896> scan<897> scan<898> scan<899> scan<900> scan<901>
++  scan<902> scan<903> scan<904> scan<905> scan<906> scan<907> scan<908> scan<909>
++  scan<910> scan<911> scan<912> scan<913> scan<914> scan<915> scan<916> scan<917>
++  scan<918> scan<919> scan<920> scan<921> scan<922> scan<923> scan<924> scan<925>
++  scan<926> scan<927> scan<928> scan<929> scan<930> scan<931> scan<932> scan<933>
++  scan<934> scan<935> scan<936> scan<937> scan<938> scan<939> scan<940> scan<941>
++  scan<942> scan<943> scan<944> scan<945> scan<946> scan<947> scan<948> scan<949>
++  scan<950> scan<951> scan<952> scan<953> scan<954> scan<955> scan<956> scan<957>
++  scan<958> scan<959> scan<960> scan<961> scan<962> scan<963> scan<964> scan<965>
++  scan<966> scan<967> scan<968> scan<969> scan<970> scan<971> scan<972> scan<973>
++  scan<974> scan<975> scan<976> scan<977> scan<978> scan<979> scan<980> scan<981>
++  scan<982> scan<983> scan<984> scan<985> scan<986> scan<987> scan<988> scan<989>
++  scan<990> scan<991> scan<992> scan<993> scan<994> scan<995> scan<996> scan<997>
++  scan<998> scan<999> scan<1000> scan<1001> scan<1002> scan<1003> scan<1004>
++  scan<1005> scan<1006> scan<1007> scan<1008> scan<1009> scan<1010> scan<1011>
++  scan<1012> scan<1013> scan<1014> scan<1015> scan<1016> scan<1017> scan<1018>
++ scan<1019> scan<1020> scan<1021> scan<1022> scan<1023> vcom c3x320x256
+X11 datap datam scan<512> scan<513> scan<514> scan<515> scan<516> scan<517>
++  scan<518> scan<519> scan<520> scan<521> scan<522> scan<523> scan<524> scan<525>
++  scan<526> scan<527> scan<528> scan<529> scan<530> scan<531> scan<532> scan<533>
++  scan<534> scan<535> scan<536> scan<537> scan<538> scan<539> scan<540> scan<541>
++  scan<542> scan<543> scan<544> scan<545> scan<546> scan<547> scan<548> scan<549>
++  scan<550> scan<551> scan<552> scan<553> scan<554> scan<555> scan<556> scan<557>
++  scan<558> scan<559> scan<560> scan<561> scan<562> scan<563> scan<564> scan<565>
++  scan<566> scan<567> scan<568> scan<569> scan<570> scan<571> scan<572> scan<573>
++  scan<574> scan<575> scan<576> scan<577> scan<578> scan<579> scan<580> scan<581>
++  scan<582> scan<583> scan<584> scan<585> scan<586> scan<587> scan<588> scan<589>
++  scan<590> scan<591> scan<592> scan<593> scan<594> scan<595> scan<596> scan<597>
++  scan<598> scan<599> scan<600> scan<601> scan<602> scan<603> scan<604> scan<605>
++  scan<606> scan<607> scan<608> scan<609> scan<610> scan<611> scan<612> scan<613>
++  scan<614> scan<615> scan<616> scan<617> scan<618> scan<619> scan<620> scan<621>
++  scan<622> scan<623> scan<624> scan<625> scan<626> scan<627> scan<628> scan<629>
++  scan<630> scan<631> scan<632> scan<633> scan<634> scan<635> scan<636> scan<637>
++  scan<638> scan<639> scan<640> scan<641> scan<642> scan<643> scan<644> scan<645>
++  scan<646> scan<647> scan<648> scan<649> scan<650> scan<651> scan<652> scan<653>
++  scan<654> scan<655> scan<656> scan<657> scan<658> scan<659> scan<660> scan<661>
++  scan<662> scan<663> scan<664> scan<665> scan<666> scan<667> scan<668> scan<669>
++  scan<670> scan<671> scan<672> scan<673> scan<674> scan<675> scan<676> scan<677>
++  scan<678> scan<679> scan<680> scan<681> scan<682> scan<683> scan<684> scan<685>
++  scan<686> scan<687> scan<688> scan<689> scan<690> scan<691> scan<692> scan<693>
++  scan<694> scan<695> scan<696> scan<697> scan<698> scan<699> scan<700> scan<701>
++  scan<702> scan<703> scan<704> scan<705> scan<706> scan<707> scan<708> scan<709>
++  scan<710> scan<711> scan<712> scan<713> scan<714> scan<715> scan<716> scan<717>
++  scan<718> scan<719> scan<720> scan<721> scan<722> scan<723> scan<724> scan<725>
++  scan<726> scan<727> scan<728> scan<729> scan<730> scan<731> scan<732> scan<733>
++  scan<734> scan<735> scan<736> scan<737> scan<738> scan<739> scan<740> scan<741>
++  scan<742> scan<743> scan<744> scan<745> scan<746> scan<747> scan<748> scan<749>
++  scan<750> scan<751> scan<752> scan<753> scan<754> scan<755> scan<756> scan<757>
++  scan<758> scan<759> scan<760> scan<761> scan<762> scan<763> scan<764> scan<765>
++ scan<766> scan<767> vcom c3x320x256
+X7 datam datap scan<256> scan<257> scan<258> scan<259> scan<260> scan<261>
++  scan<262> scan<263> scan<264> scan<265> scan<266> scan<267> scan<268> scan<269>
++  scan<270> scan<271> scan<272> scan<273> scan<274> scan<275> scan<276> scan<277>
++  scan<278> scan<279> scan<280> scan<281> scan<282> scan<283> scan<284> scan<285>
++  scan<286> scan<287> scan<288> scan<289> scan<290> scan<291> scan<292> scan<293>
++  scan<294> scan<295> scan<296> scan<297> scan<298> scan<299> scan<300> scan<301>
++  scan<302> scan<303> scan<304> scan<305> scan<306> scan<307> scan<308> scan<309>
++  scan<310> scan<311> scan<312> scan<313> scan<314> scan<315> scan<316> scan<317>
++  scan<318> scan<319> scan<320> scan<321> scan<322> scan<323> scan<324> scan<325>
++  scan<326> scan<327> scan<328> scan<329> scan<330> scan<331> scan<332> scan<333>
++  scan<334> scan<335> scan<336> scan<337> scan<338> scan<339> scan<340> scan<341>
++  scan<342> scan<343> scan<344> scan<345> scan<346> scan<347> scan<348> scan<349>
++  scan<350> scan<351> scan<352> scan<353> scan<354> scan<355> scan<356> scan<357>
++  scan<358> scan<359> scan<360> scan<361> scan<362> scan<363> scan<364> scan<365>
++  scan<366> scan<367> scan<368> scan<369> scan<370> scan<371> scan<372> scan<373>
++  scan<374> scan<375> scan<376> scan<377> scan<378> scan<379> scan<380> scan<381>
++  scan<382> scan<383> scan<384> scan<385> scan<386> scan<387> scan<388> scan<389>
++  scan<390> scan<391> scan<392> scan<393> scan<394> scan<395> scan<396> scan<397>
++  scan<398> scan<399> scan<400> scan<401> scan<402> scan<403> scan<404> scan<405>
++  scan<406> scan<407> scan<408> scan<409> scan<410> scan<411> scan<412> scan<413>
++  scan<414> scan<415> scan<416> scan<417> scan<418> scan<419> scan<420> scan<421>
++  scan<422> scan<423> scan<424> scan<425> scan<426> scan<427> scan<428> scan<429>
++  scan<430> scan<431> scan<432> scan<433> scan<434> scan<435> scan<436> scan<437>
++  scan<438> scan<439> scan<440> scan<441> scan<442> scan<443> scan<444> scan<445>
++  scan<446> scan<447> scan<448> scan<449> scan<450> scan<451> scan<452> scan<453>
++  scan<454> scan<455> scan<456> scan<457> scan<458> scan<459> scan<460> scan<461>
++  scan<462> scan<463> scan<464> scan<465> scan<466> scan<467> scan<468> scan<469>
++  scan<470> scan<471> scan<472> scan<473> scan<474> scan<475> scan<476> scan<477>
++  scan<478> scan<479> scan<480> scan<481> scan<482> scan<483> scan<484> scan<485>
++  scan<486> scan<487> scan<488> scan<489> scan<490> scan<491> scan<492> scan<493>
++  scan<494> scan<495> scan<496> scan<497> scan<498> scan<499> scan<500> scan<501>
++  scan<502> scan<503> scan<504> scan<505> scan<506> scan<507> scan<508> scan<509>
++ scan<510> scan<511> vcom c3x320x256
+X3 datap datam scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++  scan<62> scan<63> scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> scan<128> scan<129>
++  scan<130> scan<131> scan<132> scan<133> scan<134> scan<135> scan<136> scan<137>
++  scan<138> scan<139> scan<140> scan<141> scan<142> scan<143> scan<144> scan<145>
++  scan<146> scan<147> scan<148> scan<149> scan<150> scan<151> scan<152> scan<153>
++  scan<154> scan<155> scan<156> scan<157> scan<158> scan<159> scan<160> scan<161>
++  scan<162> scan<163> scan<164> scan<165> scan<166> scan<167> scan<168> scan<169>
++  scan<170> scan<171> scan<172> scan<173> scan<174> scan<175> scan<176> scan<177>
++  scan<178> scan<179> scan<180> scan<181> scan<182> scan<183> scan<184> scan<185>
++  scan<186> scan<187> scan<188> scan<189> scan<190> scan<191> scan<192> scan<193>
++  scan<194> scan<195> scan<196> scan<197> scan<198> scan<199> scan<200> scan<201>
++  scan<202> scan<203> scan<204> scan<205> scan<206> scan<207> scan<208> scan<209>
++  scan<210> scan<211> scan<212> scan<213> scan<214> scan<215> scan<216> scan<217>
++  scan<218> scan<219> scan<220> scan<221> scan<222> scan<223> scan<224> scan<225>
++  scan<226> scan<227> scan<228> scan<229> scan<230> scan<231> scan<232> scan<233>
++  scan<234> scan<235> scan<236> scan<237> scan<238> scan<239> scan<240> scan<241>
++  scan<242> scan<243> scan<244> scan<245> scan<246> scan<247> scan<248> scan<249>
++ scan<250> scan<251> scan<252> scan<253> scan<254> scan<255> vcom c3x320x256
+X14 datap datam scan<768> scan<769> scan<770> scan<771> scan<772> scan<773>
++  scan<774> scan<775> scan<776> scan<777> scan<778> scan<779> scan<780> scan<781>
++  scan<782> scan<783> scan<784> scan<785> scan<786> scan<787> scan<788> scan<789>
++  scan<790> scan<791> scan<792> scan<793> scan<794> scan<795> scan<796> scan<797>
++  scan<798> scan<799> scan<800> scan<801> scan<802> scan<803> scan<804> scan<805>
++  scan<806> scan<807> scan<808> scan<809> scan<810> scan<811> scan<812> scan<813>
++  scan<814> scan<815> scan<816> scan<817> scan<818> scan<819> scan<820> scan<821>
++  scan<822> scan<823> scan<824> scan<825> scan<826> scan<827> scan<828> scan<829>
++  scan<830> scan<831> scan<832> scan<833> scan<834> scan<835> scan<836> scan<837>
++  scan<838> scan<839> scan<840> scan<841> scan<842> scan<843> scan<844> scan<845>
++  scan<846> scan<847> scan<848> scan<849> scan<850> scan<851> scan<852> scan<853>
++  scan<854> scan<855> scan<856> scan<857> scan<858> scan<859> scan<860> scan<861>
++  scan<862> scan<863> scan<864> scan<865> scan<866> scan<867> scan<868> scan<869>
++  scan<870> scan<871> scan<872> scan<873> scan<874> scan<875> scan<876> scan<877>
++  scan<878> scan<879> scan<880> scan<881> scan<882> scan<883> scan<884> scan<885>
++  scan<886> scan<887> scan<888> scan<889> scan<890> scan<891> scan<892> scan<893>
++  scan<894> scan<895> scan<896> scan<897> scan<898> scan<899> scan<900> scan<901>
++  scan<902> scan<903> scan<904> scan<905> scan<906> scan<907> scan<908> scan<909>
++  scan<910> scan<911> scan<912> scan<913> scan<914> scan<915> scan<916> scan<917>
++  scan<918> scan<919> scan<920> scan<921> scan<922> scan<923> scan<924> scan<925>
++  scan<926> scan<927> scan<928> scan<929> scan<930> scan<931> scan<932> scan<933>
++  scan<934> scan<935> scan<936> scan<937> scan<938> scan<939> scan<940> scan<941>
++  scan<942> scan<943> scan<944> scan<945> scan<946> scan<947> scan<948> scan<949>
++  scan<950> scan<951> scan<952> scan<953> scan<954> scan<955> scan<956> scan<957>
++  scan<958> scan<959> scan<960> scan<961> scan<962> scan<963> scan<964> scan<965>
++  scan<966> scan<967> scan<968> scan<969> scan<970> scan<971> scan<972> scan<973>
++  scan<974> scan<975> scan<976> scan<977> scan<978> scan<979> scan<980> scan<981>
++  scan<982> scan<983> scan<984> scan<985> scan<986> scan<987> scan<988> scan<989>
++  scan<990> scan<991> scan<992> scan<993> scan<994> scan<995> scan<996> scan<997>
++  scan<998> scan<999> scan<1000> scan<1001> scan<1002> scan<1003> scan<1004>
++  scan<1005> scan<1006> scan<1007> scan<1008> scan<1009> scan<1010> scan<1011>
++  scan<1012> scan<1013> scan<1014> scan<1015> scan<1016> scan<1017> scan<1018>
++ scan<1019> scan<1020> scan<1021> scan<1022> scan<1023> vcom c3x320x256
+X10 datam datap scan<512> scan<513> scan<514> scan<515> scan<516> scan<517>
++  scan<518> scan<519> scan<520> scan<521> scan<522> scan<523> scan<524> scan<525>
++  scan<526> scan<527> scan<528> scan<529> scan<530> scan<531> scan<532> scan<533>
++  scan<534> scan<535> scan<536> scan<537> scan<538> scan<539> scan<540> scan<541>
++  scan<542> scan<543> scan<544> scan<545> scan<546> scan<547> scan<548> scan<549>
++  scan<550> scan<551> scan<552> scan<553> scan<554> scan<555> scan<556> scan<557>
++  scan<558> scan<559> scan<560> scan<561> scan<562> scan<563> scan<564> scan<565>
++  scan<566> scan<567> scan<568> scan<569> scan<570> scan<571> scan<572> scan<573>
++  scan<574> scan<575> scan<576> scan<577> scan<578> scan<579> scan<580> scan<581>
++  scan<582> scan<583> scan<584> scan<585> scan<586> scan<587> scan<588> scan<589>
++  scan<590> scan<591> scan<592> scan<593> scan<594> scan<595> scan<596> scan<597>
++  scan<598> scan<599> scan<600> scan<601> scan<602> scan<603> scan<604> scan<605>
++  scan<606> scan<607> scan<608> scan<609> scan<610> scan<611> scan<612> scan<613>
++  scan<614> scan<615> scan<616> scan<617> scan<618> scan<619> scan<620> scan<621>
++  scan<622> scan<623> scan<624> scan<625> scan<626> scan<627> scan<628> scan<629>
++  scan<630> scan<631> scan<632> scan<633> scan<634> scan<635> scan<636> scan<637>
++  scan<638> scan<639> scan<640> scan<641> scan<642> scan<643> scan<644> scan<645>
++  scan<646> scan<647> scan<648> scan<649> scan<650> scan<651> scan<652> scan<653>
++  scan<654> scan<655> scan<656> scan<657> scan<658> scan<659> scan<660> scan<661>
++  scan<662> scan<663> scan<664> scan<665> scan<666> scan<667> scan<668> scan<669>
++  scan<670> scan<671> scan<672> scan<673> scan<674> scan<675> scan<676> scan<677>
++  scan<678> scan<679> scan<680> scan<681> scan<682> scan<683> scan<684> scan<685>
++  scan<686> scan<687> scan<688> scan<689> scan<690> scan<691> scan<692> scan<693>
++  scan<694> scan<695> scan<696> scan<697> scan<698> scan<699> scan<700> scan<701>
++  scan<702> scan<703> scan<704> scan<705> scan<706> scan<707> scan<708> scan<709>
++  scan<710> scan<711> scan<712> scan<713> scan<714> scan<715> scan<716> scan<717>
++  scan<718> scan<719> scan<720> scan<721> scan<722> scan<723> scan<724> scan<725>
++  scan<726> scan<727> scan<728> scan<729> scan<730> scan<731> scan<732> scan<733>
++  scan<734> scan<735> scan<736> scan<737> scan<738> scan<739> scan<740> scan<741>
++  scan<742> scan<743> scan<744> scan<745> scan<746> scan<747> scan<748> scan<749>
++  scan<750> scan<751> scan<752> scan<753> scan<754> scan<755> scan<756> scan<757>
++  scan<758> scan<759> scan<760> scan<761> scan<762> scan<763> scan<764> scan<765>
++ scan<766> scan<767> vcom c3x320x256
+X6 datap datam scan<256> scan<257> scan<258> scan<259> scan<260> scan<261>
++  scan<262> scan<263> scan<264> scan<265> scan<266> scan<267> scan<268> scan<269>
++  scan<270> scan<271> scan<272> scan<273> scan<274> scan<275> scan<276> scan<277>
++  scan<278> scan<279> scan<280> scan<281> scan<282> scan<283> scan<284> scan<285>
++  scan<286> scan<287> scan<288> scan<289> scan<290> scan<291> scan<292> scan<293>
++  scan<294> scan<295> scan<296> scan<297> scan<298> scan<299> scan<300> scan<301>
++  scan<302> scan<303> scan<304> scan<305> scan<306> scan<307> scan<308> scan<309>
++  scan<310> scan<311> scan<312> scan<313> scan<314> scan<315> scan<316> scan<317>
++  scan<318> scan<319> scan<320> scan<321> scan<322> scan<323> scan<324> scan<325>
++  scan<326> scan<327> scan<328> scan<329> scan<330> scan<331> scan<332> scan<333>
++  scan<334> scan<335> scan<336> scan<337> scan<338> scan<339> scan<340> scan<341>
++  scan<342> scan<343> scan<344> scan<345> scan<346> scan<347> scan<348> scan<349>
++  scan<350> scan<351> scan<352> scan<353> scan<354> scan<355> scan<356> scan<357>
++  scan<358> scan<359> scan<360> scan<361> scan<362> scan<363> scan<364> scan<365>
++  scan<366> scan<367> scan<368> scan<369> scan<370> scan<371> scan<372> scan<373>
++  scan<374> scan<375> scan<376> scan<377> scan<378> scan<379> scan<380> scan<381>
++  scan<382> scan<383> scan<384> scan<385> scan<386> scan<387> scan<388> scan<389>
++  scan<390> scan<391> scan<392> scan<393> scan<394> scan<395> scan<396> scan<397>
++  scan<398> scan<399> scan<400> scan<401> scan<402> scan<403> scan<404> scan<405>
++  scan<406> scan<407> scan<408> scan<409> scan<410> scan<411> scan<412> scan<413>
++  scan<414> scan<415> scan<416> scan<417> scan<418> scan<419> scan<420> scan<421>
++  scan<422> scan<423> scan<424> scan<425> scan<426> scan<427> scan<428> scan<429>
++  scan<430> scan<431> scan<432> scan<433> scan<434> scan<435> scan<436> scan<437>
++  scan<438> scan<439> scan<440> scan<441> scan<442> scan<443> scan<444> scan<445>
++  scan<446> scan<447> scan<448> scan<449> scan<450> scan<451> scan<452> scan<453>
++  scan<454> scan<455> scan<456> scan<457> scan<458> scan<459> scan<460> scan<461>
++  scan<462> scan<463> scan<464> scan<465> scan<466> scan<467> scan<468> scan<469>
++  scan<470> scan<471> scan<472> scan<473> scan<474> scan<475> scan<476> scan<477>
++  scan<478> scan<479> scan<480> scan<481> scan<482> scan<483> scan<484> scan<485>
++  scan<486> scan<487> scan<488> scan<489> scan<490> scan<491> scan<492> scan<493>
++  scan<494> scan<495> scan<496> scan<497> scan<498> scan<499> scan<500> scan<501>
++  scan<502> scan<503> scan<504> scan<505> scan<506> scan<507> scan<508> scan<509>
++ scan<510> scan<511> vcom c3x320x256
+X2 datam datap scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++  scan<62> scan<63> scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> scan<128> scan<129>
++  scan<130> scan<131> scan<132> scan<133> scan<134> scan<135> scan<136> scan<137>
++  scan<138> scan<139> scan<140> scan<141> scan<142> scan<143> scan<144> scan<145>
++  scan<146> scan<147> scan<148> scan<149> scan<150> scan<151> scan<152> scan<153>
++  scan<154> scan<155> scan<156> scan<157> scan<158> scan<159> scan<160> scan<161>
++  scan<162> scan<163> scan<164> scan<165> scan<166> scan<167> scan<168> scan<169>
++  scan<170> scan<171> scan<172> scan<173> scan<174> scan<175> scan<176> scan<177>
++  scan<178> scan<179> scan<180> scan<181> scan<182> scan<183> scan<184> scan<185>
++  scan<186> scan<187> scan<188> scan<189> scan<190> scan<191> scan<192> scan<193>
++  scan<194> scan<195> scan<196> scan<197> scan<198> scan<199> scan<200> scan<201>
++  scan<202> scan<203> scan<204> scan<205> scan<206> scan<207> scan<208> scan<209>
++  scan<210> scan<211> scan<212> scan<213> scan<214> scan<215> scan<216> scan<217>
++  scan<218> scan<219> scan<220> scan<221> scan<222> scan<223> scan<224> scan<225>
++  scan<226> scan<227> scan<228> scan<229> scan<230> scan<231> scan<232> scan<233>
++  scan<234> scan<235> scan<236> scan<237> scan<238> scan<239> scan<240> scan<241>
++  scan<242> scan<243> scan<244> scan<245> scan<246> scan<247> scan<248> scan<249>
++ scan<250> scan<251> scan<252> scan<253> scan<254> scan<255> vcom c3x320x256
+X1 datap datam scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++  scan<62> scan<63> scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> scan<128> scan<129>
++  scan<130> scan<131> scan<132> scan<133> scan<134> scan<135> scan<136> scan<137>
++  scan<138> scan<139> scan<140> scan<141> scan<142> scan<143> scan<144> scan<145>
++  scan<146> scan<147> scan<148> scan<149> scan<150> scan<151> scan<152> scan<153>
++  scan<154> scan<155> scan<156> scan<157> scan<158> scan<159> scan<160> scan<161>
++  scan<162> scan<163> scan<164> scan<165> scan<166> scan<167> scan<168> scan<169>
++  scan<170> scan<171> scan<172> scan<173> scan<174> scan<175> scan<176> scan<177>
++  scan<178> scan<179> scan<180> scan<181> scan<182> scan<183> scan<184> scan<185>
++  scan<186> scan<187> scan<188> scan<189> scan<190> scan<191> scan<192> scan<193>
++  scan<194> scan<195> scan<196> scan<197> scan<198> scan<199> scan<200> scan<201>
++  scan<202> scan<203> scan<204> scan<205> scan<206> scan<207> scan<208> scan<209>
++  scan<210> scan<211> scan<212> scan<213> scan<214> scan<215> scan<216> scan<217>
++  scan<218> scan<219> scan<220> scan<221> scan<222> scan<223> scan<224> scan<225>
++  scan<226> scan<227> scan<228> scan<229> scan<230> scan<231> scan<232> scan<233>
++  scan<234> scan<235> scan<236> scan<237> scan<238> scan<239> scan<240> scan<241>
++  scan<242> scan<243> scan<244> scan<245> scan<246> scan<247> scan<248> scan<249>
++  scan<250> scan<251> scan<252> scan<253> scan<254> scan<255> vcom
++ c3x320x256_vscan hn4=0
+X5 datam datap scan<256> scan<257> scan<258> scan<259> scan<260> scan<261>
++  scan<262> scan<263> scan<264> scan<265> scan<266> scan<267> scan<268> scan<269>
++  scan<270> scan<271> scan<272> scan<273> scan<274> scan<275> scan<276> scan<277>
++  scan<278> scan<279> scan<280> scan<281> scan<282> scan<283> scan<284> scan<285>
++  scan<286> scan<287> scan<288> scan<289> scan<290> scan<291> scan<292> scan<293>
++  scan<294> scan<295> scan<296> scan<297> scan<298> scan<299> scan<300> scan<301>
++  scan<302> scan<303> scan<304> scan<305> scan<306> scan<307> scan<308> scan<309>
++  scan<310> scan<311> scan<312> scan<313> scan<314> scan<315> scan<316> scan<317>
++  scan<318> scan<319> scan<320> scan<321> scan<322> scan<323> scan<324> scan<325>
++  scan<326> scan<327> scan<328> scan<329> scan<330> scan<331> scan<332> scan<333>
++  scan<334> scan<335> scan<336> scan<337> scan<338> scan<339> scan<340> scan<341>
++  scan<342> scan<343> scan<344> scan<345> scan<346> scan<347> scan<348> scan<349>
++  scan<350> scan<351> scan<352> scan<353> scan<354> scan<355> scan<356> scan<357>
++  scan<358> scan<359> scan<360> scan<361> scan<362> scan<363> scan<364> scan<365>
++  scan<366> scan<367> scan<368> scan<369> scan<370> scan<371> scan<372> scan<373>
++  scan<374> scan<375> scan<376> scan<377> scan<378> scan<379> scan<380> scan<381>
++  scan<382> scan<383> scan<384> scan<385> scan<386> scan<387> scan<388> scan<389>
++  scan<390> scan<391> scan<392> scan<393> scan<394> scan<395> scan<396> scan<397>
++  scan<398> scan<399> scan<400> scan<401> scan<402> scan<403> scan<404> scan<405>
++  scan<406> scan<407> scan<408> scan<409> scan<410> scan<411> scan<412> scan<413>
++  scan<414> scan<415> scan<416> scan<417> scan<418> scan<419> scan<420> scan<421>
++  scan<422> scan<423> scan<424> scan<425> scan<426> scan<427> scan<428> scan<429>
++  scan<430> scan<431> scan<432> scan<433> scan<434> scan<435> scan<436> scan<437>
++  scan<438> scan<439> scan<440> scan<441> scan<442> scan<443> scan<444> scan<445>
++  scan<446> scan<447> scan<448> scan<449> scan<450> scan<451> scan<452> scan<453>
++  scan<454> scan<455> scan<456> scan<457> scan<458> scan<459> scan<460> scan<461>
++  scan<462> scan<463> scan<464> scan<465> scan<466> scan<467> scan<468> scan<469>
++  scan<470> scan<471> scan<472> scan<473> scan<474> scan<475> scan<476> scan<477>
++  scan<478> scan<479> scan<480> scan<481> scan<482> scan<483> scan<484> scan<485>
++  scan<486> scan<487> scan<488> scan<489> scan<490> scan<491> scan<492> scan<493>
++  scan<494> scan<495> scan<496> scan<497> scan<498> scan<499> scan<500> scan<501>
++  scan<502> scan<503> scan<504> scan<505> scan<506> scan<507> scan<508> scan<509>
++ scan<510> scan<511> vcom c3x320x256_vscan hn4=1
+X9 datap datam scan<512> scan<513> scan<514> scan<515> scan<516> scan<517>
++  scan<518> scan<519> scan<520> scan<521> scan<522> scan<523> scan<524> scan<525>
++  scan<526> scan<527> scan<528> scan<529> scan<530> scan<531> scan<532> scan<533>
++  scan<534> scan<535> scan<536> scan<537> scan<538> scan<539> scan<540> scan<541>
++  scan<542> scan<543> scan<544> scan<545> scan<546> scan<547> scan<548> scan<549>
++  scan<550> scan<551> scan<552> scan<553> scan<554> scan<555> scan<556> scan<557>
++  scan<558> scan<559> scan<560> scan<561> scan<562> scan<563> scan<564> scan<565>
++  scan<566> scan<567> scan<568> scan<569> scan<570> scan<571> scan<572> scan<573>
++  scan<574> scan<575> scan<576> scan<577> scan<578> scan<579> scan<580> scan<581>
++  scan<582> scan<583> scan<584> scan<585> scan<586> scan<587> scan<588> scan<589>
++  scan<590> scan<591> scan<592> scan<593> scan<594> scan<595> scan<596> scan<597>
++  scan<598> scan<599> scan<600> scan<601> scan<602> scan<603> scan<604> scan<605>
++  scan<606> scan<607> scan<608> scan<609> scan<610> scan<611> scan<612> scan<613>
++  scan<614> scan<615> scan<616> scan<617> scan<618> scan<619> scan<620> scan<621>
++  scan<622> scan<623> scan<624> scan<625> scan<626> scan<627> scan<628> scan<629>
++  scan<630> scan<631> scan<632> scan<633> scan<634> scan<635> scan<636> scan<637>
++  scan<638> scan<639> scan<640> scan<641> scan<642> scan<643> scan<644> scan<645>
++  scan<646> scan<647> scan<648> scan<649> scan<650> scan<651> scan<652> scan<653>
++  scan<654> scan<655> scan<656> scan<657> scan<658> scan<659> scan<660> scan<661>
++  scan<662> scan<663> scan<664> scan<665> scan<666> scan<667> scan<668> scan<669>
++  scan<670> scan<671> scan<672> scan<673> scan<674> scan<675> scan<676> scan<677>
++  scan<678> scan<679> scan<680> scan<681> scan<682> scan<683> scan<684> scan<685>
++  scan<686> scan<687> scan<688> scan<689> scan<690> scan<691> scan<692> scan<693>
++  scan<694> scan<695> scan<696> scan<697> scan<698> scan<699> scan<700> scan<701>
++  scan<702> scan<703> scan<704> scan<705> scan<706> scan<707> scan<708> scan<709>
++  scan<710> scan<711> scan<712> scan<713> scan<714> scan<715> scan<716> scan<717>
++  scan<718> scan<719> scan<720> scan<721> scan<722> scan<723> scan<724> scan<725>
++  scan<726> scan<727> scan<728> scan<729> scan<730> scan<731> scan<732> scan<733>
++  scan<734> scan<735> scan<736> scan<737> scan<738> scan<739> scan<740> scan<741>
++  scan<742> scan<743> scan<744> scan<745> scan<746> scan<747> scan<748> scan<749>
++  scan<750> scan<751> scan<752> scan<753> scan<754> scan<755> scan<756> scan<757>
++  scan<758> scan<759> scan<760> scan<761> scan<762> scan<763> scan<764> scan<765>
++ scan<766> scan<767> vcom c3x320x256_vscan hn4=2
+X13 datam datap scan<768> scan<769> scan<770> scan<771> scan<772> scan<773>
++  scan<774> scan<775> scan<776> scan<777> scan<778> scan<779> scan<780> scan<781>
++  scan<782> scan<783> scan<784> scan<785> scan<786> scan<787> scan<788> scan<789>
++  scan<790> scan<791> scan<792> scan<793> scan<794> scan<795> scan<796> scan<797>
++  scan<798> scan<799> scan<800> scan<801> scan<802> scan<803> scan<804> scan<805>
++  scan<806> scan<807> scan<808> scan<809> scan<810> scan<811> scan<812> scan<813>
++  scan<814> scan<815> scan<816> scan<817> scan<818> scan<819> scan<820> scan<821>
++  scan<822> scan<823> scan<824> scan<825> scan<826> scan<827> scan<828> scan<829>
++  scan<830> scan<831> scan<832> scan<833> scan<834> scan<835> scan<836> scan<837>
++  scan<838> scan<839> scan<840> scan<841> scan<842> scan<843> scan<844> scan<845>
++  scan<846> scan<847> scan<848> scan<849> scan<850> scan<851> scan<852> scan<853>
++  scan<854> scan<855> scan<856> scan<857> scan<858> scan<859> scan<860> scan<861>
++  scan<862> scan<863> scan<864> scan<865> scan<866> scan<867> scan<868> scan<869>
++  scan<870> scan<871> scan<872> scan<873> scan<874> scan<875> scan<876> scan<877>
++  scan<878> scan<879> scan<880> scan<881> scan<882> scan<883> scan<884> scan<885>
++  scan<886> scan<887> scan<888> scan<889> scan<890> scan<891> scan<892> scan<893>
++  scan<894> scan<895> scan<896> scan<897> scan<898> scan<899> scan<900> scan<901>
++  scan<902> scan<903> scan<904> scan<905> scan<906> scan<907> scan<908> scan<909>
++  scan<910> scan<911> scan<912> scan<913> scan<914> scan<915> scan<916> scan<917>
++  scan<918> scan<919> scan<920> scan<921> scan<922> scan<923> scan<924> scan<925>
++  scan<926> scan<927> scan<928> scan<929> scan<930> scan<931> scan<932> scan<933>
++  scan<934> scan<935> scan<936> scan<937> scan<938> scan<939> scan<940> scan<941>
++  scan<942> scan<943> scan<944> scan<945> scan<946> scan<947> scan<948> scan<949>
++  scan<950> scan<951> scan<952> scan<953> scan<954> scan<955> scan<956> scan<957>
++  scan<958> scan<959> scan<960> scan<961> scan<962> scan<963> scan<964> scan<965>
++  scan<966> scan<967> scan<968> scan<969> scan<970> scan<971> scan<972> scan<973>
++  scan<974> scan<975> scan<976> scan<977> scan<978> scan<979> scan<980> scan<981>
++  scan<982> scan<983> scan<984> scan<985> scan<986> scan<987> scan<988> scan<989>
++  scan<990> scan<991> scan<992> scan<993> scan<994> scan<995> scan<996> scan<997>
++  scan<998> scan<999> scan<1000> scan<1001> scan<1002> scan<1003> scan<1004>
++  scan<1005> scan<1006> scan<1007> scan<1008> scan<1009> scan<1010> scan<1011>
++  scan<1012> scan<1013> scan<1014> scan<1015> scan<1016> scan<1017> scan<1018>
++  scan<1019> scan<1020> scan<1021> scan<1022> scan<1023> vcom c3x320x256_vscan
++ hn4=3
+Vcom vcom GND DC 2
+.param ltime = 4.07u
+.param scan_r = 1k
+.param data_h = 12
+.param data_l = -10
+.param data_r = 1k
+.param begin = 2u
+Vdatap datap GND PWL(0n data_l "begin+30n" data_l "begin+30n+20n" data_h
++  "begin+30n+ltime" data_h "begin+30n+ltime+20n" data_l "begin+30n+ltime*2" data_l
++  "begin+30n+ltime*2+20n" data_h "begin+30n+ltime*3" data_h
++ "begin+30n+ltime*3+20n" data_l R="begin+30n+ltime+20n")
+Vdatam datam GND PWL(0n data_h "begin+30n" data_h "begin+30n+20n" data_l
++  "begin+30n+ltime" data_l "begin+30n+ltime+20n" data_h "begin+30n+ltime*2" data_h
++  "begin+30n+ltime*2+20n" data_l "begin+30n+ltime*3" data_l
++ "begin+30n+ltime*3+20n" data_h R="begin+30n+ltime+20n")
+
+* Schematic name: c3_rgbx1
+.SUBCKT c3_rgbx1 DATA_B DATA_G DATA_R SCAN vcom
+XB1 DATA_B SCAN vcom tft
+XG1 DATA_G SCAN vcom tft
+XR1 DATA_R SCAN vcom tft
+.ENDS c3_rgbx1
+
+* Schematic name: c3x20x16
+.SUBCKT c3x20x16 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5>
++  scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14>
++ scan<15> vcom
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X5 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X6 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X7 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X8 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X9 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X10 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X11 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X12 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X13 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X14 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X15 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X16 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+.ENDS c3x20x16
+
+* Schematic name: c3x20x16_vscan
+.SUBCKT c3x20x16_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4>
++  scan<5> scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13>
++ scan<14> scan<15> vcom
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4_vscan hn1=0 hn2=0
++ hn3=0 hn4=0 hn5=0
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X5 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4_vscan hn1=1 hn2=0
++ hn3=0 hn4=0 hn5=0
+X6 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X7 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X8 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X9 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4_vscan hn1=2 hn2=0
++ hn3=0 hn4=0 hn5=0
+X10 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X11 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X12 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X13 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4_vscan hn1=3 hn2=0
++ hn3=0 hn4=0 hn5=0
+X14 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X15 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X16 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+.ENDS c3x20x16_vscan
+
+* Schematic name: c3x320x256
+.SUBCKT c3x320x256 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5>
++  scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14>
++  scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23>
++  scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32>
++  scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41>
++  scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50>
++  scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59>
++  scan<60> scan<61> scan<62> scan<63> scan<64> scan<65> scan<66> scan<67> scan<68>
++  scan<69> scan<70> scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77>
++  scan<78> scan<79> scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86>
++  scan<87> scan<88> scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95>
++  scan<96> scan<97> scan<98> scan<99> scan<100> scan<101> scan<102> scan<103>
++  scan<104> scan<105> scan<106> scan<107> scan<108> scan<109> scan<110> scan<111>
++  scan<112> scan<113> scan<114> scan<115> scan<116> scan<117> scan<118> scan<119>
++  scan<120> scan<121> scan<122> scan<123> scan<124> scan<125> scan<126> scan<127>
++  scan<128> scan<129> scan<130> scan<131> scan<132> scan<133> scan<134> scan<135>
++  scan<136> scan<137> scan<138> scan<139> scan<140> scan<141> scan<142> scan<143>
++  scan<144> scan<145> scan<146> scan<147> scan<148> scan<149> scan<150> scan<151>
++  scan<152> scan<153> scan<154> scan<155> scan<156> scan<157> scan<158> scan<159>
++  scan<160> scan<161> scan<162> scan<163> scan<164> scan<165> scan<166> scan<167>
++  scan<168> scan<169> scan<170> scan<171> scan<172> scan<173> scan<174> scan<175>
++  scan<176> scan<177> scan<178> scan<179> scan<180> scan<181> scan<182> scan<183>
++  scan<184> scan<185> scan<186> scan<187> scan<188> scan<189> scan<190> scan<191>
++  scan<192> scan<193> scan<194> scan<195> scan<196> scan<197> scan<198> scan<199>
++  scan<200> scan<201> scan<202> scan<203> scan<204> scan<205> scan<206> scan<207>
++  scan<208> scan<209> scan<210> scan<211> scan<212> scan<213> scan<214> scan<215>
++  scan<216> scan<217> scan<218> scan<219> scan<220> scan<221> scan<222> scan<223>
++  scan<224> scan<225> scan<226> scan<227> scan<228> scan<229> scan<230> scan<231>
++  scan<232> scan<233> scan<234> scan<235> scan<236> scan<237> scan<238> scan<239>
++  scan<240> scan<241> scan<242> scan<243> scan<244> scan<245> scan<246> scan<247>
++  scan<248> scan<249> scan<250> scan<251> scan<252> scan<253> scan<254> scan<255>
++ vcom
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X5 data2 data1 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X6 data1 data2 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X7 data2 data1 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X8 data1 data2 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X9 data1 data2 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X10 data2 data1 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X11 data1 data2 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X12 data2 data1 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X13 data2 data1 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X14 data1 data2 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X15 data2 data1 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X16 data1 data2 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+.ENDS c3x320x256
+
+* Schematic name: c3x320x256_vscan
+.SUBCKT c3x320x256_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4>
++  scan<5> scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13>
++  scan<14> scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++  scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40>
++  scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49>
++  scan<50> scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58>
++  scan<59> scan<60> scan<61> scan<62> scan<63> scan<64> scan<65> scan<66> scan<67>
++  scan<68> scan<69> scan<70> scan<71> scan<72> scan<73> scan<74> scan<75> scan<76>
++  scan<77> scan<78> scan<79> scan<80> scan<81> scan<82> scan<83> scan<84> scan<85>
++  scan<86> scan<87> scan<88> scan<89> scan<90> scan<91> scan<92> scan<93> scan<94>
++  scan<95> scan<96> scan<97> scan<98> scan<99> scan<100> scan<101> scan<102>
++  scan<103> scan<104> scan<105> scan<106> scan<107> scan<108> scan<109> scan<110>
++  scan<111> scan<112> scan<113> scan<114> scan<115> scan<116> scan<117> scan<118>
++  scan<119> scan<120> scan<121> scan<122> scan<123> scan<124> scan<125> scan<126>
++  scan<127> scan<128> scan<129> scan<130> scan<131> scan<132> scan<133> scan<134>
++  scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141> scan<142>
++  scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149> scan<150>
++  scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157> scan<158>
++  scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165> scan<166>
++  scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173> scan<174>
++  scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181> scan<182>
++  scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189> scan<190>
++  scan<191> scan<192> scan<193> scan<194> scan<195> scan<196> scan<197> scan<198>
++  scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205> scan<206>
++  scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213> scan<214>
++  scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221> scan<222>
++  scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229> scan<230>
++  scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237> scan<238>
++  scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245> scan<246>
++  scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253> scan<254>
++ scan<255> vcom
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64_vscan hn3=0
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X5 data2 data1 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64_vscan
++ hn3=1
+X6 data1 data2 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X7 data2 data1 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X8 data1 data2 scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X9 data1 data2 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64_vscan hn3=2
+X10 data2 data1 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X11 data1 data2 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X12 data2 data1 scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X13 data2 data1 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64_vscan hn3=3
+X14 data1 data2 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X15 data2 data1 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X16 data1 data2 scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+.ENDS c3x320x256_vscan
+
+* Schematic name: c3x5x4
+.SUBCKT c3x5x4 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom
+X1 data1 data2 data1 scan<0> vcom c3_rgbx1
+X2 data2 data1 data2 scan<0> vcom c3_rgbx1
+X3 data1 data2 data1 scan<0> vcom c3_rgbx1
+X4 data2 data1 data2 scan<0> vcom c3_rgbx1
+X5 data1 data2 data1 scan<0> vcom c3_rgbx1
+X6 data2 data1 data2 scan<1> vcom c3_rgbx1
+X7 data1 data2 data1 scan<1> vcom c3_rgbx1
+X8 data2 data1 data2 scan<1> vcom c3_rgbx1
+X9 data1 data2 data1 scan<1> vcom c3_rgbx1
+X10 data2 data1 data2 scan<1> vcom c3_rgbx1
+X11 data1 data2 data1 scan<2> vcom c3_rgbx1
+X12 data2 data1 data2 scan<2> vcom c3_rgbx1
+X13 data1 data2 data1 scan<2> vcom c3_rgbx1
+X14 data2 data1 data2 scan<2> vcom c3_rgbx1
+X15 data1 data2 data1 scan<2> vcom c3_rgbx1
+X16 data2 data1 data2 scan<3> vcom c3_rgbx1
+X17 data1 data2 data1 scan<3> vcom c3_rgbx1
+X18 data1 data2 data1 scan<3> vcom c3_rgbx1
+X19 data1 data2 data1 scan<3> vcom c3_rgbx1
+X20 data2 data1 data2 scan<3> vcom c3_rgbx1
+.ENDS c3x5x4
+
+* Schematic name: c3x5x4_vscan
+.SUBCKT c3x5x4_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> vcom
+Vscan0 scan<0> GND PWL(0 -25 "begin-0.2u+htd0" -25 "begin-0.2u+0.05u+htd0" 30
++  "begin-0.2u+0.05u+ltime+htd0" 30 "begin-0.2u+0.05u+ltime+0.05u+htd0" -25 16.7M
++ -25 )
+.param htd0 = "(hlevel+0)*ltime"
+.param hn4 = 0
+.param hn1 = 0
+.param hn2 = 0
+.param hn5 = 0
+.param hn3 = 0
+.param htd3 = "(hlevel+3)*ltime"
+.param htd2 = "(hlevel+2)*ltime"
+.param htd1 = "(hlevel+1)*ltime"
+.param hlevel = "(pow(4,5)*hn5+pow(4,4)*hn4+pow(4,3)*hn3+pow(4,2)*hn2+4*hn1)"
+Vscan1 scan<1> GND PWL(0 -25 "begin-0.2u+htd1" -25 "begin-0.2u+0.05u+htd1" 30
++  "begin-0.2u+0.05u+ltime+htd1" 30 "begin-0.2u+0.05u+ltime+0.05u+htd1" -25 16.7M
++ -25 )
+Vscan2 scan<2> GND PWL(0 -25 "begin-0.2u+htd2" -25 "begin-0.2u+0.05u+htd2" 30
++  "begin-0.2u+0.05u+ltime+htd2" 30 "begin-0.2u+0.05u+ltime+0.05u+htd2" -25 16.7M
++ -25 )
+Vscan3 scan<3> GND PWL(0 -25 "begin-0.2u+htd3" -25 "begin-0.2u+0.05u+htd3" 30
++  "begin-0.2u+0.05u+ltime+htd3" 30 "begin-0.2u+0.05u+ltime+0.05u+htd3" -25 16.7M
++ -25 )
+X1 data1 data2 data1 scan<0> vcom c3_rgbx1
+X2 data2 data1 data2 scan<0> vcom c3_rgbx1
+X3 data1 data2 data1 scan<0> vcom c3_rgbx1
+X4 data2 data1 data2 scan<0> vcom c3_rgbx1
+X5 data1 data2 data1 scan<0> vcom c3_rgbx1
+X6 data2 data1 data2 scan<1> vcom c3_rgbx1
+X7 data1 data2 data1 scan<1> vcom c3_rgbx1
+X8 data2 data1 data2 scan<1> vcom c3_rgbx1
+X9 data1 data2 data1 scan<1> vcom c3_rgbx1
+X10 data2 data1 data2 scan<1> vcom c3_rgbx1
+X11 data1 data2 data1 scan<2> vcom c3_rgbx1
+X12 data2 data1 data2 scan<2> vcom c3_rgbx1
+X13 data1 data2 data1 scan<2> vcom c3_rgbx1
+X14 data2 data1 data2 scan<2> vcom c3_rgbx1
+X15 data1 data2 data1 scan<2> vcom c3_rgbx1
+X16 data2 data1 data2 scan<3> vcom c3_rgbx1
+X17 data1 data2 data1 scan<3> vcom c3_rgbx1
+X18 data1 data2 data1 scan<3> vcom c3_rgbx1
+X19 data1 data2 data1 scan<3> vcom c3_rgbx1
+X20 data2 data1 data2 scan<3> vcom c3_rgbx1
+.ENDS c3x5x4_vscan
+
+* Schematic name: c3x80x64
+.SUBCKT c3x80x64 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5>
++  scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14>
++  scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23>
++  scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32>
++  scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41>
++  scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50>
++  scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59>
++ scan<60> scan<61> scan<62> scan<63> vcom
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X5 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X6 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X7 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X8 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X9 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X10 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X11 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X12 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X13 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X14 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X15 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X16 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+.ENDS c3x80x64
+
+* Schematic name: c3x80x64_vscan
+.SUBCKT c3x80x64_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4>
++  scan<5> scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13>
++  scan<14> scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++  scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40>
++  scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49>
++  scan<50> scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58>
++ scan<59> scan<60> scan<61> scan<62> scan<63> vcom
+x1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16_vscan hn2=0
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X5 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16_vscan hn2=1
+X6 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X7 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X8 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X9 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16_vscan hn2=2
+X10 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X11 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X12 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X13 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16_vscan hn2=3
+X14 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X15 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X16 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+.ENDS c3x80x64_vscan
+
+* Schematic name: tft
+.SUBCKT tft drain gate vcom
+CLC pixel vcom 150f
+Rdrain Y_T drain data_R
+Cst pixel vcom 0.2p
+Rgate X_L gate scan_R
+X1 Y_T X_L pixel NTFT W=5 L=5
+.ENDS tft
+
+* Global Nodes Declarations
+.GLOBAL GND vcom
+
+* End of the netlist
+* Schematic Netlist rebuilt at runtime
+
+.options
++ scale=1u
+*
++ post=12
++ probe
++ nomod
++ nodeck
++ acct=2
+*
++ reltol=3e-4
++ abstol=1e-10
+*
+*+ cap_mna_formula=1
+*+ cflflag
+*
++ subckt_merge_mode=1
+*
+
+.options
+*+ fss_partition_merge_mode=0
+*+ fss_pwr_resmax=100
+*+ fss_pwr_resmax=40
+*+ fss_pwr_resmax=1
+*+ fss_pwr_resmax=0
+*
+*+ fss_min_res=0.01
+*
++ fss_activity_threshold=1.0e-2
++ fss_time_unit=1.0e-10
+*
+
+.lib 'model.lib' TT
+
+*.tran 0.1u 16.7m
+*.tran 0.1u 300u
+.tran 0.1u 50u
+
+.probe
++ v(x1.x1.x1.*)
++ v(*.pixel)
+*+ v(100)
+*+ v(*)
+*+ i(*.vscan0)
+*+ i(*.vscan1)
+*+ i(*.m1)
+
+.end

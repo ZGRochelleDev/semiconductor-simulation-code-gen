@@ -1,0 +1,26 @@
+* TFT RO TEST (with MOSRA model) NBTI only
+
+vdd 1 0 5 
+mp1 3 2 1 p1 l=5u w=20u ad=5p pd=6u as=5p ps=6u 
+mn1 3 2 0 n1 l=5u w=10u ad=5p pd=6u as=5p ps=6u 
+mp2 4 3 1 p1 l=5u w=20u ad=5p pd=6u as=5p ps=6u 
+mn2 4 3 0 n1 l=5u w=10u ad=5p pd=6u as=5p ps=6u 
+mp3 2 4 1 p1 l=5u w=20u ad=5p pd=6u as=5p ps=6u 
+mn3 2 4 0 n1 l=5u w=10u ad=5p pd=6u as=5p ps=6u 
+c1 2 0 .1p 
+
+.model p1 ptft level=36 
+.model n1 ntft level=36 
+
+.model p1_ra mosra mosralevel=1
++tit0 = 5e-8 titfd = 7.5e-10
++tittd = 1.45e-20 tn = 0.25
+
+.appendmodel p1_ra mosra p1 ptft
+.mosra reltotaltime=6.3e+6
++relmode=2
+
+.ic v(2)=5 
+.tran 100ns 5us 
+.options post 
+.end

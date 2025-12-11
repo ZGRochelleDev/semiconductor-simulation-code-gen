@@ -1,0 +1,183 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Textured Surface Solar Cell simulation
+
+# Required Modules
+#  Victory Process
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -3D Simulator
+#   -3D Optical
+
+# Example Name
+SET name=“Solar_ex03”
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# 1 Create a silicon cuboid (note that the cuboid is in two layers - this simplifies subsequent slice since one interface already exists)
+LAYERS point="0.0,0.0,-0.5" num.edges=1 cuboid.width=0.5 axis.deltas="0.5,5" \
+       layer.offset=0 layer.deltas="0.5" materials="(silicon, silicon)" \
+       out="$"name"_pyramid1" separate
+
+# 2 Create the pyramid planes to use for the slice into the cuboid
+# Using a quarter pyramid to minimize the slicing planes
+PYRAMID base.center="0,0,0" \
+        length.x="1.0" length.y="1.0" \
+        angle=54.7 out="slice1"
+
+# 3 Invert slice1 to match cuboid (we typically grow devices in the negative z-axis)
+REFLECT axis="z" offset="0"
+
+# 4 Slice the pyramid boundary interfaces into the silicon layered cuboid
+SLICE in="$"name"_pyramid1" shape="slice1"
+
+# 5 Convert the region above the pyramid interfaces to gas
+TAG point="0.1,0.1,-0.45" value="tag-top-gas"
+MATERIAL regions="tag-top-gas" value="gas"
+
+# Merge adjacent regions of similar material
+MERGE
+
+# keep the gas on the save (needed for Victory Process)
+SAVE out="$"name"_pyramid1" erase.regions=none 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Use Victory Process to add dopant
+
+# For NAME parameter we do not specify a file with extension,
+#  because a simulation status usually contains several files
+#  In this case here it only contains 1 file :
+#      $"name"_pyramid1.str
+# Moreover we have to add the flag
+#   LOADSTRESSMESH
+#  because Victory Process checks if the simulation status was 
+#  created by a Victory Process SAVE statement.
+#  If this is not the case Victory Process reports an error.
+#  To suppress this error we need the flag 
+#   LOADSTRESSMESH
+LOAD name="$"name"_pyramid1" loadstressmesh
+
+# Add volume data mesh
+LINE x location=0 spacing=0.05
+LINE x location=0.5  spacing=0.05
+
+LINE y location=0 spacing=0.05
+LINE y location=0.5  spacing=0.05
+
+LINE z location=-0.5 spacing=0.01
+LINE z location=0 spacing=0.01
+LINE z location=5 spacing=0.25
+
+# 6 Diffuse boron into the top surface
+DIFFUSE time=5 min temperature=950 c.boron=1e18
+
+SAVE name="$"name"_pyramid2"
+
+# Return to Victory Mesh
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in="$"name"_pyramid2"
+
+# Steps 7-9 mimic a conformal deposit
+
+# 7 Copy the structure (this will be used for the second slice)
+COPY in="$"name"_pyramid2" out="slice2"
+
+# Translate distance equal to the oxide layer thickness
+TRANSLATE delta="0,0,-0.01" 
+
+# Erasing the gas leaves only the silicon, its boundary interfaces will be used for the slice
+ERASE regions="material:gas"
+
+# 8 convert the gas in our pyramid structure to oxide and then slice
+TAG in="$"name"_pyramid2" point="0.1,0.1,-0.45" value="tag-top-oxide"
+MATERIAL regions="tag-top-oxide" value="oxide"
+
+# 9 slice the original structure with the translated pyramid.
+SLICE shape="slice2"
+
+# 10 The oxide now has an interface sliced in 0.01 microns above the silicon interface. 
+# Convert the oxide above that interface back to gas
+TAG point="0.1,0.1,-0.45" value="tag-top-gas"
+MATERIAL regions="tag-top-gas" value="gas"
+
+# 11 Mirror the quarter to create the full pyramid 
+MIRROR axes="-x, -y"
+
+# 12 Add a top aluminium contact
+SLICE from="0.45, 0.45, 0" to="0.5, 0.5, 0.05" 
+TAG point="0.4975,0.4975,0.005" value="to_aluminium"
+MATERIAL regions="to_aluminium" value="aluminum"
+MERGE
+
+# 13 Mirror the structure to generate a larger repeated surface
+MIRROR axes="+x, +y"
+
+# 14 Create Delaunay mesh for Victory Device simulation
+# activate multithreading to speed up this operation
+REMESH delaunay out="$"name"_pyramid3"
+REFINE max.size=0.5
+REFINE max.interface.size=0.01 interface.regions="material:silicon" grading="linear"
+
+SAVE
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH inf=$"name"_pyramid3.str verbose=3 
+
+ELECTRODE   num=1 name=anode region=1
+ELECTRODE   num=2 name=cathode bottom
+
+DOPING uniform n.type conc=1e14 
+DOPING uniform p.type conc=1e12
+
+MODEL srh
+
+METHOD pam.mpi norm.scaling.local
+
+# Use periodic boundary conditions for realistic sampling
+BEAM       num=1 x.o=0.5 y.o=0.5 z.o=-1.0 front.refl periodic \
+           raytrace=$"name"_rays.str wavelength=0.55 
+
+SOLVE init
+SAVE outfile=$"name"_0.str
+SOLVE b1=0.001
+SOLVE b1=0.01
+SOLVE b1=0.1
+SOLVE b1=1
+
+# Obtain spectral response
+LOG outf=$"name"_1.log
+SOLVE b1=1 beam=1 lambda1=0.3 wstep=0.02 wfinal=1.1
+LOG off
+
+SOLVE b1=1 beam=1 lambda1=0.55
+
+# Obtain monochromatic IV characteristics for speed
+log outf=$"name"_2.log
+solve name=anode vanode=0 vfinal=0.6 vstep=0.02
+
+SAVE outfile=$"name"_1.str
+
+# Obtain design indicators
+GO victoryextract
+LOAD in="$"name"_2.log"
+CURVE name=vi x="Anode Voltage" y="Cathode Current"
+EXTRACT.CURVE name="Jsc" expression="intercept(x=0, curve.vi)"
+EXTRACT.CURVE name="Voc" expression="intercept(y=0, curve.vi)"
+
+victoryvisual \
+$"name"_1.log:$"name"_1.set \
+$"name"_2.log:$"name"_2.set \
+$"name"_rays.str:$"name"_rays.set 
+
+QUIT

@@ -1,0 +1,26 @@
+Parametric analysis
+***** Circuit description
+vcc vss 0  DC vccDC
+vin inp 0  PULSE(0 3 0 trtf trtf  10ns 40ns)
+m1 2  inp  vss  vss  pm  w=wp   l=1.6u
+m2 2  inp  0    0    nm  w=30u  l=2.0u
+cout  2  0  50ff 
+.MODEL  pm  PMOS ( level=3 tox=.02e-6
++ phi=0.576 gamma=0 vto=0 alpha=0 kappa=0)
+.model  nm  NMOS ( level=3 tox=.02e-6
++ phi=0.576 gamma=0 vto=0 alpha=0 kappa=0)
+***** Analysis statement
+.TRAN 0.1ns 25ns
+***** Measure statements
+.MEASURE TRAN delrise DELAY v(inp) RISE=1 VAL=1.5
++      TARG=v(2) FALL=1 VAL='0.5*vccDC' 
+.MEASURE TRAN maxv2 MAX  v(2) 
+.MEASURE TRAN delfall DELAY v(inp) FALL=1 VAL=1.5
++      TARG=v(2) RISE=1 VAL='0.5*maxv2' 
+***** Parameter labels
+.PARAM vccDC= 5V wp=4.9u  trtf=1ns
+***** Parametric analysis  specification
+.MODIF proff  prtbl m2(w)=32.6u  LOOP=6 vccDC+=(4.5)0.1v    
++MODIF proff  prtbl     TEMP=75  LOOP=6 vccDC+=(4.5)0.1v    
+.options nomod
+.END

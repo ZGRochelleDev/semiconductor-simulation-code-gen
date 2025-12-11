@@ -1,0 +1,54 @@
+source n3.var
+source n0c3.var
+GO victoryprocess simflags="-P 4"
+#vpm_title = VP_SD
+load name = n11_VP_LDD 
+
+## ---------------------------------- ##
+## ----------- Spacer Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material = nitride thickness = 0.03
+DEPOSIT conformal material = oxide thickness = 0.05
+
+DIFFUSE time = 100 minutes temperature = 680 
+DIFFUSE time = 100 minutes temperature = 700 
+
+ETCH dry materials = "oxide,nitride" thickness = 0.09 
+
+## ---------------------------------- ##
+## ------------- SD Loop ------------ ##
+## -----------------------------------##
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+DEPOSIT min material = oxide thickness = 0.01
+
+if cond = ($type = "NMOS") 
+# NP Implant 
+IMPLANT arsenic energy = 25 dose = 1.0e15 tilt = 0 rotation = 22 reflective bca n.ion = 30000 traj.split plus.n
+IMPLANT phosphorus energy = 45 dose = 1.0e14 tilt = 0 rotation = 22 reflective bca n.ion = 30000 traj.split plus.n
+if.end 
+
+# NP RTA 
+DIFFUSE time = 10 seconds temperature = 600 t.final = 1000
+DIFFUSE time = 30 seconds temperature = 1000
+DIFFUSE time = 10 seconds temperature = 1000 t.final = 600
+
+if cond = ($type = "PMOS") 
+# PP Implant 
+IMPLANT boron energy = 5 dose = 1.0e15 tilt = 0 rotation = 22 reflective bca n.ion = 30000 traj.split plus.n
+IMPLANT boron energy = 15 dose = 5.0e13 tilt = 0 rotation = 22 reflective bca n.ion = 30000 traj.split plus.n
+if.end 
+
+# PP RTA 
+DIFFUSE time = 10 seconds temperature = 600 t.final = 1000
+DIFFUSE time = 10 seconds temperature = 1000
+DIFFUSE time = 10 seconds temperature = 1000 t.final = 600
+
+# Salicide RTA 
+DIFFUSE time = 10 seconds temperature = 600 t.final = 800
+DIFFUSE time = 30 seconds temperature = 800
+DIFFUSE time = 10 seconds temperature = 800 t.final = 600
+
+save name = n15_VP_SD conformalstr

@@ -1,0 +1,162 @@
+# (c) Silvaco Inc., 2024
+
+# SiC Dual Gate Narrow Body "FinFET" Device 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name="SiC_Power_ex07"
+
+####### DEVICE SIMULATOR #######
+# IdVg & IdVd Simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# space.mult - Scales all specified grid spacings by the given factor.
+#              This parameter can be used to produce a coarse mesh and
+#              thereby reduce the simulation time.
+MESH space.mult=2
+
+X.MESH location=-0.3275 spacing=0.05
+X.MESH location=-0.1775 spacing=0.05
+X.MESH location=-0.0275 spacing=0.0001
+X.MESH location=0 spacing=0.0022 
+X.MESH location=0.0275 spacing=0.0001
+X.MESH location=0.1775 spacing=0.05
+X.MESH location=0.3275 spacing=0.05
+
+Y.MESH location=-6.75 spacing=0.05
+Y.MESH location=-6.6 spacing=0.05
+Y.MESH location=-6.3 spacing=0.02
+Y.MESH location=-5.725 spacing=0.2
+Y.MESH location=-5.15 spacing=0.01
+Y.MESH location=-5 spacing=0.05
+Y.MESH location=0 spacing=1 
+Y.MESH location=5 spacing=0.05
+Y.MESH location=5.15 spacing=0.01
+Y.MESH location=5.725 spacing=0.2
+Y.MESH location=6.3 spacing=0.02
+Y.MESH location=6.6 spacing=0.05
+Y.MESH location=6.75 spacing=0.05
+
+Z.MESH location=0    spacing=0.02
+Z.MESH location=0.05 spacing=0.01
+Z.MESH location=0.25 spacing=0.1
+Z.MESH location=0.5  spacing=0.01
+Z.MESH location=1    spacing=0.2
+
+REGION number=1 material=4h-SiC 
+REGION number=2 material=oxide x.minimum=-0.3275 x.maximum=-0.0275 \
+       y.minimum=-6.75 y.maximum=6.3
+REGION number=3 material=oxide x.minimum=0.0275 x.maximum=0.3275 \
+       y.minimum=-6.3 y.maximum=6.75 
+
+ELECTRODE name=gate x.minimum=-0.3275 x.maximum=-0.1775 \
+          y.minimum=-6.75 y.maximum=5.15 z.minimum=0.05 z.maximum=1
+ELECTRODE name=gate x.minimum=0.1775 x.maximum=0.3275 \
+          y.minimum=-5.15 y.maximum=6.75 z.minimum=0.05 z.maximum=1
+ELECTRODE name=source x.minimum=-0.3275 x.maximum=0.0275 \
+          y.minimum=6.6 y.maximum=6.75 z.minimum=0 z.maximum=0.5
+ELECTRODE name=drain x.minimum=-0.0275 x.maximum=0.3275 \
+          y.minimum=-6.75 y.maximum=-6.6 z.minimum=0 z.maximum=0.5
+
+DOPING material=4h-SiC n.type concentration=1e16 uniform
+DOPING material=4h-SiC n.type concentration=1e18 uniform \
+       y.maximum=-6 z.minimum=0 z.maximum=0.5
+DOPING material=4h-SiC n.type concentration=1e18 uniform \
+       y.minimum=6 z.minimum=0 z.maximum=0.5
+DOPING material=4h-SiC p.type concentration=3.5e17 uniform \
+       y.minimum=-5 y.maximum=5 z.minimum=0 z.maximum=0.5
+DOPING material=4h-SiC p.type concentration=3.5e17 uniform \
+       z.minimum=0.501 z.maximum=1
+DOPING material=4h-SiC p.type concentration=1e18 uniform \
+       y.minimum=-5 y.maximum=5 z.minimum=0 z.maximum=0.05
+
+# s.i - Specifies that the conditions given on this INTERFACE statement
+#       should apply to all semiconductor–insulator interfaces,
+#       unless otherwise restricted
+# qf - Specifies the fixed oxide charge density at a semiconductor–insulator
+#      interface in units of electronic charges per cm2
+INTERFACE s.i qf=1.1e12 y.minimum=-6.15 y.maximum=6.15
+
+#### MATERIAL/PHYSICAL MODELS ####
+# altcvt.n - Activates the Alternative CVT model for electrons
+# coulomb.n - Activates the Coulomb scattering component \
+#             for electron CVT mobilities.
+MOBILITY material=4h-sic altcvt.n coulomb.n
+# srh - Selects the Shockley-Read-Hall (SRH) recombination model
+# fldmob - Models velocity saturation effects that limit mobilities
+#          at high electric fields
+# incomplete - Causes Victory Device to account for incomplete \
+#              ionization of impurities.
+# n.hanschqm - Enables MOSFET Hansch quantum correction model for electrons
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS   material=4h-sic srh fldmob incomplete n.hanschqm print
+CONTACT  name=gate workfunction=4.6
+
+#### NUMERICAL METHODS ####
+# pam.gmres - Linear solutions are obtained using a parallelized GMRES method
+# norm.scaling.local - RHS norms are nondimensionalized, and scaled by the 
+#                      local cell volume
+# pc.fill.ratio - Controls the amount of fill-in permitted by the AMP or ILUP 
+#                 preconditioner
+# linear.max.iteration - Sets the maximum number of iterations for the 
+#                        iterative linear solvers.
+# climit - Specifies a concentration normalization factor
+# cx.tol - Specifies the relative (XNORM) tolerance for convergence \
+#          of the continuity equations
+METHOD pam.gmres norm.scaling.local climit=1e-10 cx.tol=1e-10 \
+       pc.fill.ratio=1e-6 linear.max.iterations=400
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+# IdVg Simulation
+SOLVE vdrain=0.01 previous
+SOLVE vdrain=0.1 previous
+
+LOG outfile=$'name'_VD_IdVg.log
+
+SOLVE previous
+SOLVE vgate=0.01 previous
+SOLVE vgate=0.1 previous
+SOLVE vgate=0.25 vstep=0.25 vfinal=10 name=gate previous
+
+LOG off
+
+SAVE outfile=$'name'_VD_IdVg_final.str
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+# Reset the simulation
+SOLVE init
+SOLVE previous
+
+# IdVd Simulation
+# To save time, load the previously saved Vg=10V structure file
+LOAD infile=$'name'_VD_IdVg_final.str
+
+LOG outfile=$'name'_VD_IdVd.log
+
+SOLVE previous
+SOLVE vdrain=0.25 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=15 name=drain previous
+
+LOG off
+
+SAVE outfile=$'name'_VD_IdVd_final.str
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual $'name'_VD_init.str \
+$'name'_VD_IdVg.log \
+$'name'_VD_IdVd.log
+
+
+QUIT

@@ -1,0 +1,82 @@
+# (c) Silvaco Inc., 2024
+
+# TFT Simulation Using the C-interpreter
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+###### VARIABLES ######
+# Example Name
+SET name="TFT_ex03"
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####  
+MESH 
+X.MESH location=0 spacing=1 
+X.MESH location=20 spacing=1
+
+Y.MESH location=-0.1 spacing=0.25
+Y.MESH location=0 spacing=0.005
+Y.MESH location=0.1 spacing=0.005
+Y.MESH location=2 spacing=0.5
+Y.MESH location=10 spacing=1
+
+REGION number=1 oxide x.minimum=0 x.maximum=20 y.minimum=-0.1 y.maximum=0 
+REGION number=2 silicon x.minimum=0 x.maximum=20 y.minimum=0 y.maximum=0.1 
+REGION number=3 oxide x.minimum=0 x.maximum=20 y.minimum=0.1 y.maximum=10
+
+## Define electrodes
+ELECTRODE number=1 name=gate \
+ x.minimum=5 x.maximum=15 y.minimum=-0.1 y.maximum=-0.1
+ELECTRODE number=2 name=substrate substrate  
+ELECTRODE number=3 name=source \
+ x.minimum=0 x.maximum=2 y.minimum=0 y.maximum=0  
+ELECTRODE number=4 name=drain \
+ x.minimum=18 x.maximum=20 y.minimum=0 y.maximum=0
+
+## Doping profiles
+DOPING region=2 uniform concentration=1e11 n.type
+DOPING region=2 gauss concentration=1e20 n.type x.right=5 characteristic=0.3
+DOPING region=2 gauss concentration=1e20 n.type x.left=15 characteristic=0.3
+
+#### MATERIAL/PHYSICAL MODELS ####  
+## Set parameters for polysilicon
+MATERIAL region=2 mun=300 mup=30
+
+## Use the C-interpreter function and the continuous defect model 
+DEFECTS f.tftacc=${name}_VD.lib f.tftdon=${name}_VD.lib continuous \ 
+ nta=0 ntd=0 nga=0 ngd=0 \
+ afile=${name}_acceptor.log dfile=${name}_donor.log
+
+## Define gate workfunction
+CONTACT number=1 n.polysilicon
+
+## Model defines
+MODELS temperature=300  
+
+#### NUMERICAL METHODS ####  
+METHOD newton
+
+#### SOLUTION SOLVING #### 
+SOLVE initial
+SAVE outfile=${name}_VD_init.str
+
+## Electrode #1-Gate, #2-Substrate, #3-Source, #4-Drain
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=0.5
+SOLVE vdrain=1 vstep=1 vfinal=5 name=drain
+
+## Solve id versus vg curve
+LOG outfile=${name}_VD_idvg.log 
+SOLVE vstep=0.5 vfinal=20 name=gate vgate=0 vdrain=5
+
+####### VISUALIZATION OF RESULTS #####
+victoryvisual ${name}_VD_init.str:${name}_VD_init.set \
+  ${name}_VD_idvg.log:${name}_VD_idvg.set
+
+QUIT

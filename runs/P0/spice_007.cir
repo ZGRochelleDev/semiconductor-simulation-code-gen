@@ -1,0 +1,16 @@
+Answer:
+**Required:**
+
+a) Netlist of the given circuit.
+
+b) Output file containing the results of the simulation.
+
+
+<span style="color:#4257B2">**What we need to do?**</span>
+**Introduction:**
+
+In this problem, we are asked to write a **SPICE netlist** that simulates a half-wave rectifier using the provided parameters:
+
+- $V_1$ is a sine wave source with frequency $f = 60 \text{ Hz}$, amplitude $A = 10$, and period $\tau = 0.0333\text{ s}$
+- $D_1$ is a diode with a forward voltage drop of $V_f = 0.7 \text{ V}$ and a reverse saturation current of $I_s = 10^{-18}\text{ A}$
+- The load resistance $R_{load} = 1\text{ k

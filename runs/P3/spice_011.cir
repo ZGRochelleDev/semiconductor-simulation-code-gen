@@ -1,0 +1,10 @@
+**Note:** This task requires careful consideration of component values and circuit design principles.
+
+### Netlist:
+
+```
+/* Divider Op */
+V1 in 0 5
+R1 1k in 1k
+R1 out 0 0
+.end

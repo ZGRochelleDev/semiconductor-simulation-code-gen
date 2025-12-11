@@ -1,0 +1,69 @@
+# (c) Silvaco Inc., 2024
+
+# Non Planarized, Low k Dielectric Capacitance Analysis
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex14” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+##### First do Low k Calculation   ######
+
+INIT layout=$'name'.lay depth=1 material=silicon from=0 to=11 at=6.75 \
+     gasheight=3 resolution=0.125
+
+DEPOSIT material=oxide thickness=0.5 max
+
+DEPOSIT material=aluminum thickness=0.8 max
+ETCH material=aluminum mask=MET1
+ELECTRODES mask=MET1 material=aluminum
+
+DEPOSIT material=oxide thickness=0.05 conformal
+DEPOSIT material=lok thickness=0.05 max
+DEPOSIT material=oxide thickness=0.5 max
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal
+SAVE out=$'name'_VP_sv_2D.str mode=victoryrcx
+
+
+####### PARASITIC EXTRACTION ####### 
+
+## Extract Capacitance of LoK Structure ##
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv_2D.str"
+
+MATERIAL material("lok") permittivity=2.0
+
+INTERCONNECT capacitance adaptc=0.01
+
+SAVE spice="$'name'_VP_sv_LoK.net"
+
+#####   Now do Standard k calculation   #####
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv_2D.str"
+
+MATERIAL material("lok") permittivity=4.0
+
+INTERCONNECT capacitance adaptc=0.01
+
+SAVE spice="$'name'_VP_sv_HiK.net"
+
+victoryvisual $'name'_VP_sv_2D.str
+
+QUIT

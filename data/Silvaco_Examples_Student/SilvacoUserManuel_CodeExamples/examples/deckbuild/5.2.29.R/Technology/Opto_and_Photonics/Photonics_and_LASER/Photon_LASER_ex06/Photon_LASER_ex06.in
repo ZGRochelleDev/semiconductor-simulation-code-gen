@@ -1,0 +1,130 @@
+# (c) Silvaco Inc., 2024
+
+# Dynamic Simulation of Relaxation Oscillation 
+
+# Required Modules
+#  Atlas
+#   -Blaze
+#   -Laser
+
+# Example Name
+SET name=“Photon_LASER_ex06” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 2"
+
+MESH  space.mult=1.0 diag.flip
+# 
+X.MESH loc=0.00 spac=2
+X.MESH loc=8 spac=0.5
+X.MESH loc=9 spac=0.2
+X.MESH loc=11 spac=0.2
+X.MESH loc=12 spac=0.5
+X.MESH loc=20 spac=2
+#
+Y.MESH loc=0.00 spac=0.25
+Y.MESH loc=1 spac=0.25
+Y.MESH loc=1.75 spac=0.02
+Y.MESH loc=1.9 spac=0.02
+Y.MESH loc=2 spac=0.075
+Y.MESH loc=2.5 spac=0.1
+Y.MESH loc=3.5 spac=0.1
+Y.MESH loc=4.5 spac=0.2
+Y.MESH loc=10 spac=1.5
+#
+REGION     num=1  material=InP x.min=0. x.max=20.0 \
+ y.min=0.0 y.max=1.0
+#
+REGION     num=2  material=InP x.min=0. x.max=9.0 \
+ y.min=1.0 y.max=2.5
+#
+REGION     num=3  material=InP x.min=11.0 x.max=20.0 \
+ y.min=1.0 y.max=2.5
+#
+REGION     num=4  material=InP x.min=9.0 x.max=11.0 \
+ y.min=1.0 y.max=1.75
+#
+REGION     num=5  material=InGaAsP x.min=9.0 x.max=11.0 y.min=1.75 \
+ y.max=1.9 x.comp=0.25 y.comp=0.5
+#
+REGION     num=6  material=InP x.min=0.0 x.max=9.0 \
+ y.min=2.5 y.max=3.5
+#
+REGION     num=7  material=InP x.min=11.0 x.max=20.0 \
+ y.min=2.5 y.max=3.5
+#
+REGION     num=8  material=InP x.min=9.0 x.max=11.0 \
+ y.min=1.9 y.max=3.5
+#
+REGION     num=9  material=InP x.min=0.0 x.max=20.0 \
+ y.min=3.5 y.max=4.5
+#
+REGION     num=10  material=InP x.min=0.0 x.max=20.0 \
+ y.min=4.5 y.max=10.0
+#
+ELECTRODE       num=1  name=cathode       \
+ x.min=8.0 x.max=12.0 y.min=0.0 y.max=0.0
+#
+ELECTRODE       num=2  name=anode       bottom
+#
+DOPING     uniform reg=1  n.type conc=1.e18
+DOPING     uniform reg=2  p.type conc=2.e17
+DOPING     uniform reg=3  p.type conc=2.e17
+DOPING     uniform reg=4  n.type conc=1.e18
+DOPING     uniform reg=5  p.type conc=2.e15
+DOPING     uniform reg=6  n.type conc=2.e17
+DOPING     uniform reg=7  n.type conc=2.e17
+DOPING     uniform reg=8  p.type conc=1.e18
+DOPING     uniform reg=9  p.type conc=1.e18
+DOPING     uniform reg=10 p.type conc=2.e18
+#
+MATERIAL material=InP     taun0=2.e-9  taup0=2.e-9  copt=1.5e-10 \
+ mun=2400.0 mup=80.0 align=0.6
+#
+MATERIAL material=InGaAsP taun0=10.e-9 taup0=10.e-9 copt=1.5e-10 \
+ mun=4600.0 mup=150.0  
+#
+MATERIAL fcn=3e-18 fcp=2.3e-17 alphaa=50
+
+MODELS  
+MODELS material=InP     fldmob  srh optr fermi print
+MODELS material=InGaAsP fldmob  srh optr fermi print
+#
+SOLVE init
+OUTPUT con.band val.band
+SAVE outf= $'name'_0.str
+#
+METHOD newton autonr trap
+#
+SOLVE vfinal=1.0 vstep=0.1 name=anode
+#
+#    LASER MODELS
+#
+LX.M n=1  x=6.0
+LX.M n=37 x=14.0
+#
+LY.M n=1  y=1.25
+LY.M n=33 y=2.4
+#
+MODELS material=InGaAsP fldmob  srh optr fermi print \
+ laser gainmod=1 las_maxch=100. spec.name= $'name' \
+ photon_energy=1.025 lmodes las_einit=1.01 las_efinal=1.1 cavity_length=150 \
+ las.losses=5 las.absorption las.fcarrier las.mirror=95
+#
+LOG  outf= $'name'_1.log 
+#
+SOLVE vfinal=1.2 vstep=0.05 name=anode
+#
+OUTPUT con.band val.band recomb u.srh u.aug u.rad flowlines
+SAVE outfile= $'name'_1.str
+#
+METHOD dt.max=1e-11
+LOG outf= $'name'_2.log
+SOLVE vanode=1.3 ramptime=1e-11 dt=1e-13 tfinal=1e-9
+
+victoryvisual \
+$'name'_2.log:$'name'_2.set \
+$'name'_tr105.log:$'name'_tr105_tr0.set+\
+$'name'_tr0.log:$'name'_tr105_tr0.set
+
+QUIT

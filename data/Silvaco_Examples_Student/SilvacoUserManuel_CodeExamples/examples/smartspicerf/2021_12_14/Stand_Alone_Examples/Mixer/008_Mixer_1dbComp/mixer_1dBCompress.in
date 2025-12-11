@@ -1,0 +1,22 @@
+* 1db Compression Point
+.include HBT_ne600p.inc
+
+.param prf=-30_dBm
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf gnd MTS1 (prf 0 23)
+Vlo lo gnd MTS1 (vlo 0 25)
+
+*-------- Calculation the 1 dB Compression Point -----
+.HARMONIC
++ FUND=40MegHz nharm=31
++ annotate=3
++ waves 
++ SWEEP prf -20 0 0.1
+
+
+.MEASURE HARM_SP dbOUT EXPR VAL='@Pif[pout2]'
+.MEASURE MEAS r_1dbCompression COMPR1DB dbOUT EP=-15
+
+.END

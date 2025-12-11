@@ -1,0 +1,57 @@
+# (c) Silvaco Inc., 2024
+
+# Oxidation specific refinement (MESHDEPTH.OXIDATION)
+
+# Required Modules
+#  Victory Process
+#   -2D Oxidation
+
+# Example Name
+Set name=“VP_Meshing_ex06”
+
+# Global Meshdepth of 2 (inaccurate and fast)
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=-1 to=1 depth=1 \
+resolution=0.1 meshdepth=2 gasheight=2
+
+DEPOSIT material=polysilicon thick=1 right.to=0 max
+
+DIFFUSE dry time=70  temp=900
+
+# EXPORT structures are for visualization only
+EXPORT name=$'name'_MD2
+
+# Global Meshdepth of 3 (accurate but slower)
+GO victoryprocess simflags="-P 4"
+INIT material=silicon from=-1 to=1 depth=1 \
+resolution=0.1 meshdepth=3 gasheight=2
+
+DEPOSIT material=polysilicon thick=1 right.to=0 max
+
+DIFFUSE dry time=70  temp=900
+
+# EXPORT structures are for visualization only
+EXPORT name=$'name'_MD3
+
+# Global Meshdepth of 2 with localised Meshdepth of 3 on oxide.
+# (accurate with good speed)
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=-1 to=1 depth=1 \
+resolution=0.1 meshdepth=2 meshdepth.oxidation=3 gasheight=2
+
+DEPOSIT material=polysilicon thick=1 right.to=0 max
+
+DIFFUSE dry time=70  temp=900
+
+# EXPORT structures are for visualization only
+EXPORT name=$'name'_MD2_MDOx3
+
+victoryvisual \
+$'name'_MD2.str \
+$'name'_MD3.str \
+$'name'_MD2_MDOx3.str \
+$'name'_MD2.str:$'name'_Zoom.set+$'name'_MD3.str:$'name'_Zoom.set+$'name'_MD2_MDOx3.str:$'name'_Zoom.set
+
+QUIT

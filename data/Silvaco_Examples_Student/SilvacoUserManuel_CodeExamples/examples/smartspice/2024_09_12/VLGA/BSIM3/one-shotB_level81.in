@@ -1,0 +1,74 @@
+*One-shot Trigger.  (UCB TEST CIRCUIT) Verilog-A
+
+.op
+.dc vin 0 5 0.1
+.tran 0.01ns 3ns
+
+.VERILOG "bsim3v32.va"
+
+.MEAS TRAN  avg_v_out   AVG  v(out)
+
+.SAVE ALL
+
+.OPTIONS GMIN=1e-12 DCGMIN=1e-12 
++ METHOD=GEAR
+.OPTIONS nomod acct expert=3 WARNLIMIT=5 NUMDGT=9
+.OPTIONS ABSTOL=1e-12
+
+*A two-gate delay element
+YVLGd1 4 in Vdd Vdd  PMOS w=3.6u l=1.2u
+YVLGd2 4 in 0 0 NMOS w=1.8u l=1.2u
+c4 4 0 30f
+YVLGd3 A 4 Vdd Vdd  PMOS w=3.6u l=1.2u
+YVLGd4 A 4 0 0 NMOS w=1.8u l=1.2u
+ca a 0 30f
+
+*EXOR gate
+*A inverter
+YVLG1 Anot A Vdd Vdd  PMOS w=3.6u l=1.2u
+YVLG2 Anot A 0 0 NMOS w=1.8u l=1.2u
+
+YVLG3 Bnot in Vdd Vdd  PMOS w=3.6u l=1.2u
+YVLG4 Bnot in 0 0 NMOS w=1.8u l=1.2u
+
+YVLG5 AorBnot 0 Vdd Vdd PMOS w=1.8u l=3.6u
+YVLG6 AorBnot in 1 0 NMOS w=1.8u l=1.2u
+YVLG7 1 Anot 0 0 NMOS w=1.8u l=1.2u
+
+YVLG8 Lnot 0 Vdd Vdd PMOS w=1.8u l=3.6u
+YVLG9 Lnot Bnot 2 0 NMOS w=1.8u l=1.2u
+YVLG10 2 A 0 0 NMOS w=1.8u l=1.2u
+
+YVLG11 out 0 Vdd Vdd PMOS w=3.6u l=3.6u
+YVLG12 out AorBnot 3 0 NMOS w=1.8u l=1.2u
+YVLG13 3 Lnot 0 0 NMOS w=1.8u l=1.2u
+*end of EXOR gate
+
+Vcc vdd 0 5
+vin in 0 pulse 0 5 1ns .1ns .1ns .8ns 5ns
+
+*-----------  Berkeley LEVEL 81 -----------------
+.model nmos VLG module=mosfet
++ TYPE=1
++ VBM=-5
++ CJSW=0.0
++ CGBO=0.0
+*+ NQSMOD=1
+
+.model pmos VLG module=mosfet
++ TYPE=-1
++ VBM=-5
++ CJSW=0.0
++ CGBO=0.0   
+*+ NQSMOD=1
+
+.END
+
+
+
+
+
+
+
+
+

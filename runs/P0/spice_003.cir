@@ -1,0 +1,16 @@
+Answer:
+**Required:**
+
+a) Write an ngspice-compatible spicetext.
+
+b) The output should contain only the netlist text without any explanations or markdown formatting.
+
+
+<span style="color:#4257B2">**What is the ngspice-compatible spicipt?**</span>
+**Introduction:**
+
+In this problem, we are given a circuit with a series $RLC$ driven by a sine source. We need to write an ngspice-compatible spice script that will simulate the behavior of the circuit over time. 
+
+<span style="color:#36FFCC">**How can we do it?**</span>
+
+To create the ngspice-compatible spice file, we first define the components such as resistors, capacitors, and inductors using their respective values. Then, we connect these components according to the circuit diagram provided. Finally, we add the necessary parameters such as the frequency of the sine wave and the duration of the

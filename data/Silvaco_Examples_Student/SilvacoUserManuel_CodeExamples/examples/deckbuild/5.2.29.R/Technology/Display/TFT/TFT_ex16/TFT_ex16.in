@@ -1,0 +1,223 @@
+# (c) Silvaco Inc., 2024
+
+# Polysilicon grain and grain boundary device simulation
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+# Reference: 
+# "Two-Dimensional Numerical Simulationm of Solid-Phase-Crystallized 
+# polysilicon Thin-Film-Transistor Characteristics", 
+# Jpn. J.Appl. Phys. Vol. 38(199( pp.2251-2255 Part 1. No. 4B, Arpil 1999
+
+###### VARIABLES ######
+# Example Name
+SET name=TFT_ex16
+
+###### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####  
+# Width=50um, Length=5um, Grain size 0.5 um
+MESH width=50
+
+X.MESH location=-5 spacing=0.5
+X.MESH location=-3 spacing=0.1
+X.MESH location=-2.5 spacing=0.1
+X.MESH location=0 spacing=0.1
+X.MESH location=2.5	spacing=0.1
+X.MESH location=3 spacing=0.1
+X.MESH location=5 spacing=0.5
+
+Y.MESH location=-0.22 spacing=0.05
+Y.MESH location=-0.1 spacing=0.01
+Y.MESH location=0 spacing=0.01
+Y.MESH location=1 spacing=0.5
+
+REGION number=1 oxide x.minimum=-5 x.maximum=5 y.minimum=-0.22 y.maximum=1
+REGION number=2 polysilicon x.minimum=-5 x.maximum=5 y.minimum=-0.1 y.maximum=0
+SET x1=-3
+SET x2=-2.5
+SET no=3
+LOOP steps=12
+REGION number=$no polysilicon x.minimum=$x1 x.maximum=$x2 \
+ y.minimum=-0.1 y.maximum=0
+SET x1=$x2
+SET x2=$x1+0.5
+SET no=$no+1
+L.END
+
+## Define electrodes
+ELECTRODE number=1 name=gate x.minimum=-2.5 x.maximum=2.5 \
+ y.minimum=-0.22 y.maximum=-0.22
+ELECTRODE number=2 name=source x.minimum=-5 x.maximum=-3.0 \
+ y.minimum=-0.22 y.maximum=-0.1
+ELECTRODE number=3 name=drain x.minimum=3 x.maximum=5 \
+ y.minimum=-0.22 y.maximum=-0.1
+
+## Doping profiles
+DOPING x.minimum=-5 x.maximum=-2.5 y.minimum=-0.22 y.maximum=1 \
+ n.type concentration=2e19 gauss characteristic=0.1 peak=-0.1
+DOPING x.minimum=2.5 x.maximum=5 y.minimum=-0.22 y.maximum=1 \
+ n.type concentration=2e19 gauss characteristic=0.1 peak=-0.1
+DOPING x.minimum=-5 x.maximum=5 y.minimum=-0.22 y.maximum=1 \
+ n.type concentration=2e14 uniform
+
+#### MATERIAL/PHYSICAL MODELS #### 
+## Fixed charge at Semiconductor/Insulator
+INTERFACE s.i qf=3e11
+
+## Define workfunction
+CONTACT name=gate workfunction=4.1
+CONTACT name=drain con.resist=1e-3
+
+## Material parameters, bandgap, and constant mobility
+## Adjust mobility to fit output current (IdVd curve)
+MATERIAL eg300=1.2 taun0=1e-11 taup0=1e-11 mun=120 mup=120
+
+## Model defines
+MODELS srh bound.trap bbt.kl bb.b=1.2e7 bb.gamma=2 bb.a=5e20 fldmob
+
+## Acceptor shallow & donor concentration prefactor
+## fit to S.S slope and overall shape
+SET a=3*3.9
+SET b=4*2
+OPTIONS cint.param="shallow" cint.double=$a
+OPTIONS cint.param="deep" cint.double=$b
+
+## Donor shallow & donor conc prefactor
+## fit to leakage part
+SET c=4
+SET d=2
+OPTIONS cint.param="don_shallow" cint.double=$c
+OPTIONS cint.param="don_deep"    cint.double=$d
+
+## Grain interior DOS
+## Reset default dos value to zero and override new "U"-shaped DOS model using c-interpreter
+DEFECTS numa=48 numd=48 nga=0 ngd=0 nta=0 ntd=0 continuous \
+ f.tftdon=$'name'_don.lib \
+ f.tftacc=$'name'_acc.lib tfile=$'name'_dos.log
+
+## Fit to high gate bias region ranging from 10 ~ 20V
+SET f=4
+OPTIONS cint.param="acc_int_shallow" cint.double=$f
+
+## Intdefect for grain boundary
+INTDEFECTS s.s intmaterial="poly/poly" continuous \
+ numa=48 numd=48 nga=0 ngd=0 nta=0 ntd=0 \
+ f.tftdon=$'name'_don_int.lib \
+ f.tftacc=$'name'_acc_int.lib tfile=$'name'_dos_int.log
+
+#### NUMERICAL METHODS ####
+METHOD maxtrap=10 itlimit=100 climit=1e-4 dvmax=0.05
+
+#### SOLUTION SOLVING ####
+## Solve Id versus Vg curve 
+SOLVE initial
+SAVE outfile=$'name'_VD_init.str
+
+SOLVE previous
+SOLVE vgate=0 vstep=-0.5 vfinal=-8 name=gate
+
+SOLVE vdrain=0.1 
+SAVE outfile=$'name'_VD_vds0.1.str
+
+SOLVE vstep=0.1 vfinal=1 name=drain
+SAVE outfile=$'name'_VD_vds1.str
+
+LOAD infile=$'name'_VD_vds0.1.str master
+LOG outfile=$'name'_VD_idvg_vds0.1.log no.trap
+SOLVE previous vstep=0.5 vfinal=19 name=gate
+LOG off
+
+LOAD infile=$'name'_VD_vds1.str master
+LOG outfile=$'name'_VD_idvg_vds1.log no.trap
+SOLVE previous vstep=0.5 vfinal=19 name=gate
+LOG off
+
+#### SOLUTION SOLVING ####
+## Solve Id versus Vd curve
+SOLVE initial
+
+SOLVE vgate=0 vstep=0.5 vfinal=6 name=gate
+SAVE outfile=$'name'_VD_vg6.str
+
+SOLVE previous vstep=0.5 vfinal=8 name=gate
+SAVE outfile=$'name'_VD_vg8.str
+
+SOLVE previous vstep=0.5 vfinal=10 name=gate
+SAVE outfile=$'name'_VD_vg10.str
+
+SOLVE prev vstep=0.5 vfinal=12 name=gate
+SAVE outfile=$'name'_VD_vg12.str
+
+LOAD infile=$'name'_VD_vg6.str  master
+SOLVE previous
+LOG outfile=$'name'_VD_idvd_vg6.log no.trap
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+LOAD infile=$'name'_VD_vg8.str  master
+SOLVE previous
+LOG outfile=$'name'_VD_idvd_vg8.log no.trap
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+LOAD infile=$'name'_VD_vg10.str  master
+SOLVE previous
+LOG outfile=$'name'_VD_idvd_vg10.log no.trap
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+LOAD infile=$'name'_VD_vg12.str  master
+SOLVE previous
+LOG outfile=$'name'_VD_idvd_vg12.log no.trap
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+go victoryextract
+####### EXTRACT IdVg curve #####
+LOAD in="$'name'_VD_idvg_vds0.1.log"
+CURVE name="idvg_vds0.1" x="gate voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvg_vds0.1"
+#
+LOAD in="$'name'_VD_idvg_vds1.log"
+CURVE name="idvg_vds1" x="gate voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvg_vds1"
+
+####### EXTRACT IdVd curve #####
+LOAD in="$'name'_VD_idvd_vg6.log"
+CURVE name="idvd_vg6" x="drain voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvd_vg6"
+#
+LOAD in="$'name'_VD_idvd_vg8.log"
+CURVE name="idvd_vg8" x="drain voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvd_vg8"
+#
+LOAD in="$'name'_VD_idvd_vg10.log"
+CURVE name="idvd_vg10" x="drain voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvd_vg10"
+#
+LOAD in="$'name'_VD_idvd_vg12.log"
+CURVE name="idvd_vg12" x="drain voltage" y="drain current"
+EXTRACT.CSV csvfile="$'name'_SIM_idvd_vg12"
+
+####### VISUALIZATION OF RESULTS #####
+victoryvisual \
+$'name'_VD_init.str:$'name'_VD_init.set \
+$'name'_EXP_idvg_vds0.1.dat:$'name'_idvg.set+\
+$'name'_EXP_idvg_vds1.dat:$'name'_idvg.set+\
+$'name'_SIM_idvg_vds0.1.dat:$'name'_idvg.set+\
+$'name'_SIM_idvg_vds1.dat:$'name'_idvg.set \
+$'name'_EXP_idvd_vg6.dat+\
+$'name'_EXP_idvd_vg8.dat+\
+$'name'_EXP_idvd_vg10.dat+\
+$'name'_EXP_idvd_vg12.dat+\
+$'name'_SIM_idvd_vg6.csv+\
+$'name'_SIM_idvd_vg8.csv+\
+$'name'_SIM_idvd_vg10.csv+\
+$'name'_SIM_idvd_vg12.csv
+
+QUIT

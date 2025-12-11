@@ -1,0 +1,64 @@
+source n1.var
+source n0c1.var
+go devedit
+
+DevEdit version = 2.4.0.R
+#
+init infile = n1_powerex11_0.str
+
+work.area x1 = 0 y1 = -1.76 x2 = 10 y2 = 8
+# devedit 2.4.0.R (Thu May 8 12:10:27 PDT 1997)
+# libsflm 2.0.0.R (Thu May 1 18:03:38 PDT 1997)
+# libDW_Misc 1.20.0.R (Mon Apr 28 17:55:25 PDT 1997)
+# libCardDeck 1.20.0.R (Tue Apr 29 15:01:54 PDT 1997)
+# libGeometry 1.20.0.R (Mon Apr 28 18:17:55 PDT 1997)
+# libDW_set 1.20.0.R (Mon Apr 28 17:57:52 PDT 1997)
+# libSVC_Misc 1.20.0.R (Mon Apr 28 18:20:53 PDT 1997)
+# libSDB 1.0.6.C (Mon May 5 16:28:49 PDT 1997)
+# libSSS 1.20.0.R (Mon May 5 16:29:45 PDT 1997)
+# libmeshBuild 1.20.0.R (Wed May 7 23:57:48 PDT 1997)
+# libDW_Make 1.1.3.R (Thu May 1 20:07:31 PDT 1997)
+
+# set meshing Parameters
+#
+base.mesh height = 1 width = 2
+#
+bound.cond !apply max.slope = 30 max.ratio = 100 rnd.unit = 0.001 line.straightening = 1 align.points when = automatic
+#
+imp.refine imp = "Net Doping" scale = log transition = 1e+10 sensitivity = 2
+imp.refine min.spacing = 0.2
+#
+constr.mesh max.angle = 90 max.ratio = 300 max.height = 10000 max.width = 10000 min.height = 0.0001 min.width = 0.0001
+#
+constr.mesh type = Semiconductor default
+#
+constr.mesh type = Insulator default
+#
+constr.mesh type = Metal default
+#
+constr.mesh type = Other default
+#
+constr.mesh region = 1 default
+#
+constr.mesh region = 2 default
+#
+constr.mesh region = 3 default
+#
+constr.mesh region = 4 default
+constr.mesh id = 1 x1 = 2.5 y1 = 0 x2 = 1e+06 y2 = 0.5 default max.height = 0.1 max.width = 2
+constr.mesh id = 2 x1 = 2 y1 = 0 x2 = 4.5 y2 = 0.5 default max.height = 0.1 max.width = 0.2
+mesh Mode = meshBuild
+refine mode = y x1 = 0.15 y1 = 5.98 x2 = 9.82 y2 = 7.53
+
+base.mesh height = 1 width = 1
+
+bound.cond !apply max.slope = 30 max.ratio = 100 rnd.unit = 0.001 line.straightening = 1 align.Points when = automatic
+
+structure outfile = n2_powerex11_1.str
+
+
+############################################################################
+############################################################################
+
+#go atlas
+system echo finished

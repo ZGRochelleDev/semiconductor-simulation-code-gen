@@ -1,0 +1,19 @@
+.LIB demo
+
+.MODEL npn NPN (
++LEVEL    = 1              IS       = 1e-16          BF       = 37.9747        
++NF       = 1              BR       = 5.17617        NR       = 1              
++ISE      = 3.37284e-15    NE       = 1.65304        ISC      = 2.21865e-13    
++NC       = 1.35444        VAF      = 63.3792        VAR      = 10.4944        
++IKF      = 0.00182126     IKR      = 0.0001         RB       = 1854.54        
++RBM      = 60.4543        IRB      = 1.21914e-06    RE       = 10             
++RC       = 69.0206        CJE      = 3.59001e-14    VJE      = 0.686403       
++MJE      = 0.313618       FC       = 0.5            CJC      = 5.25001e-14    
++VJC      = 0.551295       MJC      = 0.346841       CJS      = 7.05712e-13    
++VJS      = 0.501668       MJS      = 0.05           TF       = 1e-10          
++XTF      = 1              ITF      = 0.01           VTF      = 5              
++PTF      = 20             TR       = 1e-08          XTB      = 1.5            
++EG       = 1.17           XTI      = 3               )
+
+.ENDL demo
+

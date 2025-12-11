@@ -1,0 +1,120 @@
+# (c) Silvaco Inc., 2024
+
+# Silicon NanoWire Gate-All-Around Tunneling Field-Effect Transistor (TFET)
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Quantum
+
+# Example Name
+Set name=“Fin_GAA_ex05” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH CYLINDRICAL
+
+X.MESH location=0.0 spacing=0.01
+X.MESH location=0.03 spacing=0.001
+X.MESH location=0.035 spacing=0.0005
+X.MESH location=0.04 spacing=0.01
+X.MESH location=0.041 spacing=0.01
+
+Y.MESH location=0 spacing=0.02
+Y.MESH location=0.01 spacing=0.02
+Y.MESH location=0.075 spacing=0.001
+Y.MESH location=0.08 spacing=0.0001
+Y.MESH location=0.14 spacing=0.02
+Y.MESH location=0.28 spacing=0.01
+Y.MESH location=0.285 spacing=0.01
+Y.MESH location=0.35 spacing=0.02
+Y.MESH location=0.36 spacing=0.02
+
+# REGIONS
+# Source Left
+REGION number=1 name=source material=silicon y.min=0.01 y.max=0.08 x.min=0 x.max=0.035
+
+# Channel Right
+REGION number=3 name=channel material=silicon y.min=0.08 y.max=0.28 x.max=0.035
+
+# Drain right
+REGION number=4 name=drain material=silicon y.min=0.28 y.max=0.35 x.max=0.035
+
+# Gate Oxide
+REGION number=5 material=Sio2 y.min=0.08 y.max=0.28 x.min=0.035
+
+# Source Air Left
+REGION number=6 material=air y.min=0 y.max=0.08 x.min=0.035
+
+# Drain Air right
+REGION number=7 material=air y.min=0.28 y.max=0.36 x.min=0.035
+
+# ELECTRODES
+ELECTRODE name=source material=Aluminum y.min=0 y.max=.01 x.min=0 x.max=0.035
+
+ELECTRODE name=drain material=Aluminum y.min=0.35 y.max=0.36 x.min=0 x.max=0.035
+
+ELECTRODE name=gate material=Aluminum y.min=0.08 y.max=0.28 x.min=0.0395 x.max=0.041 
+
+# DOPING
+DOPING gaussian material=silicon p.type concentration=1e+17 y.min=0.08 \
+ y.max=0.28 x.max=0.035 Y.char=0.01 X.char=0
+
+DOPING gaussian material=silicon p.type concentration=1e+19 y.min=0.01 \
+ y.max=0.08 x.max=0.035 Y.char=0.025 X.char=0
+
+DOPING gaussian material=silicon n.type concentration=1e+19 y.min=0.28 \
+ y.max=0.35 x.max=0.035 Y.char=0.025 X.char=0
+
+# QUANTUM MESH
+QTX.MESH location=0 spacing=0.0050 
+QTX.MESH location=0.03 spacing=0.0005 
+QTX.MESH location=0.035 spacing=0.0001 
+
+QTY.MESH location=0.04 spacing=0.00025 
+QTY.MESH location=0.09 spacing=0.00010 
+QTY.MESH location=0.14 spacing=0.00025 
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=silicon me.tunnel=.22 mh.tunnel=.12
+MATERIAL material=SiO2 permittivity=25
+CONTACT name=GATE workfunc=4
+
+MODELS qtunn.dir=ydir bbt.nonlocal temperature=300 \
+ fermi ni.fermi srh auger cvt fldmob conmob bgn print
+
+#### NUMERICAL METHODS #### 
+METHOD itlimit=5
+
+OUTPUT band.temp band.param traps u.srh j.electron j.hole j.total qfn qfp
+
+#### SOLUTION SOLVING ####
+# Use a LOOP to sweep the final value, just two steps used here
+LOOP steps=2
+
+# Fig. 3b in [1] Id-Vg characteristics values
+ASSIGN name=Vn n.value=(1.2, 0.05)
+
+SOLVE init
+
+SOLVE name=DRAIN vDRAIN=0 vstep=0.025 vfinal=$Vn
+
+SAVE outfile=$'name'_VD_Vg0_Vd$'Vn'.str
+
+LOG outfile=$'name'_VD_idvg_Vd$'Vn'.log
+
+SOLVE name=GATE vGATE=-0.0 vstep=-0.05 vfinal=-0.5
+SOLVE name=GATE vGATE=-0.5 vstep=0.05 vfinal=1.5
+
+SAVE outfile=$'name'_VD_Vg1p5_Vd$'Vn'.str
+
+LOG off
+
+L.END
+
+victoryvisual '($'name'_VD_idvg_Vd1.2.log+$'name'_VD_idvg_Vd0.05.log)':$'name'.set \
+ $'name'_VD_Vg1p5_Vd1.2.str
+
+QUIT

@@ -1,0 +1,278 @@
+# (c) Silvaco Inc., 2024
+
+# SiC trench MOSFET
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+SET name=SiC_Power_ex10
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+INIT material=4h-SiC depth=2 from="0" to="2.5" at=0 gasheight=20 \
+  resolution=0.02 meshdepth=2 meshdepth.oxidation=3 \
+  dopants=nitrogen dopingvalues=1e19
+
+LINE x location=0    spacing=0.1
+LINE x location=0.3  spacing=0.1
+LINE x location=0.5  spacing=0.05
+line x location=0.65 spacing=0.05
+LINE x location=0.95 spacing=0.05
+LINE x location=1.25 spacing=0.05
+LINE x location=1.35 spacing=0.05
+LINE x location=1.5  spacing=0.05
+LINE x location=2.0 spacing=0.05
+LINE x location=2.2 spacing=0.1
+LINE x location=2.5 spacing=0.1
+
+LINE z location=-12.4 spacing=0.1
+LINE z location=-12.2 spacing=0.05
+LINE z location=-10   spacing=0.05
+LINE z location=-6    spacing=0.1
+LINE z location=-3    spacing=0.5
+LINE z location=0     spacing=0.1
+LINE z location=2     spacing=0.5
+
+SPECIFYMASKPOLY mask="Trench" \
+  p="-0.1, -0.1" p="2.0, -0.1" p="2.0, 0.1" p="-0.1, 0.1"
+SPECIFYMASKPOLY mask="Pplus" \
+  p="0.5, -0.1" p="2.6, -0.1" p="2.6, 0.1" p="0.5, 0.1"
+SPECIFYMASKPOLY mask="Nplus" \
+  p="0.95, -0.1" p="1.5, -0.1" p="1.5, 0.1" p="0.95, -0.1"
+SPECIFYMASKPOLY mask="Contac" \
+  p="-0.1, -0.1" p="1.25, -0.1" p="1.25, 0.1" p="-0.1, 0.1"
+
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/N/Trn" \
+  dif.parametervalue="1e-12"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/N/Seg" \
+  dif.parametervalue="1.0"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/Al/Trn" \
+  dif.parametervalue="1e-12"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/Al/Seg" \
+  dif.parametervalue="1.0"
+
+# n-drift Epitaxy
+EPITAXY material=SiC-4H thickness=11 time=60 minutes \
+  dopants=nitrogen dopingvalues=1.4e16 temperature=950
+
+# p-well Epitaxy
+EPITAXY material=SiC-4H thickness=1.5 time=12 minutes \
+  dopants=aluminium dopingvalues=5e16 temperature=950
+
+# Etch Trench
+MASK mask="Trench"
+ETCH material=4h-SiC dry thickness=3 angle=86
+ETCH material=4h-SiC wet thickness=0.5
+STRIP material=barrier
+DEPOSIT material=oxide min thickness=0.2
+DEPOSIT material=oxide conformal thickness=0.25
+ETCH material=oxide above=-10.0
+DEPOSIT material=oxide conformal thickness=0.25
+ETCH material=oxide wet thickness=0.26
+
+# Trench Oxidation
+DIFFUSE time=12 temperature=1250 dryo2 
+
+# p contact layer
+MASK mask="Pplus"
+IMPLANT aluminum dose=5e13 energy=60 tilt=7 rotation=27 \
+  bca n.ion=100000 temperature=500
+IMPLANT aluminum dose=5e13 energy=60 tilt=7 rotation=207 \
+  bca n.ion=100000 temperature=500
+IMPLANT aluminum dose=5e13 energy=120 tilt=7 rotation=27 \
+  bca n.ion=100000 temperature=500
+IMPLANT aluminum dose=5e13 energy=120 tilt=7 rotation=207 \
+  bca n.ion=100000 temperature=500
+STRIP material=barrier
+
+# P plus Implant Activation RTA
+DIFFUSE time=20 temperature=1800
+
+# n contact layer
+MASK mask="Nplus" reverse
+IMPLANT nitrogen dose=1e14 energy=40 tilt=7 rotation=207 \
+  bca n.ion=200000 temperature=500
+IMPLANT nitrogen dose=1e14 energy=40 tilt=7 rotation=27 \
+  bca n.ion=200000 temperature=500
+STRIP material=barrier
+
+# N plus Implant Activation RTA
+DIFFUSE time=10 temperature=1800
+
+# Deposit and Etch-back Polysilicon gate
+DEPOSIT material=polysilicon thickness=1 conformal \
+  dopants=phosphorus dopingvalues=1e19 
+
+# Etch Excess Poly
+ETCH thickness=1.05 dry
+
+# Isolation oxide Oxidation 
+DEPOSIT material=oxide thick=0.75 conformal
+ETCH mask="Contac" reverse material=oxide dry thickness=0.8 
+
+# Depo Alum
+DEPOSIT material=Aluminum min thickness=1
+
+# Electrodes
+ELECTRODE NAME=drain  substrate
+ELECTRODE NAME=gate   x=2.5 material=Polysilicon
+ELECTRODE NAME=source x=2.5 material=Aluminum
+
+# Save for Victory Mesh
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+CUBOID from="-0.1, -12.1" to="2.6,-8.5" out="cub1"
+
+LOAD in=$'name'_VP_sv
+
+OFFSET interface.regions="material:4H-SiC" \
+  other.interface.regions="material:SiO2" \
+  delta=0.001/1.5 multiplier=1.5 num.intervals=7
+OFFSET interface.regions="material:SiO2" \
+  other.interface.regions="material:4H-SiC" \
+  delta=0.025 num.intervals=1
+
+REMESH delaunay
+REFINE regions="*" max.size=0.25
+REFINE regions="semiconductor" shape="cub1" \
+  max.shape.size=0.1 max.shape.size.distance=0 \
+  max.shape.distance=0.75 max.shape.distance.size=0.25 \
+  grading="linear"
+REFINE regions="insulator" shape="cub1" \
+  max.shape.size=0.05 max.shape.size.distance=0 \
+  max.shape.distance=0.75 max.shape.distance.size=0.25 \
+  grading="linear"
+REFINE interface.regions="material:4H-SiC" \
+  other.interface.regions="material:SiO2, material:Aluminum" \
+  max.interface.size=0.02 max.interface.size.distance=0 \
+  max.interface.distance=0.3 max.interface.distance.size=0.1 \
+  grading="linear" 
+REFINE max.junction.size=0.001 max.junction.size.distance=0 \
+  max.junction.distance=0.3 max.junction.distance.size=0.1 \
+  grading="linear"
+REFINE impurity="donor" impurity.iso=5e17 \
+  max.impurity.size=0.02 max.impurity.size.distance=0 \
+  max.impurity.distance=0.75 max.impurity.distance.size=0.25 \
+  grading="linear"
+
+MERGE
+
+SAVE out=$'name'_VM_del.str
+
+####### DEVICE SIMULATION #######
+# Id-Vg
+GO victorydevice simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS material=4H-SiC print consrh auger fermidirac ni.fermi fldmob incomplete
+MOBILITY altcvt.n n.lcrit=2e-6 p.lcrit=2e-6 
+MATERIAL material=4H-SiC ni.min=2
+
+CONTACT name=gate workfunction=4.2
+
+#### NUMERICAL METHODS ####
+METHOD norm.scaling.local cr.tol=2e-20 climit=2e-20 itlimit=100
+
+OUTPUT band.temp band.param
+
+#### SOLUTION SOLVING ####
+# Vth Unsaturated with Vd=0.1V
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_Vth_Vd0p1V.log
+SOLVE vstep=0.25 vfinal=15 name=gate
+LOG off
+
+# Vt Saturated with Vd=10V
+SOLVE init
+SOLVE previous
+SOLVE vstep=0.5 vfinal=10 name=drain
+LOG outfile=$'name'_VD_Vth_Vd10V.log
+SOLVE vstep=0.25 vfinal=15 name=gate
+LOG off
+
+####### DEVICE SIMULATION #######
+# Breakdown
+GO victorydevice simflags="-160 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS material=4H-SiC print consrh auger fermidirac ni.fermi fldmob incomplete
+MOBILITY altcvt.n n.lcrit=1e-6 p.lcrit=1e-6 analytic.p
+
+CONTACT name=gate n.polysilicon
+
+IMPACT material=4H-SiC okuto gradqfl
+
+#### NUMERICAL METHODS ####
+METHOD itlimit=30 dvmax=10 weak=1 project.atlas \
+  px.tol=1.e-25 cx.tol=1.e-25 pr.tol=1.e-35 cr.tol=1.e-32
+
+OUTPUT band.temp band.param
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 previous
+SOLVE vdrain=1 vstep=1 vfinal=15 name=drain
+SOLVE vstep=2.5 vfinal=40 name=drain
+SOLVE vstep=5 vfinal=70 name=drain
+SOLVE vstep=10 vfinal=160 name=drain
+SOLVE vstep=20 vfinal=600 name=drain
+SOLVE vstep=20 vfinal=1500 name=drain \
+  compliance=1e-28 cname=drain
+
+CONTACT name=drain current
+
+METHOD itlimit=30 dvmax=2.5 weak=1 \
+   px.tol=1e-10 cx.tol=1e-10 pr.tol=1e-24 cr.tol=1e-24
+
+SOLVE previous
+SOLVE mult istep=2 ifinal=1e-26 name=drain previous
+SAVE outfile=$'name'_VD_BV_final.str
+
+# Extract the breakdown voltage.
+GO victoryextract
+LOAD in=$'name'_VD_BV.log
+CURVE name=cbv x="abs(Drain Voltage)" y="abs(Drain Current)"
+EXTRACT.CURVE name=BV expression="maxyx(curve.cbv)"
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VM_del.str:$'name'_1_Struct.set \
+$'name'_VM_del.str:$'name'_2_InterfaceMesh.set
+
+victoryvisual \
+$'name'_VD_Vth_Vd0p1V.log \
+$'name'_VD_Vth_Vd10V.log \
+--noplus '($'name'_VD_Vth_Vd0p1V.log \
+  ^$'name'_VD_Vth_Vd10V.log)':$'name'_4_IdVg_LogScale.set
+
+victoryvisual \
+$'name'_VD_BV.log:$'name'_5_BV.set \
+$'name'_VD_BV_final.str:$'name'_6_BV_ImpactGen.set \
+$'name'_VD_BV_final.str:$'name'_7_BV_Efield.set
+
+QUIT

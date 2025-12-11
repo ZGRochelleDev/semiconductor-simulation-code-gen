@@ -1,0 +1,64 @@
+# (c) Silvaco Inc., 2024
+
+# Inverter Cell with Physical Geometry
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex09” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+## Process Description ##
+
+INIT layout=$'name'.lay depth=1 material=silicon rulefile=$'name'.lmp
+
+# Gate Stack
+DEPOSIT material=oxide thickness=0.25 max
+DEPOSIT material=polysilicon thickness=0.3 max
+ETCH material=polysilicon thick=0.36 angle=87 max mask=POLY
+ELECTRODES mask=POLY material=polysilicon
+ELECTRODES mask=*GATE material=polysilicon
+
+# Via 2
+DEPOSIT material=oxide thickness=0.25 max
+ETCH material=oxide thickness=0.9 angle=87 mask=VIA2 reverse max
+ELECTRODES mask=*CONT material=silicon
+
+# Metal 1
+DEPOSIT material=aluminum thickness=0.25 max
+ETCH material=aluminum thickness=0.3 angle=87 max mask=MET1
+ELECTRODES mask=MET1 material=aluminum
+
+# Via 3
+DEPOSIT material=oxide thickness=0.25 max
+ETCH material=oxide thickness=0.3 angle=87 max mask=VIA3 reverse
+
+# Metal 2
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.6 angle=87 max mask=MET2
+ELECTRODES mask=MET2 material=aluminum
+
+# Passivation
+DEPOSIT material=oxide thickness=0.25 max
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv.str" layout="$'name'.lay" depth=1 map="$'name'.lmp"
+
+SAVE spice="$'name'.before.net"
+
+INTERCONNECT adapt=(0.04, 0.02)
+
+SAVE spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

@@ -1,0 +1,159 @@
+# (c) Silvaco Inc., 2024
+
+# Amorphous IGZO TFT Hysteresis Simulation 
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+###### VARIABLES ######
+# Example Name
+SET name=TFT_ex13
+
+# device length(um)
+SET l=20
+
+# material thickness(um)
+SET sin_gi=0.1
+SET sio_gi=0.15
+SET igzo_thick=0.02
+SET pass=0.3/2
+SET sd_thick=0.15
+
+# Ramping time
+SET dt=10e-3
+
+# capture cross section: control trapping and detrapping
+SET SIGN=1e-25
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 2 -80"
+
+#### STRUCTURE SPECIFICATION ####
+# Device Width(um)
+# Simulated current Unit: A
+MESH width=20
+
+X.MESH location=-$l/2-3 spacing=0.5
+X.MESH location=-$l/2 spacing=0.5
+X.MESH location=0 spacing=1
+X.MESH location=$l/2  spacing=0.5
+X.MESH location=$l/2+3 spacing=0.5
+
+Y.MESH location=-$sin_gi-$sio_gi-$igzo_thick-$sd_thick-$pass spacing=0.05
+Y.MESH location=-$sin_gi-$sio_gi-$igzo_thick-$sd_thick spacing=0.05
+Y.MESH location=-$sin_gi-$sio_gi-$igzo_thick spacing=$igzo_thick/10
+Y.MESH location=-$sin_gi-$sio_gi spacing=$igzo_thick/10
+Y.MESH location=-$sin_gi spacing=0.05
+Y.MESH location=-$sin_gi/2 spacing=0.05
+Y.MESH location=0 spacing=0.03
+Y.MESH location=0.06 spacing=0.03
+Y.MESH location=0.5 spacing=0.1
+
+REGION number=1 oxide name=pass
+REGION number=2 nitride name=gi1 y.minimum=-$sin_gi y.maximum=0
+REGION number=3 oxide name=gi2 y.minimum=-$sin_gi-$sio_gi y.maximum=-$sin_gi
+REGION number=4 material=igzo name=channel \
+ y.minimum=-$sin_gi-$sio_gi-$igzo_thick y.maximum=-$sin_gi-$sio_gi
+
+ELECTRODE number=1 name=gate y.minimum=0 y.maximum=0.06 material=aluminum
+ELECTRODE number=2 name=source x.minimum=-$l/2-3 x.maximum=-$l/2 \
+ y.minimum=-$sin_gi-$sio_gi-$igzo_thick-$sd_thick \
+ y.maximum=-$sin_gi-$sio_gi-$igzo_thick material=aluminum
+ELECTRODE number=3 name=drain x.minimum=$l/2 x.maximum=$l/2+3 \
+ y.minimum=-$sin_gi-$sio_gi-$igzo_thick-$sd_thick \
+ y.maximum=-$sin_gi-$sio_gi-$igzo_thick material=aluminum
+
+#### MATERIALS/PHYSICAL MODELS ####
+
+# metal workfunction
+CONTACT name=gate workfunction=4.3
+CONTACT name=source workfunction=4.16
+CONTACT name=drain workfunction=4.16
+
+# GI and passivation insulator epsilon
+MATERIAL material=Si3N4 permittivity=7
+MATERIAL material=nitride permittivity=7
+MATERIAL material=oxide permittivity=3.9
+
+# a-IGZO bandgap, density of states, and affinity
+MATERIAL material=IGZO nc300=5.2e18 nv300=5e20 eg300=3.0 affinity=4.16 \
+ taun0=1e-9 taup0=1e-9
+
+# IGZO mobility
+MOBILITY material=IGZO mun0=14.0 mup0=0.1
+
+# model
+MODELS bound.trap print
+
+# IGZO native trap for tail
+DEFECTS continuous nta=5.2e18*2 ntd=5e20 wta=0.04 wtd=0.1 \
+ nga=0.0 ngd=2e16 egd=2.8 wgd=0.1 \
+ sigtae=1e-14 sigtah=2e-14 sigtde=1e-14 sigtdh=2e-14 \
+ siggae=1e-14 siggah=2e-14 siggde=1e-14 siggdh=2e-14 \
+ numa=24 numd=24
+  
+# IGZO native trap for deep tail
+DEFECTS continuous nta=2e16*6*1.5 wta=0.65 ntd=0 \
+ nga=0 ngd=0 \
+ sigtae=$SIGN sigtah=2e-14 sigtde=1e-14 sigtdh=2e-14 siggae=1e-14 \
+ siggah=2e-14 siggde=1e-14 siggdh=2e-14 \
+ numa=24 numd=24
+
+OUTPUT con.band val.band u.trap traps traps.ft
+
+#### NUMERICAL METHODS ####
+METHOD maxtrap=10 
+#dt.max=10e-3
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SOLVE previous
+SOLVE vdrain=0.1
+
+SET v0=-10
+SET dv=0.25
+SET n=(10-($v0))/$dv
+SET vg=$v0
+SET t=$dt
+
+# pre 
+LOG outfile=$'name'.log
+SOLVE vgate=$v0 ramptime=1e-6 dt=1e-9 tstop=1e-4
+LOG off
+
+### forward
+LOG outfile=$'name'_$'dt'_forward.log no.trap
+LOOP steps=$n
+SOLVE vgate=$vg ramptime=$dt dt=5e-3 tstop=$t 
+SET t=$t+$dt
+SET vg=$vg+$dv
+L.END
+LOG off
+
+
+#### reverse
+LOG outfile=$'name'_$'dt'_reverse.log no.trap
+LOOP steps=$n
+SOLVE prev vgate=$vg-0.5 ramptime=$dt dt=5e-3 tstop=$t
+SET t=$t+$dt
+SET vg=$vg-$dv
+L.END
+LOG off
+
+go victoryextract
+LOAD in=$'name'_$'dt'_forward.log
+CURVE name=c-vtf x = "Gate Voltage" y = "Drain Current"
+EXTRACT.CURVE name="vth_forward" expression="intercept(y=1e-9, curve.c-vtf)"
+LOAD in=$'name'_$'dt'_reverse.log
+CURVE name=c-vtr x = "Gate Voltage" y = "Drain Current"
+EXTRACT.CURVE name="vth_reverse" expression="intercept(y=1e-9, curve.c-vtr)"
+EXTRACT.VDOE name="dvth" expression=abs($"vth_forward" - $"vth_reverse")
+
+####### RESULTS DISPLAY #######
+
+victoryvisual '($'name'_$'dt'_forward.log+$'name'_$'dt'_reverse.log)':$'name'.set
+
+QUIT
+

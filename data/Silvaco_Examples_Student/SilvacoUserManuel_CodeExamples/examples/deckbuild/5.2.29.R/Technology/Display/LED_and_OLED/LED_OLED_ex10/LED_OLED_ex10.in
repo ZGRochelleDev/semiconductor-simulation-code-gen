@@ -1,0 +1,576 @@
+# (c) Silvaco Inc., 2024
+
+# EGDM (Pasveer) mobility enhancement model
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D Organic Display
+#
+# Reference : 
+# [1] "Effect of Gaussian disorder on the voltage dependence of the current density
+# in sandwich-type devices based on organic semiconductors"
+# S. L. M. van Mensfoort and R. Coehoorn
+# Rhysical Review B 78, (2008)
+# [2] "Unified Description of Charge-Carrier Mobilities in Disordered Semiconducting Polymers"
+# W. F. Pasveer
+# Physical Review Letter, PRL 94, 206601 (2005)
+# We reproduced Figure 1(a), 1(b), and 1(c) in the reference paper[1].
+# Temperature dependence is not simulated here but you can refer to Atlas user's manual
+# We validated the EGDM(PASVEER) model in this simulation.
+
+# g0 temperature dependence : Refer to Atlas user's manual section for g0(T) 
+# mu(n,T,F) = mu(T)*g1(n,T)*g2(F,T)
+# Diffusion Coefficient is given by Einstein Relation
+# D(n,T,F) = (kB*T/e)*mu(n,T,F)*g3(T,n), g3(n,T) is dimensionaless diffusion coefficient enhancement factor
+# g1 is function of carrier concentration n/Nt, Nt is site density
+# g2 is function of reduced field eaF/sigma, sigma is width of Gaussian DOS, a= (Nt)^-(1/3)
+# g3 is function of carrier concentration
+# c=n/Nt carrier concentration, a=Nt^-1/3 average intersite distance.
+# ^sigma = sigma/(kB*T) , dimensionless disorder parameter
+
+##### VARIABLES #####
+# Example Name
+SET name=LED_OLED_ex10
+
+##############################################################################
+# g0(T) is EGDM(PASVEER)
+# g0 temperature dependence: Refer to Victory Device User's manual section for g0(T)
+##############################################################################
+
+GO internal
+# Fundamental constants
+ASSIGN name=k n.value=1.3806488e-23
+ASSIGN name=q n.value=1.602176565e-19
+
+#######################################
+# sighat is the width of the Gaussian normalised to kT
+# normc is the carrier concentration normalised to the density of the Gaussian.
+# normf is the normalised electric field
+# tl is the lattice temperature
+SET sighat=3
+SET normc=1e-10
+SET normf=0.1
+
+#set variables
+SET tl=200
+SET c2=0.3
+
+#remove old data
+SYSTEM rm $'name'_g0_*.dat
+# open new file and title for VictoryVisual data
+SET file_no=1
+LOOP steps=4
+SYSTEM echo "title" >> $'name'_g0_$'file_no'.dat
+SYSTEM echo 10 3 3 >> $'name'_g0_$'file_no'.dat
+SYSTEM echo "tl" >> $'name'_g0_$'file_no'.dat
+SYSTEM echo "c2" >> $'name'_g0_$'file_no'.dat
+SYSTEM echo "g0" >> $'name'_g0_$'file_no'.dat
+
+LOOP steps=10
+
+#######################################
+# Concentration of the Gaussian
+ASSIGN name=Nt n.value=1e22
+# average separation between sites
+ASSIGN name=a n.value=1e7/pow($'Nt',0.3333333333)
+# The width of the Gaussian is sig = sighat*k*T (in eV)
+# HOWEVER, in this calculation we want a constant sigma,
+# therefore we assume sighat is defined at 300K
+ASSIGN name=sig n.value=$'sighat'*$'k'*300.0/$'q'
+# The reference field (the 1e7 is to convert a from nm to cm)
+ASSIGN name=e0 n.value=1.0e7*$'sig' / $'a'
+
+#######################################
+# Carrier concentraion
+ASSIGN name=cconc n.value=$'Nt'*$'normc'
+# The final electric field
+ASSIGN name=ef n.value=1000
+# Voltage to get this electric field E=V/d, d is 10um
+ASSIGN name=va n.value=0.001*$'ef'
+
+#######################################
+# Set the MOBILITY low so that it is not effected by the
+# thermal limit.
+ASSIGN name=muc0 n.value=1e-6
+ASSIGN name=mux0 n.value=1e-6*$'muc0'
+
+##### DEVICE SIMULATION #####
+GO victorydevice simflags="-P 4"
+
+# By making the width 1e8 um the xz area is 1cm^2
+# Therefore current and current density have the same value.
+MESH width=1e8
+
+X.MESH loc=0 spac=0.25
+X.MESH loc=1 spac=0.25
+Y.MESH loc=0 spac=1
+Y.MESH loc=10 spac=1
+
+REGION number=1 MATERIAL=organic
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+# Set the Doping to get the carrier density
+DOPING n.type uniform conc=$'cconc'
+
+# the organic MATERIAL doesn't have any parameters therefore
+# we need to Set eg/permittivity.  eg is wide so that the
+# intrinsic carrier density is lower than anything we are
+# interested in.
+MATERIAL number=1 ntl.gauss=$Nt sigl.gauss=$sig eg300=3 permittivity=1
+
+#######################################
+# We can Set a.pasv/sig.pasv independently, but if we have a gaussian
+# band structure the default values are from that.
+# We have to activate pasveer to calculate g0, but we Set
+# ccutoff and fcutoff to 0 so that g1 and g2 are not calculated.
+MOBILITY mup=$'mux0' mun=$'muc0' pasveer.n ccutoff.n=0.0 fcutoff.n=0 tc2.pasv.n=$'c2'
+
+#######################################
+MODELS temperature=$'tl' print
+
+SOLVE init 
+
+LOG outfile=$'name'_g0.log
+SOLVE vanode=0.0 vstep=0.25*$'va' vfinal=$'va' name=anode
+
+#######################################
+# The current is the same as the current density (because we chose
+# the width as 1e8 um).  J=c.q.mu.E ==> mu = J/(c.q.E)
+EXTRACT name="j" y.val from curve(v."anode", i."anode") where x.val=1 
+EXTRACT name="muc" $j / ($cconc*$q*$ef) 
+EXTRACT name="g0" $muc / $muc0  
+
+SYSTEM echo $tl $c2 $g0 >> $'name'_g0_$'file_no'.dat
+SET tl=$tl+30
+L.END
+SET file_no=$file_no+1
+SET c2=$c2+0.1
+SET tl=200
+L.END
+
+##############################################################################
+# g1(T.n) enhancement in EGDM(PASVEER)
+##############################################################################
+
+GO internal
+# Fundamental constants
+ASSIGN name=k n.value=1.3806488e-23
+ASSIGN name=q n.value=1.602176565e-19
+
+#######################################
+# sighat is the width of the Gaussian normalised to kT
+# normc is the carrier concentration normalised to the density of the Gaussian.
+# normf is the normalised electric field
+# tl is the lattice temperature
+SET sighat=3
+SET normc=1e-10
+SET normf=0.1
+SET tl=300
+
+#remove old data
+SYSTEM rm $'name'_g1_*.dat
+# open new file and title for VictoryVisual data
+SET file_no=1
+LOOP steps=4
+SYSTEM echo "title" >> $'name'_g1_$'file_no'.dat
+SYSTEM echo 10 3 3 >> $'name'_g1_$'file_no'.dat
+SYSTEM echo "normc" >> $'name'_g1_$'file_no'.dat
+SYSTEM echo "sighat" >> $'name'_g1_$'file_no'.dat
+SYSTEM echo "g1" >> $'name'_g1_$'file_no'.dat
+
+LOOP steps=10
+#######################################
+# Concentration of the Gaussian
+ASSIGN name=Nt n.value=1e22
+# average separation between sites
+ASSIGN name=a n.value=1e7/pow($'Nt',0.3333333333)
+# The width of the Gaussian is sig = sighat*k*T (in eV)
+ASSIGN name=sig n.value=$'sighat'*$'k'*$'tl'/$'q'
+# The reference field (the 1e7 is to convert a from nm to cm)
+ASSIGN name=e0 n.value=1.0e7*$'sig' / $'a'
+
+#######################################
+# Carrier concentraion
+ASSIGN name=cconc n.value=$'Nt'*$'normc'
+# The final electric field
+ASSIGN name=ef n.value=1000
+# Voltage to get this electric field E=V/d, d is 10um
+ASSIGN name=va n.value=0.001*$'ef'
+
+#######################################
+# SET the MOBILITY low so that it is not effected by the
+# thermal limit.
+ASSIGN name=muc0 n.value=1e-6
+ASSIGN name=mux0 n.value=1e-6*$'muc0'
+
+##### DEVICE SIMULATION #####
+GO victorydevice simflags="-P 4"
+
+
+# By making the width 1e8 um the xz area is 1cm^2
+# Therefore current and current density have the same value.
+MESH width=1e8
+
+X.MESH loc=0 spac=0.25
+X.MESH loc=1 spac=0.25
+
+Y.MESH loc=0 spac=1
+Y.MESH loc=10 spac=1
+
+REGION number=1 MATERIAL=organic
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+# SET the DOPING to get the carrier density
+DOPING n.type uniform conc=$'cconc'
+
+# the organic MATERIAL doesn't have any parameters therefore
+# we need to SET eg/permittivity.  eg is wide so that the
+# intrinsic carrier density is lower than anything we are
+# interested in.
+MATERIAL number=1 ntl.gauss=$Nt sigl.gauss=$sig eg300=3 permittivity=1
+
+#######################################
+# We can SET a.pasv/sig.pasv independently, but if we have a gaussian
+# band structure the default values are from that.
+# By setting fcutoff to zero the g2 parameter is not calculated
+# therefore any MOBILITY enhancement is due to g1
+MOBILITY mup=$'mux0' mun=$'muc0' pasveer.n ccutoff.n=0.1 fcutoff.n=0
+
+#######################################
+MODELS print
+
+SOLVE init 
+
+LOG outfile=$'name'_g1.log
+SOLVE vanode=0.0 vstep=0.05*$'va' vfinal=$'va' name=anode
+
+#######################################
+# The current is the same as the current density (because we chose
+# the width as 1e8 um).  J=c.q.mu.E ==> mu = J/(c.q.E)
+EXTRACT name="j" y.val from curve(v."anode", i."anode") where x.val=1
+EXTRACT name="muc" $j / ($cconc*$q*$ef)
+EXTRACT name="g1" $muc / $muc0
+
+
+SYSTEM echo $normc $sighat $g1 >> $'name'_g1_$'file_no'.dat
+SET normc=$normc+$normc*10
+L.END
+SET file_no=$file_no+1
+SET sighat=$sighat+1
+SET normc=1e-10
+L.END
+
+##############################################################################
+#g2(T,F) enhancement in EGDM(PASVEER)
+##############################################################################
+
+GO internal
+# Fundamental constants
+ASSIGN name=k n.value=1.3806488e-23
+ASSIGN name=q n.value=1.602176565e-19
+
+#######################################
+# sighat is the width of the Gaussian normalised to kT
+# normc is the carrier concentration normalised to the density of the Gaussian.
+# normf is the normalised electric field
+# tl is the lattice temperature
+SET sighat=3
+SET normc=1e-10
+SET normf=0.1
+SET tl=300
+
+
+#remove old data
+SYSTEM rm $'name'_g2_*.dat
+# open new file and title for VictoryVisual data
+SET file_no=1
+LOOP steps=4
+SYSTEM echo "title" >> $'name'_g2_$'file_no'.dat
+SYSTEM echo 10 3 3 >> $'name'_g2_$'file_no'.dat
+SYSTEM echo "normf" >> $'name'_g2_$'file_no'.dat
+SYSTEM echo "sighat" >> $'name'_g2_$'file_no'.dat
+SYSTEM echo "g2" >> $'name'_g2_$'file_no'.dat
+
+LOOP steps=10
+
+#######################################
+# Concentration of the Gaussian
+ASSIGN name=Nt n.value=1e22
+# average separation between sites
+ASSIGN name=a n.value=1e7/pow($'Nt',0.3333333333)
+# The width of the Gaussian is sig = sighat*k*T (in eV)
+ASSIGN name=sig n.value=$'sighat'*$'k'*$'tl'/$'q'
+# The reference field (the 1e7 is to convert a from nm to cm)
+ASSIGN name=e0 n.value=1.0e7*$'sig' / $'a'
+
+#######################################
+# Carrier concentraion
+ASSIGN name=cconc n.value=1e16
+# The final electric field
+ASSIGN name=ef n.value=$'normf'*$'e0'
+# Voltage to get this electric field E=V/d, d is 10um
+ASSIGN name=va n.value=0.001*$'ef'
+
+#######################################
+# Set the MOBILITY low so that it is not effected by the
+# thermal limit.
+ASSIGN name=muc0 n.value=1e-10
+ASSIGN name=mux0 n.value=1e-6*$'muc0'
+
+##### DEVICE SIMULATION #####
+GO victorydevice simflags="-P 4"
+
+# By making the width 1e8 um the xz area is 1cm^2
+# Therefore current and current density have the same value.
+MESH width=1e8
+X.MESH loc=0 spac=0.25
+X.MESH loc=1 spac=0.25
+Y.MESH loc=0 spac=1
+Y.MESH loc=10 spac=1
+REGION number=1 MATERIAL=organic
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+# Set the doping to get the carrier density
+DOPING n.type uniform conc=$'cconc'
+
+# the organic MATERIAL doesn't have any parameters therefore
+# we need to set eg/permittivity.  eg is wide so that the
+# intrinsic carrier density is lower than anything we are
+# interested in.
+MATERIAL number=1 ntl.gauss=$Nt sigl.gauss=$sig eg300=3 permittivity=1
+
+#######################################
+# We can set a.pasv/sig.pasv independently, but if we have a gaussian
+# band structure the default values are from that.
+# By setting ccutoff to zero the g1 parameter is not calculated
+# therefore any MOBILITY enhancement is due to g2
+MOBILITY mup=$'mux0' mun=$'muc0' pasveer.n ccutoff.n=0.0 fcutoff.n=2
+
+#######################################
+MODELS print
+SOLVE init 
+#prev
+lOG outfile=$'name'_g2.log
+SOLVE vanode=0.0 vstep=0.05*$'va' vfinal=$'va' name=anode
+
+#######################################
+# The current is the same as the current density (because we chose
+# the width as 1e8 um).  J=c.q.mu.E ==> mu = J/(c.q.E)
+EXTRACT name="j" y.val from curve(v."anode", i."anode") where x.val=$va
+EXTRACT name="muc" $j / ($cconc*$q*$ef)
+EXTRACT name="g2" $muc / $muc0
+
+#######################################
+SYSTEM echo $normf $sighat $g2 >> $'name'_g2_$'file_no'.dat
+SET normf=$normf*1.35
+L.END
+SET file_no=$file_no+1
+SET sighat=$sighat+1
+SET normf=0.1
+L.END
+
+
+##############################################################################
+#g3(T,n) enhancement in EGDM(PASVEER)
+##############################################################################
+
+GO internal
+# Fundamental constants
+ASSIGN name=k n.value=1.3806488e-23
+ASSIGN name=q n.value=1.602176565e-19
+
+#######################################
+# sighat is the width of the Gaussian normalised to kT
+# normc is the carrier concentration normalised to the density of the Gaussian.
+# normf is the normalised electric field
+# tl is the lattice temperature
+SET sighat=3
+SET normc=1e-4
+SET normf=0.1
+SET tl=300
+
+
+#remove old data
+SYSTEM rm $'name'_g3_*.dat
+# open new file and title for VictoryVisual data
+SET file_no=1
+LOOP steps=4
+SYSTEM echo "title" >> $'name'_g3_$'file_no'.dat
+SYSTEM echo 10 3 3 >> $'name'_g3_$'file_no'.dat
+SYSTEM echo "normc" >> $'name'_g3_$'file_no'.dat
+SYSTEM echo "sighat" >> $'name'_g3_$'file_no'.dat
+SYSTEM echo "g3" >> $'name'_g3_$'file_no'.dat
+
+LOOP steps=10
+
+#######################################
+# Concentration of the Gaussian
+ASSIGN name=Nt n.value=1e22
+# average separation between sites
+ASSIGN name=a n.value=1e7/pow($'Nt',0.3333333333)
+# The width of the Gaussian is sig = sighat*k*T (in eV)
+ASSIGN name=sig n.value=$'sighat'*$'k'*$'tl'/$'q'
+# The reference field (the 1e7 is to convert a from nm to cm)
+ASSIGN name=e0 n.value=1.0e7*$'sig' / $'a'
+
+#######################################
+# Carrier concentraion
+ASSIGN name=cconc n.value=$'Nt'*$'normc'
+# The final electric field
+ASSIGN name=ef n.value=1000
+# Voltage to get this electric field E=V/d, d is 10um
+ASSIGN name=va n.value=0.001*$'ef'
+
+#######################################
+# Set the MOBILITY low so that it is not effected by the
+# thermal limit.
+ASSIGN name=muc0 n.value=1e-6
+ASSIGN name=mux0 n.value=1e-6*$'muc0'
+ASSIGN name=s n.value=-1
+
+##### DEVICE SIMULATION #####
+GO victorydevice simflags="-P 4"
+
+# EXTRACTing g3 is a bit more difficult than EXTRACTing g1/g2
+#
+# g3 enhances the diffusion coefficient, therefore we have to have
+# some sort of diffusion in the device.
+#
+# The drift-diffusion current is
+#
+#    J = -s.q.D.dc/dy - q.c.mu.dV/dy
+#      = -s.q.D.dc/dy + q.c.mu.E
+#
+#    D = (k.T/q).mu.g3
+#
+#    J = -s.k.T.mu.g3.dc/dy + q.c.mu.E
+#
+# At zero bias there should be zero current therefore we have a built-in
+# electric field to generate a drift term to counter the diffusion term
+# caused by the gradient in the carrier density.  I.e.
+#
+#    0 = -s.k.T.mu.g3.dc/dy + q.c.mu.E0
+#
+# In this simulation c goes linearly from 0.5*cconc at y=0 to 1.5*cconc at y=10 um
+# (therefore c = cconc at y=5 um), the gradient is therefore
+#
+#    dc/dy = (1.5*cconc - 0.5*cconc) / 10 [um]
+#          = cconc / 1e-3 [cm]
+#          = 1000 * cconc
+#
+# Therefore
+#    E0 = s.k.T.mu.g3.1000*cconc / (q.c.mu)
+#       = 1000.s.k.T.g3 / q
+#
+# (kT/q ~ 1/40 eV, therefore if g3=1 E0 ~ 25 V/cm)
+#
+#    g3 = s.q.E0 / (1000.k.T)
+
+# By making the width 1e8 um the xz area is 1cm^2
+# Therefore current and current density have the same value.
+MESH width=1e8
+X.MESH loc=0 spac=0.25
+X.MESH loc=1 spac=0.25
+Y.MESH loc=0 spac=1
+Y.MESH loc=4 spac=1
+Y.MESH loc=4.1 spac=0.1
+Y.MESH loc=4.9 spac=0.1
+Y.MESH loc=4.91 spac=0.01
+Y.MESH loc=5.09 spac=0.01
+Y.MESH loc=5.1 spac=0.1
+Y.MESH loc=5.9 spac=0.1
+Y.MESH loc=6 spac=1
+Y.MESH loc=10 spac=1
+
+REGION number=1 MATERIAL=organic graded nd.top=0.5*$'cconc' nd.bottom=1.5*$'cconc'
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+# the organic MATERIAL doesn't have any parameters therefore
+# we need to set eg/permittivity.  eg is wide so that the
+# intrinsic carrier density is lower than anything we are
+# interested in.
+MATERIAL number=1 ntl.gauss=$Nt sigl.gauss=$sig eg300=3 permittivity=1
+
+#######################################
+# We don't activate pasveer therefore g1 and g2 are not calculated.
+MOBILITY mun=$'muc0' mup=$'mux0'
+#######################################
+
+PROBE name="pef" field dir=90 x=0.5 y=5
+MODELS print
+SOLVE init
+#SOLVE prev
+LOG outfile=$'name'_g3.log
+SOLVE vanode=-0.01
+SOLVE vanode=0.01
+LOG off
+
+EXTRACT init infile="$'name'_g3.log"
+EXTRACT name="im" y.val from curve(v."anode", i."anode") where x.val=-0.01
+EXTRACT name="ip" y.val from curve(v."anode", i."anode") where x.val=0.01
+SET v0 = -0.01 - 0.02*$'im'/($'ip'-$'im')
+
+LOG outfile=$'name'_g3.log
+SOLVE vanode=$'v0'-0.005
+SOLVE vanode=$'v0'+0.005
+LOG off
+
+EXTRACT init infile="$'name'_g3.log"
+EXTRACT name="ef0" y.val from curve(i."anode", PROBE."pef") where x.val=0
+EXTRACT name="va0" y.val from curve(i."anode", v."anode") where x.val=0
+EXTRACT name="g3" ($s*$q*$ef0 / (1000.0*$k*$tl))
+
+SYSTEM echo $normc $sighat $g3 >> $'name'_g3_$'file_no'.dat
+# normc range(1e-4,0.5)
+SET normc=$normc*2.5
+L.END
+SET file_no=$file_no+1
+SET sighat=$sighat+1
+SET normc=1e-4
+L.END
+
+victoryvisual \
+$'name'_g0_1.dat:$'name'_g0.set+\
+$'name'_g0_2.dat:$'name'_g0.set+\
+$'name'_g0_3.dat:$'name'_g0.set+\
+$'name'_g0_4.dat:$'name'_g0.set
+
+victoryvisual \
+$'name'_g1_1.dat:$'name'_g1.set+\
+$'name'_g1_2.dat:$'name'_g1.set+\
+$'name'_g1_3.dat:$'name'_g1.set+\
+$'name'_g1_4.dat:$'name'_g1.set+\
+$'name'_exp_g1_1.dat:$'name'_g1.set+\
+$'name'_exp_g1_2.dat:$'name'_g1.set+\
+$'name'_exp_g1_3.dat:$'name'_g1.set+\
+$'name'_exp_g1_4.dat:$'name'_g1.set
+
+victoryvisual \
+$'name'_g2_1.dat:$'name'_g2.set+\
+$'name'_g2_2.dat:$'name'_g2.set+\
+$'name'_g2_3.dat:$'name'_g2.set+\
+$'name'_g2_4.dat:$'name'_g2.set+\
+$'name'_exp_g2_1.dat:$'name'_g2.set+\
+$'name'_exp_g2_2.dat:$'name'_g2.set+\
+$'name'_exp_g2_3.dat:$'name'_g2.set+\
+$'name'_exp_g2_4.dat:$'name'_g2.set
+
+victoryvisual \
+$'name'_g3_1.dat:$'name'_g3.set+\
+$'name'_g3_2.dat:$'name'_g3.set+\
+$'name'_g3_3.dat:$'name'_g3.set+\
+$'name'_g3_4.dat:$'name'_g3.set+\
+$'name'_exp_g3_1.dat:$'name'_g3.set+\
+$'name'_exp_g3_2.dat:$'name'_g3.set+\
+$'name'_exp_g3_3.dat:$'name'_g3.set+\
+$'name'_exp_g3_4.dat:$'name'_g3.set
+
+QUIT

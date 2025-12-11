@@ -1,0 +1,155 @@
+# (c) Silvaco Inc., 2024
+
+# CCD Illumination and Charge Transfer 
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+Set name=“CIS_CCD_ex05” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon orientation=100 from=0.00 to=7.00 \
+depth=3 gasheight=6.26 resolution=0.05,0.05 dopants="boron" dopingvalues="5e15"
+
+LINE x location=0.00 spacing=0.2
+LINE x location=6.00 spacing=0.2
+LINE x location=6.20 spacing=0.05
+LINE x location=6.50 spacing=0.05
+LINE x location=7.00 spacing=0.1
+
+LINE z location=-0.04  spacing=0.01
+LINE z location=0.00  spacing=0.01
+LINE z location=3.0   spacing=0.2
+
+# form n- active layer at surface 
+IMPLANT phosphorus dose=8e11 energy=120
+
+# active layer diffusion
+DIFFUSE time=60 temperature=950
+
+# Deposit gate oxide
+DEPOSIT max material=oxide thick=0.04 
+ 
+# mask for the p- implant under transfer gate
+DEPOSIT max material=barrier thick=3.0 outside=3.5,7
+
+# Implant p- region   
+IMPLANT boron dose=1e11 energy=80
+
+STRIP material=barrier
+
+# drive diffusion
+DIFFUSE time=220 temp=1000 press=1.00
+
+DEPOSIT max material=polysilicon thick=0.12 outside=3,3.2  outside=6.2,7
+
+DEPOSIT conformal material=barrier thick=1.0
+ 
+ETCH material=barrier right.to=6.2 max 
+ETCH material=oxide right.to=6.2 max
+
+# Implant n+ drain region 
+IMPLANT arsenic dose=1e15 energy=50
+
+STRIP material=barrier
+
+# drain anneal
+DIFFUSE time=30 temp=900
+
+DEPOSIT material=aluminum thick=0.1 min right.to=6.5
+
+ELECTRODE name=sto_gate x=0
+ELECTRODE name=tra_gate x=4
+ELECTRODE name=drain x=6.9
+ELECTRODE name=substrate substrate
+
+# Save simulation status and generate conformal mesh
+SAVE name=$'name'_VP conformalstr
+
+GO victoryextract
+# EXTRACT process parameters 
+LOAD in="$'name'_VP_exVC.str"
+EXTRACT.DEPTH name=storage_xj x.val=1 field=net value=0 regions=silicon
+EXTRACT.DEPTH name=transfer_xj x.val=5 field=net value=0 regions=silicon
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-P 2"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_exVC.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+CONTACT name=sto_gate n.poly
+CONTACT name=tra_gate n.poly
+
+MATERIAL taun0=1e-7 taup0=1e-7
+MODELS cvt consrh bgn auger print 
+INTERFACE qf=3e10
+
+BEAM num=1 wavelength=0.6 x.origin=0 y.origin=-1 max.win=2 angle=90
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vstep=-0.1 vfinal=-6 name=sto_gate
+SOLVE vstep=-0.1 vfinal=-6 name=tra_gate
+
+SOLVE vdrain=0.1
+SOLVE vdrain=1 vstep=1 vfinal=15 name=drain 
+
+# save empty structure
+SAVE outfile=$'name'_Empty.str
+
+# now turn on light beam in transient
+SOLVE b1=1 ramp.lit ramptime=5e-9 dt=1e-11 tstop=20e-9
+SOLVE b1=0 ramp.lit ramptime=5e-9 dt=1e-10 tstop=50e-9
+
+#save charged structure
+SAVE outfile=$'name'_Charged.str
+
+# now do transfer
+# ramp transfer gate to +2V
+LOG outfile=$'name'_transfer.log
+SOLVE vfinal=2 name=tra_gate ramptime=1e-9 dt=1e-11 tstop=1e-6 \
+ outfile=$'name'_time.str tsave="5.01e-8,5.04e-8,5.07e-8,5.10e-8,5.13e-8,5.16e-8" tsave.name
+
+GO victoryextract
+# EXTRACT electron concentration in empty well (1.0e4 is to scale into I/cm^3)
+LOAD in="$'name'_Empty.str"
+EXTRACT.PROFILE x.val=1 field="Electron Conc" region=silicon csvfile=nconc_emp.csv
+LOAD in=nconc_emp.csv
+CURVE name=nconc1 x="Depth" y="Electron Conc"
+EXTRACT.CURVE name="n_in_empty_well" expression=1.0e+4*area(curve.nconc1)
+# EXTRACT electron concentration in full well (1.0e4 is to scale into I/cm^3)
+LOAD in="$'name'_Charged.str"
+EXTRACT.PROFILE x.val=1 field="Electron Conc" region=silicon csvfile=nconc_final.csv
+LOAD in=nconc_final.csv
+CURVE name=nconc2 x="Depth" y="Electron Conc"
+EXTRACT.CURVE name="n_in_full_well" expression=1.0e+4*area(curve.nconc2)
+
+EXTRACT.VDOE name="stored_n" expression=$n_in_full_well - $n_in_empty_well
+
+victoryvisual \
+$'name'_VP_exVC.str:$'name'_NetDop.set \
+$'name'_Empty.str:$'name'_ElecConc.set \
+$'name'_Charged.str:$'name'_ElecConc.set
+
+victoryvisual \
+$'name'_time_5.01e-8.str:$'name'_ElecConc.set \
+$'name'_time_5.04e-8.str:$'name'_ElecConc.set \
+$'name'_time_5.07e-8.str:$'name'_ElecConc.set \
+$'name'_time_5.10e-8.str:$'name'_ElecConc.set \
+$'name'_time_5.13e-8.str:$'name'_ElecConc.set \
+$'name'_time_5.16e-8.str:$'name'_ElecConc.set
+
+QUIT 

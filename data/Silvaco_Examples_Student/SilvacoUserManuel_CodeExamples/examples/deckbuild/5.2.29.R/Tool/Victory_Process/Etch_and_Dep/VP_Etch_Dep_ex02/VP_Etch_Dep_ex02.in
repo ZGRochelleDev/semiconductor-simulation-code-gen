@@ -1,0 +1,102 @@
+# (c) Silvaco Inc., 2024
+
+# Introduction to physical etching models, Part 1 
+
+# Required Modules
+#  Victory Process
+#   -2D Physical Etch & Deposit
+
+# Example Name
+Set name=“VP_Etch_Dep_ex02” 
+
+# Wet etch
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+# bottom left and top right coordinates of rectangular mask
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+# Wet etch
+ETCH material=nitride wet thick=0.05
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_WetEtch.str
+
+# Isotropic Etch
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+# define material properties (etch rates)
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 
+
+# call in physical etch (isotropic) model and material etch rate properties
+ETCH MODEL="isotropic" TIME=30 SECONDS MATERIALPROPERTIES=myetchprop solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Isotropic.str
+
+# Anisotropic Etch
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+# define material properties (etch rates)
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 RATIO=0.5 \
+
+# call in physical etch (isotropic) model and material etch rate properties
+ETCH MODEL="anisotropic" TIME=30 SECONDS MATERIALPROPERTIES=myetchprop  solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Anisotropic.str
+
+# Profile Etch
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+ETCH DRY all.materials.but="barrier" THICKNESS=0.05 PROFILE="(-0.05,0) (-0.05,0.05) (0.1,0.05)" smooth.roundcorners smooth.distance=0.024
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Profile.str
+
+victoryvisual \
+$'name'_WetEtch.str \
+$'name'_Isotropic.str \
+$'name'_Anisotropic.str \
+$'name'_Profile.str
+
+QUIT

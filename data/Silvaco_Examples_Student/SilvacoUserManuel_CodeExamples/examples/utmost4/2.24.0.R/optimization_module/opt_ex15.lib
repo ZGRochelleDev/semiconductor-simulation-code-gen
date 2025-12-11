@@ -1,0 +1,35 @@
+.MODEL nwres R3_CMC (
++LEVEL    = 1003           VERSION  = 1              
++SUBVERSION = 0
++REVISION = 0              TYPE     = -1             SCALE    = 1              
++SHRINK   = 0              TMIN     = -100           TMAX     = 500            
++RTHRESH  = 0.001          GMIN     = 3.4556e-13     IMAX     = 1              
++TNOM     = 25             LMIN     = 0              LMAX     = 9.9e+09        
++WMIN     = 0              WMAX     = 9.9e+09        JMAX     = 100            
++VMAX     = 9.9e+09        TMINCLIP = -100           TMAXCLIP = 500            
++RSH      = 6806.6         XW       = 0              NWXW     = 0              
++WEXW     = 0              FDRW     = 1              FDXWINF  = 0              
++XL       = 0              XLW      = 0              DXLSAT   = 0              
++NST      = 1              ATS      = 0              DFINF    = 0.0990268      
++DFW      = 0              DFL      = 0              DFWL     = 0              
++SW_DFGEO = 1              DP       = 81.2582        ECRIT    = 100            
++ECORN    = 0.01           DU       = 0.000500096    RC       = 0              
++RCW      = 0              FC       = 0.9            ISA      = 2.3129e-18     
++NA       = 1.05746        CA       = 0              CJA      = 3.99368e-16    
++PA       = 0.608792       MA       = 0.395893       AJA      = -0.5           
++ISP      = 0              NP       = 1              CP       = 0              
++CJP      = 0              PP       = 0.75           MP       = 0.33           
++AJP      = -0.5           VBV      = 0              IBV      = 1e-06          
++NBV      = 1              KFN      = 0              AFN      = 2              
++BFN      = 1              SW_FNGEO = 0              EA       = 1.13495        
++XIS      = 3.51692        TC1      = 0.00157425     TC2      = 1.37811e-05    
++TC1L     = 0              TC2L     = 0              TC1W     = 0              
++TC2W     = 0              TC1RC    = 0              TC2RC    = 0              
++TC1KFN   = 0              TC1VBV   = 0              TC2VBV   = 0              
++TC1NBV   = 0              GTH0     = 1e+06          GTHP     = 0              
++GTHA     = 0              GTHC     = 0              CTH0     = 0              
++CTHP     = 0              CTHA     = 0              CTHC     = 0              
++NSIG_RSH = 0              NSIG_W   = 0              NSIG_L   = 0              
++SIG_RSH  = 0              SIG_W    = 0              SIG_L    = 0              
++SMM_RSH  = 0              SMM_W    = 0              SMM_L    = 0              
++SW_MMGEO = 0 )

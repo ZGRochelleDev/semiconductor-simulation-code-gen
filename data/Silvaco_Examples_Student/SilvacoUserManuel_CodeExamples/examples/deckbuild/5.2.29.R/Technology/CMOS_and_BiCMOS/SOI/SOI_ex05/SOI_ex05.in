@@ -1,0 +1,133 @@
+# (c) Silvaco Inc., 2024
+
+# Breakdown in SOI MOSFETs - Effect of Lattice Heating
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Giga
+
+# Example Name
+SET name=“SOI_ex05” 
+
+# Energy Balance (EB) 
+GO victoryd simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH space.mult=1.0
+# 
+X.MESH location=0.00 spacing=0.250
+X.MESH location=1.15 spacing=0.02
+X.MESH location=1.5 spacing=0.05
+X.MESH location=1.85 spacing=0.02
+X.MESH location=3 spacing=0.25
+#
+Y.MESH location=-0.012 spacing=0.25
+Y.MESH location=0.00 spacing=0.0025
+Y.MESH location=0.025 spacing=0.02
+Y.MESH location=0.05 spacing=0.005
+Y.MESH location=0.5 spacing=0.1
+#
+## Regions and electrodes
+REGION num=1 y.max=0 oxide 
+REGION num=2 y.min=0 y.max=0.05 silicon
+REGION num=3 y.min=0.05 oxide
+#
+ELECTRODE name=gate x.min=1 x.max=2 y.min=-0.012 y.max=-0.012
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.5 y.min=0 y.max=0
+ELECTRODE substrate
+#
+#Device doping
+#
+DOPING uniform conc=1.75e17 p.type reg=2
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.r=1.0 
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.l=2.0 
+SAVE outf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL taurel.el=0.2e-12 taumob.el=0.2e-12 
+MODELS conmob bgn fldmob hcte.el consrh auger print 
+IMPACT selb lambdae=0.02
+CONTACT number=2 n.polysilicon
+#
+#### SOLUTION SOLVING #### 
+SOLVE init 
+METHOD block itlimit=100 maxtrap=30 
+# Id-Vd calculations EB model
+SOLVE vgate=1 
+SOLVE vgate=2
+SOLVE vgate=4 
+LOG outf=$'name'_VD_EB.log master
+#
+SOLVE vdrain=0.00625
+SOLVE vdrain=0.0125
+SOLVE vdrain=0.025
+SOLVE vdrain=0.05
+SOLVE vdrain=0.1 vstep=0.1 vfinal=4.5 name=drain
+SAVE outf=$'name'_VD_EB.str
+#
+
+# Nonisothermal Energy Balance Models (NEB)
+GO victoryd simflags="-P 4"
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH space.mult=1.0
+# 
+X.MESH location=0.00 spacing=0.250
+X.MESH location=1.15 spacing=0.02
+X.MESH location=1.5 spacing=0.05
+X.MESH location=1.85 spacing=0.02
+X.MESH location=3 spacing=0.25
+#
+Y.MESH location=-0.012 spacing=0.25
+Y.MESH location=0.00 spacing=0.0025
+Y.MESH location=0.025 spacing=0.02
+Y.MESH location=0.05 spacing=0.005
+Y.MESH location=0.5 spacing=0.1
+#
+## Regions and electrodes
+REGION num=1 y.max=0 oxide 
+REGION num=2 y.min=0 y.max=0.05 silicon
+REGION num=3 y.min=0.05 oxide
+#
+ELECTRODE name=gate x.min=1 x.max=2 y.min=-0.012 y.max=-0.012
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.5 y.min=0 y.max=0
+ELECTRODE substrate
+#
+#Device doping
+#
+DOPING uniform conc=1.75e17 p.type reg=2
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.r=1.0 
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.l=2.0 
+
+
+#### MATERIAL/PHYSICAL MODELS #### 
+Material taurel.el=0.2e-12 taumob.el=0.2e-12 
+MODELS conmob bgn fldmob hcte.el lat.temp consrh auger print 
+THERMCONTACT num=1 x.min=0 x.max=6.5 y.min=0.5 y.max=0.5
+IMPACT selb lambdae=0.02
+CONTACT number=2 n.polysilicon
+#
+#### SOLUTION SOLVING #### 
+SOLVE init 
+METHOD block itlimit=100 maxtrap=30 
+# Id-Vd calculations EB model
+SOLVE vgate=1 
+SOLVE vgate=2
+SOLVE vgate=4 
+LOG outf=$'name'_VD_NEB.log master
+#
+SOLVE vdrain=0.00625
+SOLVE vdrain=0.0125
+SOLVE vdrain=0.025
+SOLVE vdrain=0.05
+SOLVE vdrain=0.1 vstep=0.1 vfinal=4.5 name=drain
+SAVE outf=$'name'_VD_NEB.str
+
+victoryvisual \
+$'name'_VD_EB.log+$'name'_VD_NEB.log
+
+QUIT

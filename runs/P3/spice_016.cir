@@ -1,0 +1,7 @@
+ngspice
+* op
+V1 in DC 1
+E1 OUT 0 IN 0 10
+
+.R LOAD 10K
+.END

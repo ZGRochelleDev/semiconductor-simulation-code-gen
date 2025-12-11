@@ -1,0 +1,23 @@
+# (c) Silvaco Inc., 2024
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE prev
+
+# Bias the drain 
+SOLVE vdrain=0.05 vstep=0.05 vfinal=0.1 name=drain
+
+# save IV data to file
+LOG outf=$'name'_VD_300K.log master
+
+SOLVE vgate=0 vstep=0.1 vfinal=3.0 name=gate
+
+SAVE outf=$'name'_VD_300K.str
+
+# extract device parameters
+go victoryextract
+LOAD  in=$'name'_VD_300K.log
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.MAXSLOPE.XINTERCEPT IN=IV NAME=intercept
+EXTRACT.LOG name=mean expression="abs(ave(DRAIN VOLTAGE))/2.0"
+EXTRACT.VDOE name="nvt_T_300K_[V]" expression=$intercept-$mean

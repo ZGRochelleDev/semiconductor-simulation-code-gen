@@ -1,0 +1,50 @@
+* Ic = f(Vce) with self-heating, to compare with Device v1.72 results
+
+.options brief nomod gmin=1e-18 dcgmin=1e-18
+
+.temp 26.85
+
+Q1  c  b  0  0  hicum
+Vc  c  0  DC 0.0
+Vb  b  0  DC 0.88
+
+.print i(Vc) i(Vb) @q1[tdev] @q1[ith]
+
+.dc vc 1.0 6.0 0.2
+
+.model hicum npn (level=8
++ tref=26.85 selft=1 dtmax=2000 smart=0
++ is=1.35e-18 hfe=1.00 hjei=1.00 mcf=1.0 alfav=8.25e-5 alqav=1.96e-4 itss=1.0e-30
++ msf=1.05 msr=1.05 tsf=100e-12 iscs=1.0e-30 msc=1.0
++
++ qp0=2.04e-15 ich=2.45E-03 hjci=1.00 hfc=1.00
++ cjei0=2.36E-15 vdei=0.940 zei=0.617 aljei=1.68
++ cjci0=3.12E-16 vdci=0.780 zci=0.448 vptci=1.00E+10
++ t0=2.02E-12 dt0h=1.135E-12 tbvl=1.570E-12
++ tef0=1.10E-13 gtfe=0.07 thcs=1.20E-10 alhc=0.099 fthc=0.800
++ rci0=1.87E+02 vlim=0.532 vpt=4.65 vces=0.100
++ latb=5.21E+00 latl=1.042
++ ibeis=1.11E-20 mbei=1.0108
++ ireis=3.41E-16 mrei=2.0000
++ alit=0.450 alqf=0.225
++ favl=3.61 qavl=4.09E-15
++ tr=3.18E-08
++ ibcis=1.00E-33 mbci=2.0000
++ rbi0=397.76 fgeo=0.8157 fdqr0=2.200 fcrbi=0.00 fqi=1.0000
++ ibeps=0.00E+00 mbep=1.0108
++ ireps=4.46E-33 mrep=2.0000
++ ibets=10.00E+00 abet=37.52
++ cjep0=3.03E-15 vdep=0.960 zep=0.437 aljep=2.68 ceox=6.17E-16
++ rcx=37.13 rbx=58.15 re=25.05
++ ibcxs=4.75E-33 mbcx=1.0245
++ cjcx0=6.52E-15 vdcx=0.850 zcx=0.401 vptcx=1.00E+10
++ ccox=1.77E-15 fbc= 0.229
++ cjs0=1.39E-14 vds=0.650 zs=0.409 vpts=1.0E10
++ rsu=0.0 csu=0.0
++ vgb=1.170 alb=-2.30E-04
++ alces=4.00E-04 zetaci=1.63 alvs=1.00E-03 alt0=-3.06E-04 kt0=5.00E-06
++ zetarbi=0.90 zetarcx=0.28 zetarbx=0.15 zetare=-0.80
++ kf=1.87E-08 af=2.00E+00 krbi=1.00
++ rth=5000.00 cth=0.00E-00 xrt=0)
+
+.end

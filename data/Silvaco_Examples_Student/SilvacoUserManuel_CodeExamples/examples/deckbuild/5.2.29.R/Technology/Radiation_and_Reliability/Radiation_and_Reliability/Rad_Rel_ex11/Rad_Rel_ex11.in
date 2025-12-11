@@ -1,0 +1,261 @@
+# (c) Silvaco Inc., 2024
+
+# Inter Device Leakage from Total Dose XRay Photonic Exposure
+
+# Required Modules
+#  Victory Process
+#   -3D Diffusion & Implantation 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D REM
+
+# Example Name
+SET name=“Rad_Rel_ex11”
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material="silicon" depth=1.14 gasHeight=1 from="-0.72,0" to="0.42,0.15" \
+	c.boron=1.32e15 orientation=100 resolution="0.01,0.01,0.01" \
+	meshdepth=2 flow.dim=3d
+
+LINE X location=-0.72  spacing=0.02 
+LINE X location=-0.64  spacing=0.02
+LINE X location=-0.6   spacing=0.01
+LINE X location=-0.525 spacing=0.02
+LINE X location=-0.45  spacing=0.01
+LINE X location=-0.41  spacing=0.02
+LINE X location=-0.3   spacing=0.001
+LINE X location=-0.297 spacing=0.001
+LINE X location=-0.247 spacing=0.025
+LINE X location=-0.197 spacing=0.025
+LINE X location=-0.157 spacing=0.008
+LINE X location=-0.15  spacing=0.007
+LINE X location=-0.143 spacing=0.008
+LINE X location=-0.103 spacing=0.025
+LINE X location=-0.053 spacing=0.025
+LINE X location=-0.003 spacing=0.001
+LINE X location=0.0    spacing=0.001
+LINE X location=0.11   spacing=0.02
+LINE X location=0.15   spacing=0.01
+LINE X location=0.225  spacing=0.02
+LINE X location=0.3    spacing=0.01
+LINE X location=0.34   spacing=0.02
+LINE X location=0.42   spacing=0.02
+
+LINE Y location=0     spacing=0.05
+LINE Y location=0.15   spacing=0.05
+
+LINE Z location=0     spacing=0.001
+LINE Z location=0.2   spacing=0.1
+LINE Z location=0.397 spacing=0.02
+LINE Z location=0.447 spacing=0.02
+LINE Z location=0.497 spacing=0.001
+LINE Z location=0.5   spacing=0.001
+LINE Z location=1.14  spacing=0.2
+
+ETCH silicon between.x="-0.3,0" thickness=0.5 MAX
+
+DEPOSIT oxide thick=0.003 conformal
+
+IMPLANT boron dose=2.2e13 energy=30 tilt=7 rotation=27 bca n.ion=2000000
+IMPLANT boron dose=2.2e13 energy=30 tilt=7 rotation=207 bca n.ion=2000000
+
+# Trench Fill
+DEPOSIT oxide thick=0.05 conformal
+ETCH oxide above=-0.003
+
+DEPOSIT polysilicon thick=0.05 MAX
+
+ETCH polysilicon thickness=1 left.to=-0.6 MAX
+ETCH polysilicon thickness=0.05 between="-0.45, 0.15" MAX
+ETCH polysilicon thickness=1 right.to=0.3 MAX
+
+ETCH polysilicon thickness=0.397 between="-0.197, -0.103" MIN
+
+DEPOSIT nitride thick=0.04 conformal
+
+ETCH nitride dry thick=0.0401
+
+IMPLANT arsenic dose=1.0e15 energy=4 tilt=7 rotation=27  bca n.ion=2000000
+IMPLANT arsenic dose=1.0e15 energy=4 tilt=7 rotation=207 bca n.ion=2000000
+
+DIFFUSE time=0.7 temp=1050 
+
+SAVE name=b4_electrodes
+
+ELECTRODES name=gate material=polysilicon x=-0.52 y=0.075 z=-0.03
+ELECTRODES name=ngate material=polysilicon x=0.23 y=0.075 z=-0.03
+ELECTRODES name=anode material=polysilicon x=-0.15 y=0.075 z=0.42 
+
+SAVE name=$'name'_vp_0
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_vp_0
+
+REMESH conformal
+
+SAVE out=$'name'_0.str
+
+
+# =======================================================================
+# Radiation damage of nMOS-nMOS pair
+# =======================================================================
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4 -128"
+
+# -----------------------------------------------------------------------
+# Structure Definition
+# -----------------------------------------------------------------------
+
+MESH infile=$'name'_0.str  
+
+ELECTRODE name=substrate z.min=1.14 z.max=1.14
+ELECTRODE name=ground x.min=-0.391 x.max=-0.332 y.min=0 y.max=0.15 z.min=-0.003 z.max=0
+ELECTRODE name=vdd    x.min=0.0325 x.max=0.091 y.min=0 y.max=0.15  z.min=-0.003 z.max=0
+ELECTRODE name=drain  x.min=-0.72  x.max=-0.65  y.min=0 y.max=0.15 z.min=-0.003 z.max=0
+ELECTRODE name=source x.min=0.359  x.max=0.42 y.min=0 y.max=0.15  z.min=-0.003 z.max=0
+
+
+# -----------------------------------------------------------------------
+# Materials and Models
+# -----------------------------------------------------------------------
+
+# Use thermionic interface model at semiconductor/semiconductor interfaces
+INTERFACE thermionic
+
+# Semiconductor properties for oxide
+MATERIAL material=oxide semiconductor
+MATERIAL material=oxide nc300=2e19 nv300=2e19 eg300=9 affinity=0.9 \
+         mun=1 mup=1e-3 m.vthp=1
+
+DOPING material=oxide replace uniform net concentration=-1
+
+INTOXIDECHARGING r1material=oxide r2material=silicon \
+    jmodel.p nt.p=1e14 sigmat.p=1.5e-13 sigman.p=1e-30 sigmaph.p=1.5e-13 \
+    jmodel.n nt.n=1e4  sigmat.n=1e-30   sigmap.n=1e-30 sigmaph.n=1e-30   \
+    mfp.phonon=0.013
+
+OXIDECHARGING material=oxide \
+    vmodel.p nt.p=2e18 sigmat.p=1.5e-17 sigman.p=1e-34 sigmaph.p=1.5e-13 \
+    vmodel.n nt.n=1e10 sigmat.n=2e-32   sigmap.n=2e-32 sigmaph.n=1e-30 
+          
+# Radiation environment
+RADIATION doserate=1 XRay
+
+# Other models and material properties
+MODELS bound.trap
+MODELS material=silicon consrh cvt bound.trap print
+CONTACT name=gate  n.poly
+CONTACT name=ngate n.poly
+CONTACT name=anode n.poly
+
+# -----------------------------------------------------------------------
+# Solution 
+# -----------------------------------------------------------------------
+
+# Request structure output of band parameters and carrier velocities
+OUTPUT band.param con.band val.band band.temp \
+       e.mobility h.mobility e.velocity h.velocity
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# N-Channel 1 Vt Check
+
+METHOD pam.gmres itlimit=120 linear.max.iterations=200
+
+SOLVE init
+SOLVE previous
+
+METHOD pam.gmres itlimit=25 linear.max.iterations=200
+
+SAVE outfile=$'name'_1.str
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+LOG outfile=$'name'_0.log
+SOLVE vgate=0.01 
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate previous
+SAVE outfile=Vg1V_3d.str
+
+LOG off
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+# N-Channel 2 Vt Check
+
+METHOD pam.gmres itlimit=120 linear.max.iterations=200
+
+SOLVE init
+SOLVE previous
+
+METHOD pam.gmres itlimit=25 linear.max.iterations=200
+
+SOLVE vvdd=0.001
+SOLVE vvdd=0.01
+SOLVE vvdd=0.05
+LOG outfile=$'name'_1.log
+SOLVE vngate=0.01
+SOLVE vngate=0.05 vstep=0.05 vfinal=1 name=ngate previous
+
+LOG off
+
+
+# Inter Transistor Leakage
+
+METHOD pam.gmres maxtraps=100 itlimit=200 tol.time=1e6 tstep.incr=1.1 trf=1.1 \
+       climit=1e-8 c.max.mul=400 c.max.div=25 cx.tol=1e-7 cr.tol=1e-14 \
+       norm.scaling.local dvmax=4.5 dt.max=50000 linear.max.iterations=200
+
+# Initialize the solution
+
+METHOD pam.gmres itlimit=120 linear.max.iterations=200
+
+SOLVE init
+SOLVE previous
+
+METHOD pam.gmres itlimit=50 linear.max.iterations=200
+
+# Test Pre-Rad Inter Device Leakage
+LOG outfile=$'name'_2.log
+SOLVE radiation dt=0.005 tstop=1 vvdd=1 ramptime=1 previous
+SAVE outfile=$'name'_2.str
+LOG off
+
+
+# Re-Set Vdd Back to 50mV
+SOLVE radiation dt=0.01 tstop=2 vvdd=0.05 ramptime=1 previous
+
+# Bias Trench Poly
+SOLVE radiation dt=0.01 tstop=3 vanode=1 ramptime=1 previous
+SAVE outfile=$'name'_3.str
+
+# Irradiate the Device to 3MRad
+LOG outfile=$'name'_3.log
+SOLVE radiation dt=0.01 tstop=3000000 previous
+SAVE outfile=$'name'_4.str
+LOG off
+
+METHOD pam.gmres maxtraps=100 itlimit=200 tol.time=1e6 tstep.incr=1.1 trf=1.1 \
+       climit=1e-8 c.max.mul=400 c.max.div=25 cx.tol=1e-7 cr.tol=1e-14 \
+       norm.scaling.local dvmax=4.5 dt.max=0.05 linear.max.iterations=200
+
+# Re-Set Trench Poly Bias
+SOLVE radiation dt=0.01 tstop=3000001 vanode=0 ramptime=1 previous
+
+# Re-Test Inter-Device Leakage
+LOG outfile=$'name'_4.log
+SOLVE radiation dt=0.01 tstop=3000002 vvdd=1 ramptime=1 previous
+LOG off
+
+victoryvisual \
+$'name'_0.log \
+$'name'_1.log:$'name'_1.set \
+$'name'_2.log:$'name'_2.set \
+$'name'_2.log:$'name'_3.set+\
+$'name'_4.log:$'name'_3.set 
+
+QUIT

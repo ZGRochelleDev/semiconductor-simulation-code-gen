@@ -1,0 +1,39 @@
+* SRAM: PULSE DURATION 0.01n. messenger
+
+.option itl1=500 gmin=1e-15 dcgmin=1e-15 itl4=10
+.option nomod nodeck numdgt=5 measraw=0
+.option trtol=3.5 $lvltime=2
+
+vdd dd 0 dc 0 pulse 0 2 0 1n 1 1 1
+vss ss 0 dc 0
+
+.ic v(a)=2 v(b)=0
+
+mp1  a b  dd  dd  P1 w=3.6u l=1.2u
+mn1  a b  ss  ss  N1 w=1.8u l=1.2u
+mp2  b a  dd  dd  P1 w=3.6u l=1.2u
+mn2  b a  ss  ss  N1 w=1.8u l=1.2u
+
+.tran 0.2n 20n 0 1n 
+.rad SEE annotate=1
++ device=mn1 node=ndp
++ taur=5p tauf=100p  start=10n ; Messenger only
++ iseu=0.81e-3  ; both Messenger & user-defined expr.
+
+.probe all
+.probe @mn1[vgs] @mn1[vth] @mn1[iseu] @mn1[qdep] @mn1[cqdep]
+.probe @mn1[ids] @mn1[cd]
+
+* lib
+.include model.nmos
+.include model.pmos
+
+.measure tran qdeptot integral @mn1[iseu] from=0 to=20n
+.measure tran tc_vg cross @mn1[vth] @mn1[vgs]
+.measure tran t2_vd cross @mn1[vdsat] @mn1[vds]
+.measure tran tva8n point v(a) arg0=8n
+.measure tran tva17nn point v(a) arg0=17n
+.measure tran tvb8n point v(b) arg0=8n
+.measure tran tvb17nn point v(b) arg0=17n 
+
+.end

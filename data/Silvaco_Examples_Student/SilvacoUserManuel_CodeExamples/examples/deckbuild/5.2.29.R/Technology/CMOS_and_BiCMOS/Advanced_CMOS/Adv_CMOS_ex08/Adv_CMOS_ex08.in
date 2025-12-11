@@ -1,0 +1,329 @@
+# (c) Silvaco Inc., 2024
+
+# Full characterization of CMOS 180nm IO GGNMOS Device
+
+# Required Modules
+# Victory Process
+# -2D Diffusion & Implantation
+# -2D Oxidation
+# Victory Mesh
+# -2D Meshing
+# Victory Device
+# -2D Simulator
+# -2D Giga
+
+# Example Name
+SET name=“Adv_CMOS_ex08” 
+
+# Full flow from process to device simulation of CMOS 180nm IO GGNMOS Device
+# Process simualtion: 
+# -Calibration steps are included in comments
+# Eletrical Simualtion:
+# -Transfer Characterization: Snapback and secondary breakdown Simulation
+# -Parameter Extraction: Breakdown/Trigger/Hold voltage Extraction 
+# -Output Characteristics: Breakdown,Hold and trigger Simulation and Voltage Extraction
+
+
+####### PROCESS SIMULATION ####### 
+# Symmetrical 180nm 5V IO device structure. Only half simulated to save simulation time.
+# Mirrored at the end of process simulation.
+
+## ---------------------------------- ##
+## ---------- Initialization -------- ##
+## -----------------------------------##
+
+GO victoryprocess simflags="-P 4"
+
+SET Lgate = 0.5 # Poly Gate Length 
+SET Lsd = 0.5 # Source/Drain AA 
+SET Ldomain=$Lgate/2+$Lsd # Simulation Domain (Half Device Pitch) 
+
+INIT material=silicon orientation=100 sub.rot=45 dopants=boron resistivity=10 \
+ depth=5.0 gasHeight=1.0 from=0.0 to=$Ldomain \
+ resolution=0.01 meshdepth=3 
+
+LINE x location=0 spacing=$Lgate/20 
+LINE x location=$Ldomain spacing=$Lsd/10 
+
+LINE z location=-0.2 spacing=0.05 
+LINE z location=0.0 spacing=0.002 
+LINE z location=0.01 spacing=0.002 
+LINE z location=0.5 spacing=0.05 
+LINE z location=2.0 spacing=0.1 
+LINE z location=5.0 spacing=0.3 
+
+# Load calibration file: 
+
+SOURCE $'name'_Calib
+
+## ---------------------------------- ##
+## ------------ Well Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=oxide thickness=0.01 
+
+## PWell 
+IMPLANT boron energy=200 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=150 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=100 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=20 dose=3.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+
+## Well RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000 
+DIFFUSE time=20 seconds temperature=1000 
+DIFFUSE time=10 seconds temperature=1000 t.final=600 
+
+ETCH dry material=oxide thickness=0.011
+
+SAVE name=$'name'_VP_Well conformalstr
+
+## ---------------------------------- ##
+## ------------ GOX Loop ------------ ##
+## -----------------------------------##
+
+# Local Parameters: OED (may adjust for calibration purpose) 
+
+# GOX1: IO thick oxide
+DIFFUSE time=10 minutes temperature=600 t.final=900 f.n2=10 pressure=1
+DIFFUSE time=20 minutes temperature=900 f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=900 t.final=600 f.n2=10 pressure=1
+
+EXTRACT name="TGOx1" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+
+# GOX2: IO thin oxide
+DIFFUSE time=10 minutes temperature=600 t.final=800 f.n2=10 pressure=1
+DIFFUSE time=70 minutes temperature=800 f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=800 t.final=600 f.n2=10 pressure=1
+
+EXTRACT name="TGOx2" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+
+# GOX3: core oxide 
+DIFFUSE time=10 minutes temperature=600 t.final=800 f.n2=10 pressure=1
+DIFFUSE time=50 minutes temperature=800 f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=800 t.final=600 f.n2=10 pressure=1
+
+EXTRACT name="TGOx3" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+STRIP material=oxide 
+
+# precisely control the Oxide thickness 
+DEPOSIT min material=oxide thickness=0.0130 
+
+## ---------------------------------- ##
+## ------------ Poly Loop ----------- ##
+## -----------------------------------##
+
+# Local Parameters: OED (may adjust for calibration purpose) 
+
+# Mesh Adjustment: 
+LINE x location=$Lgate/2 spacing=0.01 
+
+# Poly 
+DEPOSIT conformal material=polySilicon thickness=0.2
+ETCH dry material="polySilicon,oxide" thickness=0.223 right.to.x=$Lgate/2
+
+# PolyReOX
+DIFFUSE time=10 seconds temperature=600 t.final=1000 f.n2=10 pressure=1 
+DIFFUSE time=20 seconds temperature=1000 f.o2=10 pressure=1 
+DIFFUSE time=10 seconds temperature=1000 t.final=600 f.n2=10 pressure=1 
+
+EXTRACT name="TpolyReOx" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+EXTRACT name="TGOxReOx" thickness material="SiO~2" mat.occno=2 x.val=$Lgate/4
+
+SAVE name=$'name'_VP_Poly conformalstr
+
+## ---------------------------------- ##
+## ------------ LDD Loop ------------ ##
+## -----------------------------------##
+
+# Mesh Adjustment: 
+
+LINE x location=$Lgate/2-0.12 spacing=0.01 
+LINE x location=$Lgate/2+0.1 spacing=0.015 
+
+LINE z location=0.04 spacing=0.005 
+LINE z location=0.10 spacing=0.02 
+LINE z location=0.30 spacing=0.01 
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+# offSET spacer 
+DEPOSIT conformal material=oxide thickness=0.005
+
+# LDD RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000
+DIFFUSE time=10 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+# NLDD Implant 
+# Note for tilt IMPLANT: to use "dose=" for beam dose, to use "dose.wafer=" for wafer dose. 
+IMPLANT phosphorus energy=60 dose.wafer=3.0e13 tilt=30 rotation=45 n.rot=4 reflective bca n.ion=30000 traj.split plus.n
+
+SAVE name=$'name'_VP_LDD conformalstr
+
+## ---------------------------------- ##
+## ----------- Spacer Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=nitride thickness=0.03
+DEPOSIT conformal material=oxide thickness=0.05
+
+DIFFUSE time=100 min temperature=680 
+DIFFUSE time=100 min temperature=700 
+
+ETCH dry materials="oxide,nitride" thickness=0.09 
+
+## ---------------------------------- ##
+## ------------- SD Loop ------------ ##
+## -----------------------------------##
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+# Local Parameter: suggest to re-set amorphizationLevel ONLY at S/D loop 
+MATERIAL name=silicon param="amorphizationLevel" value=5.0e23 unit="1/cm3"
+
+DEPOSIT min material=oxide thickness=0.01
+
+# NP Implant 
+IMPLANT arsenic energy=25 dose=1.0e15 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+IMPLANT phosphorus energy=45 dose=1.0e14 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+
+# NP RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000
+DIFFUSE time=30 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+# PP RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000
+DIFFUSE time=10 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+# Salicide RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=800
+DIFFUSE time=30 seconds temperature=800
+DIFFUSE time=10 seconds temperature=800 t.final=600
+
+SAVE name=$'name'_VP_SD conformalstr
+
+## ---------------------------------- ##
+## ----------- Contact Loop --------- ##
+## -----------------------------------##
+
+ETCH dry materials="oxide,nitride" thickness=0.011 
+DEPOSIT min material= aluminum thickness= 0.02 
+
+MIRROR mirror="-x"
+
+ELECTRODE name=gate x=0 z=-0.1
+ELECTRODE name=source x=-$Lgate/2-$Lsd/2 z=0
+ELECTRODE name=drain x=$Lgate/2+$Lsd/2 z=0
+ELECTRODE name=substrate substrate
+
+SAVE name=$'name'_VP_sv conformalstr
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+REMESH conformal 
+
+SAVE out=$'name'_VM_con.str
+
+####### DEVICE SIMULATION #######
+# Transfer Characterisation of CMOS 180nm IO GGNMOS Device
+# Snapback and secondary breakdown Simulation
+# Trigger/Hold voltage Extraction 
+
+#### STRUCTURE SPECIFICATION ####
+GO victorydevice simflag="-P 4 -80"
+
+SET sign=1 
+SET Vdd=5.0
+SET wf=4.2 
+
+SET i_Trigger=2e-6
+SET i_Hold=4e-4
+SET i_final=5e-3
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_con.str width=1
+
+# Contact
+CONTACT name=gate workfunction=$wf 
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=silicon taun0=1.0e-7*1e-2 taup0=1.0e-7*1e-2 
+MODELS fermi srh cvt auger bgn lat.temp  print
+
+IMPACT selb
+
+THERMCONTACT num=6 y.min=5.0 y.max=5.0 ext.temp=300 alpha=1200 #substrate thermal contact
+THERMCONTACT num=2 x.min=0.6 x.max=1.0 ext.temp=300 alpha=1200 #drain thermal contact
+
+#### NUMERIAL METHODS ####
+METHOD  maxtrap = 20 climit = 1e-4
+
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility 
+
+#### SOLUTION SOLVING #### 
+# Output Characteristics: Snapback and Secondary breakdown curve
+
+SOLVE init
+SOLVE previous
+
+LOG outfile = $'name'_Secondary_breakdown.log
+
+#BV
+SOLVE vdrain = 0.001*$sign
+SOLVE vdrain = 0.01*$sign
+SOLVE vstep = 0.01*$sign vfinal = 0.1*$sign name = drain 
+SOLVE vstep = 0.05*$sign vfinal = 0.5*$sign name = drain
+SOLVE vstep = 0.2*$sign vfinal = 2.0*$sign name = drain
+SOLVE vstep = 0.5*$sign vfinal = 9.0*$sign name = drain 
+SOLVE vstep = 0.1*$sign vfinal = 12.0*$sign name = drain compl = 1e-8*$sign cname = drain
+
+#Trigger
+CONTACT name = drain current 
+
+SOLVE previous 
+SOLVE istep = 1.1 ifinal = $i_Trigger*$sign name = drain imult 
+
+SAVE outfile = $'name'_trigger.str
+
+#Hold
+SOLVE previous 
+SOLVE istep = 1.1 ifinal = $i_Hold*$sign name = drain imult  temperature.compliance=500
+
+SAVE outfile = $'name'_hold.str
+
+#Secondary breakdown
+SOLVE previous 
+SOLVE istep = 1.1 ifinal = $i_final*$sign name = drain imult temperature.compliance=500
+
+SAVE outfile = $'name'_Secondary_breakdown.str
+
+#### DEVICE EXTRACTION ####
+GO victoryextract
+
+OPTION datafile = $'name'_Secondary_breakdown.result
+LOAD in = $'name'_Secondary_breakdown.log
+
+SET X = "drain Voltage" 
+SET Y = "drain Current"
+CURVE name = Secondary_breakdown x = "abs($X)" y = "abs($Y)"
+
+#first breakdown
+EXTRACT.curve name = BV_[V] expression = "intercept(y = 1.0e-6, abs(curve.Secondary_breakdown))"
+#trigger
+EXTRACT.curve name = TriggerV_[V] expression = "intercept(y = $i_Trigger, abs(curve.Secondary_breakdown))"
+#hold
+EXTRACT.curve name = HoldV_[V] expression = "intercept(y = $i_Hold, abs(curve.Secondary_breakdown))"
+
+victoryvisual \
+$'name'_VM_con.str \
+$'name'_Secondary_breakdown.log \
+$'name'_Secondary_breakdown.str:$'name'_Lattice_temp.set
+
+QUIT
+
+ 

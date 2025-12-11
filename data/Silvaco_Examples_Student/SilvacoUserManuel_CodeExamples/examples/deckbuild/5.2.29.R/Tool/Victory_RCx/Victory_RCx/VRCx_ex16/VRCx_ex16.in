@@ -1,0 +1,86 @@
+# (c) Silvaco Inc., 2024
+
+# SRAM Analysis for Back Annotation into SPICE model
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex16” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.lay depth=1 material=silicon rulefile=$'name'.lmp
+
+ELECTRODES substrate
+
+## Process Description ##
+
+## Trench and Fill ##
+ETCH material=silicon thickness=0.5 max mask=AA
+DEPOSIT material=oxide thickness=0 max
+
+## Gate Stack ##
+DEPOSIT material=gateox thickness=0.01 max
+ETCH material=gateox mask=*GATE reverse
+DEPOSIT material=oxide thickness=0 max
+
+DEPOSIT material=polysilicon thickness=0.2 max
+ETCH material=polysilicon mask=poly
+ELECTRODES mask=*GATE material=polysilicon
+
+## Contact ##
+DEPOSIT material=oxide thickness=0.4 max
+ETCH material=oxide mask=cont reverse
+
+## Stop Source/Drain/Substrate Contacts Shorting to Substrate ##
+DEPOSIT material=gateox thickness=-0.6 max
+
+## Named polygons will be converted into electrodes ##
+ELECTRODES mask=*CONT material=gateox
+
+## Metal 1 ##
+DEPOSIT material=aluminum thickness=0.6 max
+ETCH material=aluminum mask=M1
+ELECTRODES mask=M1 material=aluminum
+
+## M1/M2 via ##
+DEPOSIT material=oxide thickness=0.5 max
+ETCH material=oxide mask=via1 reverse
+
+## M2 ##
+DEPOSIT material=aluminum thickness=0.8 max
+ETCH material=aluminum mask=M2
+ELECTRODES mask=M2 material=aluminum
+
+## M1/M2 via ##
+DEPOSIT material=oxide thickness=0.6 max
+ETCH material=oxide mask=via2 reverse
+
+## M3 ##
+DEPOSIT material=aluminum thickness=1 max  
+ETCH material=aluminum mask=M3
+ELECTRODES mask=M3 material=aluminum
+
+DEPOSIT oxide thickness=1 max
+
+SAVE name=$'name'_VP_sv 
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv.str" layout="$'name'.lay" map="$'name'.lmp"
+
+MATERIAL silicon conductivity=1
+MATERIAL material("gateox") permittivity=0.01
+
+INTERCONNECT adapt=(0.05,0.02) capsolver=1
+
+SAVE spice="$'name'.net" 
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

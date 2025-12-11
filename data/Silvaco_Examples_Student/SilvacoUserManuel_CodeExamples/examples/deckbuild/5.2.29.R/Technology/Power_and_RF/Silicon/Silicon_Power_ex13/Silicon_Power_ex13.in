@@ -1,0 +1,272 @@
+# (c) Silvaco Inc., 2024
+
+# UMOS Process and Device Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Remeshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name="Silicon_Power_ex13"
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+### Initial Substrate
+INIT meshdepth=2 orientation=100 from=0.0 to=2.4 depth=2 \
+     gasheight=10 resolution=0.04 material=silicon \
+     dopants="phosphorus" dopingvalues=3e+19 surface.z=4 
+
+### Mesh Construction
+LINE x location=0.0 spacing=0.2
+LINE x location=2.4 spacing=0.2
+
+LINE z location=-2 spacing=0.5
+LINE z location=2  spacing=1
+LINE z location=4  spacing=0.2
+LINE z location=6  spacing=1
+
+### Epitaxy Layer
+EPITAXY material=silicon time=15 temperature=1100 thickness=4 \
+        dopants="phosphorus" dopingvalues=2e+16 
+
+# Form a trench with rounded bottom by combitation of DRY and WET etch steps
+DEPOSIT material=nitride thickness=0.5 conformal
+ETCH thickness=1.75 dry angle=87 left.to.x=0.276205
+ETCH wet thickness=0.25 left.to.x=0.276205
+STRIP material=nitride
+
+#Trench oxideation
+DIFFUSE time=30 temperature=1050 dryo2 pressure=1.00 hcl.pc=3
+
+# Wet etch to adjust gate oxide thickness
+ETCH material=oxide thickness=0.03 wet
+
+SAVE name=temp
+EXPORT structure=$'name'_ox.str
+
+# Extract gate oxide thicknesses
+go victoryextract
+load in=$'name'_ox.str
+EXTRACT.THICKNESS name="gateox_bottom" regions="SiO2" nth=1  x.val=0.05
+EXTRACT.THICKNESS name="gateox_side" regions="SiO2" nth=1  y.val=0.75
+
+go victoryp simflags="-P 4"
+LOAD name=temp
+
+# Deposit and Etch-back Polysilicon gate
+DEPOSIT material=polysilicon thickness=0.8 conformal \
+        dopants="phosphorus" dopingvalues="1e20"
+ETCH thickness=0.82 dry
+
+SAVE name=temp
+EXPORT structure=$'name'_ox2.str
+
+# Add grid lines along the channel 
+go victoryextract
+load in=$'name'_ox2.str
+EXTRACT.BOUND name="Xgate_position" max regions="SiO2" nth=1  z.val=0.75
+EXTRACT.BOUND name="TrenchBottom" max regions="SiO2" nth=1  x.val=0.01
+
+go victoryp simflags="-P 4"
+LOAD name=temp
+
+LINE x location=$Xgate_position-0.27 spacing=0.02
+LINE x location=$Xgate_position+0.02 spacing=0.02
+LINE z location=0.4 spacing=0.04
+LINE z location=1.625 spacing=0.04
+
+#Vt adjust "vertical" doping 
+IMPLANT boron energy=150 dose=5e12
+IMPLANT boron energy=300 dose=7e12
+IMPLANT boron energy=500 dose=9e12
+
+DIFFUSE time=60 temperature=1050
+
+# Add fine grid to capture N+ implant
+LINE z location=0.02 spacing=0.01
+
+# N+ Implant and drive
+IMPLANT arsenic dose=2e+15 energy=30 tilt=0
+DIFFUSE time=30 temperature=950
+
+# Adjust vertical mesh after N+ diffusion
+LINE z location=0.1 spacing=0.04
+LINE remove z location=0.02 
+
+# Isolation oxide and recessed etch for P= implant and source contact
+DEPOSIT material=oxide thickness=1 conformal
+ETCH material=oxide right.to.x=1.9 dry thickness=2
+ETCH material=silicon thickness=0.5 dry
+
+# P+ implant and drive
+IMPLANT boron dose=2e+15 energy=25 tilt=0
+DIFFUSE time=15 temperature=1000 
+
+# Contact metal deposition
+DEPOSIT material=aluminum thickness=0.3 conformal
+
+# Assign electrods
+ELECTRODE name=gate x=0.05 z=0.75 
+ELECTRODE name=source x=0.05 
+ELECTRODE name=drain substrate
+
+# SAVE simulation status for REMESHing(conformalstr)
+# before electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+#Surface concentration in the "middle" of the vertical gate
+GO victoryextract
+LOAD in=$'name'_VP_sv_exVC.str 
+EXTRACT.SURFACE.CONCENTRATION name="SurfC" field="Net Doping" region=silicon other.region=oxide z.val=0.75
+EXTRACT.DEPTH name=J1 x.val=0.7 field="Net Doping" value=0 region=silicon nth=1
+EXTRACT.DEPTH name=J2 x.val=0.7 field="Net Doping" value=0 region=silicon nth=2
+EXTRACT.VDOE name=GateLength expression=$J2-$J1
+if cond=($J2 > $TrenchBottom)
+EXTRACT.DEPTH name=Jlat z.val=$TrenchBottom field="Net Doping" value=0 region=silicon nth=1
+if.end
+
+
+####### STRUCTURE REMESHING #######
+# Use VictoryMesh to prepare the structure for VictoryDevice simulation
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+# Mirror the structure
+MIRROR axes="-x"
+
+# Delaunay refinement
+REMESH delaunay
+
+# Base Mesh
+REFINE max.size=0.5 regions="*"
+REFINE max.size=0.2 regions="material:aluminum"
+REFINE max.size=0.1 regions="material:polysilicon"
+
+# Interface refinement
+REFINE max.interface.size=0.001 grading="quadratic"
+# Junction refinement
+REFINE max.junction.size=0.03 grading="quadratic"
+# find the SiO2 interface and add a little refinement
+REFINE regions="material:sio2" max.interface.size=0.01 \
+       grading="quadratic" interface.regions="material:sio2" \
+       other.interface.regions="material:polysilicon,silicon"
+
+SAVE out=$'name'_VM_del.str
+
+
+####### DEVICE SIMULATION #######
+# Vth Test : Returns Threshold Volatage
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# width - Specifies the assumed length in the z-direction for a 2D device
+MESH infile=$'name'_VM_del.str width=10
+
+#### MATERIAL/PHYSICAL MODELS ####
+# cvt - Specifies the transverse field dependent model of Lombardi or,
+#     if KLASSEN is also set, the transverse field dependent model of Darwish
+# srh - Selects the Shockley-Read-Hall (SRH) recombination model
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS cvt srh print
+CONTACT name=gate n.polysilicon
+# qf - Specifies the fixed oxide charge density at a semiconductor–insulator 
+#      interface in units of electronic charges per cm2
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####
+# newton - Nonlinear solutions are obtained using the Newton method
+METHOD newton
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_Vth_init.str
+
+SOLVE vdrain=0.1 previous
+
+LOG outfile=$'name'_VD_Vth.log
+
+SOLVE vgate=0 vstep=0.2 vfinal=5.0 name=gate
+
+LOG off
+
+# Extract threshold voltage.
+GO victoryextract
+LOAD in="$'name'_VD_Vth.log"
+EXTRACT.LOG name=mean expression="abs(ave(DRAIN VOLTAGE))/2.0"
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.CURVE name="Vth" expression="intercept(y=0, max(slope(curve.IV)))-$'mean'"
+EXTRACT.CURVE name="MaxId" expression="intercept(x=5, curve.IV)"
+
+# BV Test : Returns Breakdaown volatage
+GO victorydevice simflags="-80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str width=10
+
+#### MATERIAL/PHYSICAL MODELS ####
+# cvt - Specifies the transverse field dependent model of Lombardi or,
+#     if KLASSEN is also set, the transverse field dependent model of Darwish
+# srh - Selects the Shockley-Read-Hall (SRH) recombination model
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS cvt srh print
+# Impact ionisation - critical for breakdown simulations
+# Selects the model described by Selberherr
+IMPACT selberherr gradqfl
+CONTACT name=gate n.polysilicon
+
+#### NUMERICAL METHODS ####
+# newton - Nonlinear solutions are obtained using the Newton method
+# climit - Specifies a concentration normalization factor
+METHOD newton climit=1e-4 
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_BV_init.str
+
+LOG outfile=$'name'_VD_BV.log
+
+SOLVE vdrain=0.03 previous
+SOLVE vdrain=0.1
+SOLVE vdrain=0.25 vstep=0.25 vfinal=2 name=drain 
+SOLVE vstep=1 vfinal=10 name=drain
+# Current compliance is used in order to switch to the current boundary 
+# condition.
+SOLVE vstep=2 vfinal=70 name=drain cname=drain compliance=5e-12
+
+CONTACT name=drain current
+
+SOLVE mult vstep=1.4 vfinal=1e-9 name=drain previous
+
+LOG off
+
+# Save at 1e-9A - breakdown
+SAVE outfile=$'name'_VD_BV_final.str
+
+# Extract the breakdown voltage.
+GO victoryextract
+LOAD in="$'name'_VD_BV.log"
+EXTRACT.LOG name=BV expression="max(Drain Voltage)"
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual  \
+$"name"_VM_del.str:$"name"_Mesh.set \
+$"name"_VM_del.str:$"name"_NetDop.set \
+$"name"_VD_Vth.log \
+$"name"_VD_BV.log:$"name"_BV.set
+
+QUIT

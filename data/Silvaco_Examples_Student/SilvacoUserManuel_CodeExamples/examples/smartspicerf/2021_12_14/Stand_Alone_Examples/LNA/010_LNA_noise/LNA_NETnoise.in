@@ -1,0 +1,15 @@
+* Sparam and Noise
+.include 'LNAcircuit.inc'
+.param rpar21=234
+
+Pout 9  0  r=40
+Prf  in 0 
+$ ----------------------
+.HNET Prf Pout
++  LIN 31  800MegHz 1.1GHz
++  FUND=900MegHz
++  NOISE_CIRCLES=(5,10,15,20,25,30)
++  NCFREQ=900Meg
++  annotate=3 waves
+
+.END

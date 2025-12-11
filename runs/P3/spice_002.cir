@@ -1,0 +1,13 @@
+plaintext
+/*
+Step Response Netlist
+*/
+/* Requested Parameters */
+V1 in 0 PULS(0 5 1n -1 1n -1e3 10 10);
+R in out 1k;
+C out 0 1e9;
+.TRAN 1n 1us;
+
+/* Output Line */
+.VOUT
+.END

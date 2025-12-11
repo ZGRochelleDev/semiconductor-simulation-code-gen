@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <math.h>
+#include "template.h"
+
+/*
+ * TFT donor trap density as function of energy
+ * Statement: DEFECTS
+ * Parameter: F.TFTDON
+ * Arguments:
+ * energy     energy relative to valence band (eV)
+ * eg         band gap (eV)
+ * *density   tft donor trap density (cm^-3)
+ * *sigmae    donor trap electron capture cross-section
+ * *sigmah    donor trap hole capture cross-section
+ */
+int tftdon(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	
+	double c=CIgetGlobalDouble("don_shallow");
+	double d=CIgetGlobalDouble("don_deep");
+
+	*density = c*1.0e5*2.0e15*exp(-energy/0.03) + d*1.0e5*4.0e13*exp(-energy/0.191);
+	*sigmae=1.0e-15;
+	*sigmah=1.0e-15;
+
+	return(0);
+}

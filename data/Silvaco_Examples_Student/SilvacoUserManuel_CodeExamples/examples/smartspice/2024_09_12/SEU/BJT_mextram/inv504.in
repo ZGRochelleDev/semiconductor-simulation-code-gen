@@ -1,0 +1,41 @@
+* Mextram level 504 : PNP inverter
+
+.OPTIONS brief nomod dcgmin=0
+
+VB in 0 DC -3 PULSE (-3 0 0ns 1us 1us 4us 10us) AC 1
+VCC 1 0 DC -3
+
+.TEMP 50
+
+Q1 col bas 0 0 mextram
+RC 1  col 20K
+RB in bas 50K
+
+*.DC vb -3 0 0.2
+.TRAN 2us 30us
+*.AC DEC 2 1k 10g
+
+.PRINT dc v(col) @q1[tdev]
+.PRINT tran v(col) v(in) @q1[tdev]
+.PRINT ac v(col)
+
+* model parameters (use default parameters)
+.MODEL mextram pnp (level=6 version=504 selft=1 dtmax=100)
+
+.probe @q1[iseu]  @q1[qdep]
+
+.MEASURE TRAN t_vol_upset 
++ TRIG v(col) VAL=-2.8 TD=12u RISE=1
++ TARG v(col) VAL=-2.8 FALL=1
+
+* Rq: Physical values are unrealistic: just set
+* to change behavior!
+.rad SEE
++ device=q1 node=nc2
++ start=12u taur=5e-8 tauf=12e-8
++ lf=5u let=150
++ upset_node=col upset_threshold=-1 upset_delta=1u
++ annotate=1
+
+.END
+

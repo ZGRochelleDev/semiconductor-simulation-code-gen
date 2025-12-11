@@ -1,0 +1,23 @@
+source n1.var
+source n0c1.var
+GO victorymesh simflags="-P 4"
+####### structure REmeshING ####### 
+
+load in = n17_VP_sv
+
+CROP axis = "z" offset = "1.2"
+
+REmesh conformal 
+
+save out = n21_VM_con.str
+
+## ---------------------------------- ##
+## ----------- Device: IdVg --------- ##
+## -----------------------------------##
+
+# Transfer Characterisation of CMOS 180nm Core Device
+# -IdVglin and IdVgsat Simulation
+# -Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/DIBL extraction 
+
+#### structure SPECIFICATION ####
+info

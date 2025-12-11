@@ -1,0 +1,99 @@
+# (c) Silvaco Inc., 2024
+
+# IGBT Ic/Vce Characteristics
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+SET name=Silicon_Power_ex02
+
+GO victorydevice simflags="-P 4"
+
+### Structure specification ###
+MESH
+
+X.MESH location=0.0   spacing=1.0
+X.MESH location=8.0   spacing=0.25
+X.MESH location=13.0  spacing=0.25
+X.MESH location=18.2  spacing=0.8
+X.MESH location=25.0  spacing=1.0
+
+Y.MESH location=-0.08 spacing=0.04
+Y.MESH location=0.0   spacing=0.01
+Y.MESH location=0.6   spacing=0.2
+Y.MESH location=3     spacing=1.0
+Y.MESH location=5.5   spacing=0.2
+Y.MESH location=8.0   spacing=1.0
+Y.MESH location=25    spacing=10
+Y.MESH location=45    spacing=10
+Y.MESH location=65    spacing=0.5
+Y.MESH location=73    spacing=2.5
+Y.MESH location=81.4  spacing=0.2
+Y.MESH location=100.0 spacing=10
+
+REGION num=1 y.max=0.0 oxide
+REGION num=2 y.min=0.0 silicon
+
+# electrodes #1 - gate; #2 - emitter; #3 - collector
+ELECTRODE num=1 left length=13.0 y.maximum=-0.08 name=gate
+ELECTRODE num=2 right length=6.8 y.minimum=0.0 y.maximum=0.0 name=emitter
+ELECTRODE num=3 substrate  name=collector
+
+# impurity profile
+DOPING  uniform concentration=1.5e14 n.type 
+DOPING  uniform concentration=1.0e19 p.type y.minimum=81.4 y.maximum=100
+DOPING  uniform concentration=1.0e17 n.type y.minimum=65.0 y.maximum=81.4
+DOPING  gauss concentration=2.7e17 p.type junction=5.8 \
+  x.minimum=13 x.ratio=0.8
+DOPING  gauss concentration=9.3e19 n.type junction=0.4 \
+  x.minimum=13 x.maximum=20 x.ratio=0.8
+
+### material/physical models###
+MATERIAL region=2 taup0=1e-6 taun0=1e-6
+CONTACT num=1 n.poly
+
+MODELS srh auger cvt print
+
+IMPACT selberherr
+
+### numerical methods###
+METHOD newton trap  
+
+### solution solving ###
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_0V.str
+
+# Vge increased from 0 up to Vge=10.0 V
+SOLVE vgate=0.1 vstep=0.1 vfinal=1 name=gate 
+SOLVE vstep=0.2 vfinal=4.8 name=gate
+SOLVE vgate=5.0 outfile=$'name'_VD_Vg5V.str 
+SOLVE vstep=0.2 vfinal=9.8 name=gate
+SOLVE vgate=10.0 outfile=$'name'_VD_Vg10V.str 
+
+# Vge=5.0 V
+# Vce increased from 0. up to Vce=20. V
+LOG outfile=$'name'_VD_IcVc_Vg5V.log
+
+LOAD infile=$'name'_VD_Vg5V.str 
+SOLVE vcollector=0.1 vstep=0.1 vfinal=1.0 name=collector
+SOLVE vstep=0.25 vfinal=8.0 name=collector
+SOLVE vstep=1.0 vfinal=20.0 name=collector
+
+# Vge=10.0 V
+# Vce increased from 0.1 up to Vce=20. V
+LOG outfile=$'name'_VD_IcVc_Vg10V.log
+
+LOAD infile=$'name'_VD_Vg10V.str 
+SOLVE vcollector=0.1 vstep=0.1 vfinal=1.0 name=collector
+SOLVE vstep=0.25 vfinal=8.0 name=collector
+SOLVE vstep=1.0 vfinal=20.0 name=collector
+SAVE outfile=$'name'_VD_Vc20V_Vg10V.str 
+
+victoryvisual \
+$'name'_VD_0V.str:$'name'_struct.set \
+$'name'_VD_IcVc_Vg5V.log+$'name'_VD_IcVc_Vg10V.log
+
+QUIT

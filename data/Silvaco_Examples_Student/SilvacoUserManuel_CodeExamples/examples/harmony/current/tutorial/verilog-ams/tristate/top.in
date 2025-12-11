@@ -1,0 +1,23 @@
+
+
+.include models.spi
+.include tristate.net
+
+.global vdd
+
+vdd     vdd    gnd dc 5
+
+vclk    clk   gnd  pulse (0, 5, 0, 1ns,1ns, 200ns, 400ns);
+vresetb resetb gnd  pwl 0 5 10ns 5 11ns 0 20ns 0 21ns 5 
+
+rload   pad gnd 10k
+cload   pad gnd 1pf
+
+xcore1 clk resetb oeb1 data1 core
+xcore2 clk resetb oeb2 data2 core
+
+xtristate1 data1 pad oeb1 tristate
+xtristate2 data2 pad oeb2 tristate
+
+.tran 10ns 6000ns
+.end

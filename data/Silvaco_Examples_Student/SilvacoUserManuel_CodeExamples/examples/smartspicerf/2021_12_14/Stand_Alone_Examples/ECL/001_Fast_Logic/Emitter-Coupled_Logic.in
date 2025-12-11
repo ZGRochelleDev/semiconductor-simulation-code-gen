@@ -1,0 +1,61 @@
+* Emitter-Coupled Logic
+
+.OPTIONS NOMOD ACCT=2
+
+.param alpha=0.5
+
+Vin  in   gnd  dc=-1.4
++ mag1='alpha*0.63662' mag3='alpha*-0.212207'
++ mag1f=0.1 mag2f=0.1
+
+Vin2 b2   gnd  -2.
+Vin3 b3   gnd  -2.
+Vref vr   gnd  -1.4
+
+Vee  ve   gnd  -5.
+
+*** Transistors
+Q1   c1  b1  e   ve  Qstd
+Q2   c1  b2  e   ve  Qstd
+Q3   c1  b3  e   ve  Qstd
+Q4   c2  vr  e   ve  Qstd
+Q5   gnd c2  out ve  Qstd area=2
+Q6   gnd c1  NORout  ve  Qstd area=2
+*** Resistors
+Rin  in  b1  r=50
+Rc1  gnd c1  r=80
+Rc2  gnd c2  r=80  
+Re   e   ve  r=270
+Rth1 out ve  r=125
+Rth3 NORout ve  r=125
+*** Capacitors
+C1  out ve c=5pF
+C2  NORout ve c=5pF
+
+*** Models
+.model Qstd npn is=1.0e-16 br=0.1 vaf=50
++           expli=200mA 
++           cje=0.4pF vje=0.8 mje=0.4
++           cjc=0.5pF vjc=0.8 mjc=0.333
++           cjs=1pF tr=5ns tf=0.12ns 
++           rb=50 rc=10
+*
+.HARM 
++  FUND1=10megHz
++  nharm1=31
++  Annotate=3
++  WAVES 
+
+.SPECTRAL 
++  FUND1=10MegHz 
++  FUND2=10.2MegHz 
++  nharm1=5 
++  nharm2=3 
++  Annotate=3 
++  WAVES=5000
+
+
+.PROBE HARM_WF  v(out) v(NORout) v(in)
+.PROBE SPECT_WF v(out) v(NORout) v(in)
+
+.END

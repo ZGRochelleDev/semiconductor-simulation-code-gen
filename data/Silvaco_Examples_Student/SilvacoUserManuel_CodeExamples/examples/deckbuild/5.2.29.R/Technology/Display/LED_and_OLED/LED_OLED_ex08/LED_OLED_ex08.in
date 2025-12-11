@@ -1,0 +1,169 @@
+# (c) Silvaco Inc., 2024
+
+# Color sensor with vertically stacked organic photodetectors
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Organic
+#   -2D Optical
+
+# Reference:
+# [1] Hokuto Seo, Satoshi Aihara, Toshihisa Watabe, Hiroshi Ohtake, 
+# Misao Kubota and Norifumi Egami,
+# "Color Sensors with three vertically stacked organic photodetectors,"
+# in Japanese Journal of Applied Physics, Volume 46, Page L1240-L1242, 
+# December 2007, doi: 10.1143/JJAP.46.L1240.
+
+###### VARIABLES ######
+# Example Name
+SET name=LED_OLED_ex08
+
+###### DEVICE SIMULATION 1 ######
+# Sweep wavelength of incident beam and 
+# detect cathode current of each sensor
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# When "auto" is set,
+# prepare mesh spacings in only x-direction by X.MESH statements,
+# and add each material on the top/bottom step by step by REGION statements.
+MESH auto
+X.MESH location=0 spacing=2
+X.MESH location=10 spacing=2
+# The top blue cell with thick glass substrate
+# The glass substrate was devided to two statements for mesh spacing control
+REGION number=1 material=ITO bottom thickness=0.02 ny=5
+REGION number=2 user.mat=NTCDA user.group=semiconductor bottom \
+ thickness=0.4 ny=40
+REGION number=3 material=Alq3 bottom thickness=0.22 ny=44
+REGION number=4 user.mat=COTPP bottom user.group=semiconductor \
+ thickness=0.08 ny=20
+REGION number=5 material=ITO bottom thickness=0.15 ny=15
+REGION number=6 material=SiO2 bottom thickness=350 ny=50
+REGION number=6 material=SiO2 bottom thickness=350 ny=50
+# The middle GREEN cell with thick glass substrate
+REGION number=7 material=ITO bottom thickness=0.02 ny=5
+REGION number=8 user.mat=NTCDA user.group=semiconductor bottom \
+ thickness=0.3 ny=30
+REGION number=9 material=Alq3 bottom thickness=0.05 ny=10
+REGION number=10 user.mat=NNQA user.group=semiconductor bottom \
+ thickness=0.2 ny=50
+REGION number=11 material=ITO bottom thickness=0.15 ny=15
+REGION number=12 material=SiO2 bottom thickness=350 ny=50
+REGION number=12 material=SiO2 bottom thickness=350 ny=50
+# The bottom RED cell with thick glass substrate
+REGION number=13 material=ITO bottom thickness=0.02 ny=5
+REGION number=14 user.mat=NTCDA user.group=semiconductor bottom \
+ thickness=0.3 ny=30 
+REGION number=15 material=Alq3 bottom thickness=0.05 ny=10 
+REGION number=16 user.mat=ZnPc user.group=semiconductor bottom \
+ thickness=0.25 ny=50
+REGION number=17 material=ITO bottom thickness=0.15 ny=15
+REGION number=18 material=SiO2 bottom thickness=350 ny=50
+REGION number=18 material=SiO2 bottom thickness=350 ny=50
+# Change each ITO region to Cathode/Anode
+ELECTRODE number=1 region=1 name=B_Cathode
+ELECTRODE number=2 region=5 name=B_Anode
+ELECTRODE number=3 region=7 name=G_Cathode
+ELECTRODE number=4 region=11 name=G_Anode
+ELECTRODE number=5 region=13 name=R_Cathode
+ELECTRODE number=6 region=17 name=R_Anode
+
+#### MATERIAL/PHYSICAL MODELS ####
+# Set workfunction on Anode and Cathode
+CONTACT name=B_Cathode workf=4.7
+CONTACT name=B_Anode workf=4.7
+CONTACT name=G_Cathode workf=4.7
+CONTACT name=G_Anode workf=4.7
+CONTACT name=R_Cathode workf=4.7
+CONTACT name=R_Anode workf=4.7
+# pfmob - Poole-Frenkel mobility enhances mobility in electric fields
+# langevin - Langevin recombination generates excitons from holes and electrons
+# singlets - Activate singlet exciton equations
+# s.dissoc - Activate singlet exciton dissociation
+# print - Output parameters to run-time.
+MODELS pfmob langevin singlet s.dissoc print 
+# Load SOPRA database for ITO index
+MATERIAL material=ITO sopra=Ito2.nk 
+# Set material parameters for organic materials
+# The first line specifies the material and, if needed, load default values,
+# the second line modifies LUMO, HOMO, DOS and permittivity,
+# the third line specifies the parameters for singlet excitons,
+# and the last line sets/outputs the index file
+MATERIAL material=Alq3 \
+ affinity=3 eg300=2.8 nc300=1.5e20 nv300=1.5e20 permittivity=2.9 \
+ qe.s=1 frl.s=0.25 ld.s=0.01 tau.s=1e-9 s.binding=0.1 a.singlet=4.965 \
+ index.file=$'name'_alq3_index.nk out.index=alq3 lam1=0.4 lam2=0.75 nlam=40
+MATERIAL material=NTCDA user.def=organic \
+ affinity=4 eg300=4 nv300=1e20 nc300=1e20 permittivity=2.6 \
+ qe.s=1 frl.s=0.25 ld.s=0.01 tau.s=1e-9 s.binding=0.1 a.singlet=5.538 \
+ real.index=1.8
+MATERIAL material=COTPP user.def=organic \
+ affinity=2.9 eg300=2.2 nv300=1e20 nc300=1e20 permittivity=3 \
+ qe.s=1 frl.s=0.25 ld.s=0.01 tau.s=1e-9 s.binding=0.1 a.singlet=4.799 \
+ index.file=$'name'_cotpp_absorp.nk out.index=cotpp lam1=0.4 lam2=0.75 nlam=40
+MATERIAL material=NNQA user.def=organic \
+ affinity=3.1 eg300=2.3 nv300=1e20 nc300=1e20 permittivity=3 \
+ qe.s=1 frl.s=0.25 ld.s=0.01 tau.s=1e-9 s.binding=0.1 a.singlet=4.799 \
+ index.file=$'name'_nnqa_absorp.nk out.index=nnqa lam1=0.4 lam2=0.75 nlam=40
+MATERIAL material=ZnPc user.def=organic \
+ affinity=2.9 eg300=1.9 nv300=1e20 nc300=1e20 permittivity=3.2 \
+ qe.s=1 frl.s=0.25 ld.s=0.01 tau.s=1e-9 s.binding=0.1 a.singlet=4.499 \
+ index.file=$'name'_znpc_absorp.nk out.index=znpc lam1=0.4 lam2=0.75 nlam=40
+# Set Poole-Frankel mobility parameters
+MOBILITY material=Alq3 mun0=1.4e-6 mup0=2e-8 e0n.pfmob=1e4 e0p.pfmob=1e4 
+MOBILITY material=NTCDA mun0=3e-3 mup0=1e-6 e0n.pfmob=2e4 e0p.pfmob=2e4 
+MOBILITY material=COTPP mun0=1e-7 mup0=1e-5 e0n.pfmob=1e4 e0p.pfmob=1e4 
+MOBILITY material=NNQA mun0=1e-7 mup0=1e-5 e0n.pfmob=1e4 e0p.pfmob=1e4 
+MOBILITY material=ZnPc mun0=1e-7 mup0=1e-5 e0n.pfmob=1e4 e0p.pfmob=1e4 
+# Set incident beam from the front side (negative y-direction)
+BEAM number=1 x.origin=5 y.origin=-1 angle=90 tr.matrix
+
+#### ADDITIONAL OUTPUT INFORMATION ####
+OUTPUT con.band val.band band.param e.mobility h.mobility u.langevin opt.intens
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE initial
+SOLVE previous
+SAVE outfile=$'name'_initial.str
+# Set DC biases.
+SOLVE name=B_Cathode vstep=2 vfinal=78
+SOLVE name=G_Cathode vstep=1 vfinal=8
+SOLVE name=R_Cathode vstep=1 vfinal=11
+# Ramp wavelength from 0.4 to 0.75um under 50uW/cm2 illumination.
+LOG outfile=$'name'_WaveLengthSweep.log
+SOLVE b1=50e-6 beam=1 lambda=0.4 wstep=0.001 wfinal=0.75
+LOG off
+
+# Extract external quantum efficiency and sensitiviy of each cell.
+go victoryextract
+LOAD in="$'name'_WaveLengthSweep.log"
+CURVE name=EQE_blue x="optical wavelength" y="(B_Cathode Current)/(source photo current)"
+EXTRACT.CSV csvfile="$'name'_blue_eqe"
+CURVE name=Sensitivity_blue x="optical wavelength" y="(B_Cathode Current)/50e-6*1e7"
+EXTRACT.CSV csvfile="$'name'_blue_sens"
+
+CURVE name=EQE_green x="optical wavelength" y="(G_Cathode Current)/(source photo current)"
+EXTRACT.CSV csvfile="$'name'_green_eqe"
+CURVE name=Sensitivity_green x="optical wavelength" y="(G_Cathode Current)/50e-6*1e7"
+EXTRACT.CSV csvfile="$'name'_green_sens"
+
+CURVE name=EQE_red x="optical wavelength" y="(R_Cathode Current)/(source photo current)"
+EXTRACT.CSV csvfile="$'name'_red_eqe"
+CURVE name=Sensitivity_red x="optical wavelength" y="(R_Cathode Current)/50e-6*1e7"
+EXTRACT.CSV csvfile="$'name'_red_sens"
+
+victoryvisual \
+$'name'_red_sens.csv+\
+$'name'_green_sens.csv+\
+$'name'_blue_sens.csv
+
+victoryvisual \
+$'name'_red_eqe.csv+\
+$'name'_green_eqe.csv+\
+$'name'_blue_eqe.csv
+
+QUIT
+

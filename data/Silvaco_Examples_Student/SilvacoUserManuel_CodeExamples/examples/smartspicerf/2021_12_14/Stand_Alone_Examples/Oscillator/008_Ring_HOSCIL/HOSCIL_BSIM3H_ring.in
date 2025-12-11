@@ -1,0 +1,155 @@
+* Test 5-stage BSIM3H Ring Oscillator
+
+.option brief=1 wl nomod scale=1u
+
+.model NKANAL       nmos     (                     LEVEL=88
++ VERSION=3.2
++tnom    = 27             tox     = 1.35e-8        xj      = 2e-7
++nch     = 1.7e17         vth0    = 0.7713322      k1      = 0.9956175
++k2      = -0.0362332     k3      = -10            k3b     = 2.8488866
++w0      = 9.626187e-7    nlx     = 1e-8           dvt0w   = 0.02
++dvt1w   = 5.3e6          dvt2w   = -0.0330119     dvt0    = 6.1765138
++dvt1    = 0.7862766      dvt2    = -0.0660589     u0      = 523.6181119
++ua      = 9.344127e-10   ub      = 6.945969e-19   uc      = 7.562334e-11
++vsat    = 9.90405e4      a0      = 1.0286761      ags     = 0.1469886
++b0      = 9.503339e-8    b1      = 1.287243e-6    keta    = -0.0306332
++a1      = 0              a2      = 1              rdsw    = 1.384306e3
++prwg    = 6.804009e-3    prwb    = 0.0616457      wr      = 1
++wint    = 6.282286e-8    lint    = 4.675718e-8    dwg     = -8.987447e-9
++dwb     = 0              voff    = -0.0867008     
++cit     = 0              cdsc    = 7.13148e-4     cdscd   = 0
++cdscb   = 0              eta0    = 0              etab    = 0
++dsub    = 0.0114564      pclm    = 1.7761803      pdiblc1 = 2.2998616
++pdiblc2 = 2.320715e-3    pdiblcb = 2e-3           drout   = 1.2928504
++pscbe1  = 3.347696e8     pscbe2  = 1.373405e-6    pvag    = 2.0616027
++delta   = 0.03           alpha0  = 0              beta0   = 30
++pb      = 1.971          
++js      = 1e-4           mobmod  = 3              prt     = 0
++ute     = -1             kt1     = -0.3           kt1l    = 1.018565e-7
++kt2     = 0.078502       ua1     = 4.272804e-9    ub1     = -4.34101e-18
++uc1     = -5.6e-11       at      = 3.3e4          
++nqsmod  = 0              elm     = 5              xpart   = 0
++wl      = 2.063246e-23   wln     = 0.5993221      ww      = 2.009114e-23
++wwn     = 1.4557453      wwl     = -1e-20         wmin    = 5e-7
++wmax    = 5e-5           ll      = 2e-23          lln     = 0.9819579
++lw      = 2e-23          lwn     = 1.1179924      lwl     = 4.367312e-21
++lmin    = 4e-7           lmax    = 5e-5           cgsl    = 0
++cgdl    = 0              ckappa  = 0.6            cf      = 0
++clc     = 1e-7           cle     = 0.6            cgdo    = 1.40e-10
++cgso    = 1.40e-10       kf=1e-24
++ mj      = 0.333         mjsw    = 1.1            acm     = 12                
++                         rshd     = 73            RSHS     = 90
++                         cjd      = 9e-4          cjswd   = 2.0e-10
++                         cjs      = 6.e-4         cjsws   = 1.0e-10
++                         JSWD     = 1E-11
++                         jss      = 5.0E-4        jsws     = 5E-11
++                         hdifd    = 5e-7          hdifs    = 7e-7
++                         LDIFD=2E-8   RD= 100     LDD =  1.0e-8 
++                         LDIFS=4E-8   RS= 100     LDS =  2.e-8
++ NFACTOR = 2.8273737  CCSE='0.2*0.5u' PBSE=0.5  UD=0.5
++ PRWD1=0.3  PRWD2=0.003 PRWS1=0.2 PRWS2= 0.002 
++    TOXM=1.2E-08 ACDE=0.5
++ ALPHA1=0.1
++     MOIN =6   NOFF=0.2
++ CJSWG= 8.0E-10 PBSW=0.75 MJSWG= 0.45
++ TCJ=7.707813E-04  TCJSW=5.512283E-04  TCJSWG= 8.0E-4
++ TPB=1.167715E-03 TPBSW=1.167715E-03       TPBSWG= 2.0e-3)
+
+.model PKANAL       pmos     (                     LEVEL=88
++ VERSION=3.2
++tnom    = 27             tox     = 1.35e-8        xj      = 2.5e-7
++nch     = 1.7e17         vth0    = -1.0237052     k1      = 0.4341501
++k2      = 0.0239425      k3      = 23.6092569     k3b     = -4.5680352
++w0      = 1.987229e-7    nlx     = 1.568589e-9    dvt0w   = 0.01
++dvt1w   = 5.3e6          dvt2w   = -0.032         dvt0    = 0.7917589
++dvt1    = 0.3793556      dvt2    = -0.558989      u0      = 237.9555185
++ua      = 3.539797e-9    ub      = 1e-21          uc      = -7.08381e-11
++vsat    = 1.969491e5     a0      = 0.8297094      ags     = 0.1737065
++b0      = 3.490581e-7    b1      = 5.506397e-8    keta    = 5.352167e-4
++a1      = 0              a2      = 1              rdsw    = 2.585766e3
++prwg    = 0              prwb    = 3.390805e-3    wr      = 1
++wint    = 1.178335e-7    lint    = -9.190047e-8   dwg     = 0
++dwb     = 3.653768e-9    voff    = -0.115555      
++cit     = 0              cdsc    = 7.17652e-4     cdscd   = 0
++cdscb   = 4.004302e-4    eta0    = 0.0305557      etab    = 0
++dsub    = 0.12034        pclm    = 2.6050829      pdiblc1 = 9.99332e-4
++pdiblc2 = 1.001e-6       pdiblcb = 0              drout   = 1
++pscbe1  = 8e8            pscbe2  = 5e-5           pvag    = 0.961431
++delta   = 0.01           alpha0  = 0              beta0   = 30
++pb      = 0.885          
++js      = 1e-4           mobmod  = 1              prt     = 2.063246e-3
++ute     = -1.0009989     kt1     = -0.2645612     kt1l    = -1.03666e-7
++kt2     = 0              ua1     = 2.729703e-9    ub1     = -5.19208e-18
++uc1     = -9.99137e-11   at      = 1.003165e3     
++nqsmod  = 0              elm     = 5              xpart   = 0
++wl      = -1.26578e-14   wln     = 1              ww      = -5.45112e-14
++wwn     = 1              wwl     = 0              wmin    = 5e-7
++wmax    = 5e-5           ll      = 1.452969e-14   lln     = 1
++lw      = 0              lwn     = 1              lwl     = 0
++lmin    = 4e-7           lmax    = 5e-5           cgsl    = 0
++cgdl    = 0              ckappa  = 0.6            cf      = 0
++clc     = 1e-7           cle     = 0.6            cgdo    = 1.25e-10
++cgso    = 1.25e-10       mj      = 0.552          kf=1e-24
++       mjsw    = 0.2            acm     = 12
++                         rshd     = 73            RSHS     = 90
++                         cjd      = 9e-4          cjswd   = 2.0e-10 
++                         cjs      = 6.e-4         cjsws   = 1.0e-10 
++                         JSWD     = 1E-11
++                         jss      = 5.0E-4        jsws     = 5E-11 
++                         hdifd    = 5e-7          hdifs    = 7e-7
++                         LDIFD=2E-8   RD= 100     LDD =  1.0e-8 
++                         LDIFS=4E-8   RS= 100     LDS =  2.e-8
++ NFACTOR = 2.8273737  CCSE='0.2*0.55u' PBSE=0.5  UD=0.5
++ PRWD1=0.3  PRWD2=0.003 PRWS1=0.2 PRWS2= 0.002 
++    TOXM=1.2E-08 ACDE=0.5
++ ALPHA1=0.1
++     MOIN =6   NOFF=0.2
++ CJSWG= 8.0E-10 PBSW=0.75 MJSWG= 0.45
++ TCJ=7.707813E-04  TCJSW=5.512283E-04  TCJSWG= 8.0E-4
++ TPB=1.167715E-03 TPBSW=1.167715E-03       TPBSWG= 2.0e-3)
+
+M1 k1 k5 vdd vdd PKANAL
++  W=12.9 L=1 AD=53.38 AS=26.47 PD=41.4 PS=23.8  m=7.0
+M3 k2 k1 vdd vdd PKANAL
++  W=12.9 L=1 AD=53.38 AS=26.47 PD=41.4 PS=23.8  m=7.0
+M5 k3 k2 vdd vdd PKANAL
++  W=12.9 L=1 AD=53.38 AS=26.47 PD=41.4 PS=23.8  m=7.0
+M7 k4 k3 vdd vdd PKANAL
++  W=12.9 L=1 AD=53.38 AS=26.47 PD=41.4 PS=23.8  m=7.0
+M9 k5 k4 vdd vdd PKANAL
++  W=12.9 L=1 AD=53.38 AS=26.47 PD=41.4 PS=23.8  m=7.0
+
+M2 k1 k5 0 0 NKANAL
++  W=8.4 L=.8 AD=23.52 AS=28.72 PD=22.4 PS=28.4  m=7.0
+M4 k2 k1 0 0 NKANAL
++  W=8.4 L=.8 AD=23.52 AS=28.72 PD=22.4 PS=28.4  m=7.0
+M6 k3 k2 0 0 NKANAL
++  W=8.4 L=.8 AD=23.52 AS=28.72 PD=22.4 PS=28.4  m=7.0
+M8 k4 k3 0 0 NKANAL
++  W=8.4 L=.8 AD=23.52 AS=28.72 PD=22.4 PS=28.4  m=7.0
+M10 k5 k4 0 0 NKANAL
++  W=8.4 L=.8 AD=23.52 AS=28.72 PD=22.4 PS=28.4  m=7.0
+
+* Bias
+vd vdd 0 dc 5
+
+* Frequency estimate
+.param fund_osc_init = 400.0MegHz
+
+* Startup condition for TIG only
+*.IC V(k1)=5
+
+* Steady-state analysis for autonomous circuit
+.hoscil probe(k1,k2)
++ fund_osc=fund_osc_init nharm=15
++ newton_accuracy=high
+*+ UseTIG=3
+*+ TIGtstop=8n
++ annotate=1
++ waves
+
+* Outputs
+.probe hop_wf v(k1) v(k2) v(k3) v(k4) v(k5) i(vd) id(M2)
+.probe hop_sp vdb(k1)
+
+.end

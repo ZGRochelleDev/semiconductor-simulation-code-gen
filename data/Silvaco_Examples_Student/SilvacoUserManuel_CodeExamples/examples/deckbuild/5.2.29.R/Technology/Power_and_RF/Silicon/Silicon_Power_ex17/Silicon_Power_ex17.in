@@ -1,0 +1,418 @@
+# (c) Silvaco Inc., 2024
+
+# 1200V IGBT Process and Device Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+ 
+# Example Name
+SET name="Silicon_Power_ex17"
+
+# Full flow from process to device simulation of IGBT Device
+# Process simulation: 
+#  -Various process modules are integrated into a single flow
+# Electrical Simulation:
+#  -Output Characterization: Ic/Vce Simulation
+#  -Breakdown Characterization: BV Simulation
+#  -Switching Characterization: Eon/Eoff/Tdon/Tdoff/Tr/Tf Simulation
+#  -Parameter Extraction: Eon/Eoff/Tdon/Tdoff/Tr/Tf/VCEsat/BVds Extraction 
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+## ---------------------------------- ##
+## ---------- Initialization -------- ##
+## -----------------------------------##
+
+INIT material=silicon orientation=100 sub.rot=0 dopants=phosphorus resistivity=50 \
+		depth=100 gasHeight=10 from=0 to=1.5 \
+		resolution=0.05 meshdepth=2 flow.dim=2D_XZ
+
+LINE z loc=0 spac=0.2
+LINE z loc=0.5 spac=0.02
+LINE z loc=2 spac=0.02
+LINE z loc=3 spac=0.1
+LINE z loc=9 spac=0.1
+LINE z loc=40 spac=15
+LINE z loc=99 spac=0.03
+LINE z loc=100 spac=0.02
+
+LINE x loc=0.0 spac=0.05
+LINE x loc=1.2 spac=0.02
+LINE x loc=1.5 spac=0.05
+
+
+## ---------------------------------- ##
+## ----------- Trench Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=Oxide thickness=0.6
+ETCH max material=oxide thickness=0.7 left.to=0.625
+ETCH max material=silicon thickness=6 rbottom=0.5 angle=89 left.to=0.625
+
+IMPLANT phosphorus energy=150 dose=1e12 tilt=0 rotation=0 bca n.ion=20000
+
+
+## ---------------------------------- ##
+## ------------ Gate Loop ----------- ##
+## -----------------------------------##
+
+# GATE OX 
+OXIDIZE thickness=0.1
+DIFFUSE time=50 minutes temp=700 t.final=1000
+DIFFUSE time=300 minutes temp=1000 
+
+# POLY
+DEPOSIT min material=polysilicon thickness=8 c.phosphorus=2e20
+ETCH material=polysilicon above=0.05
+ETCH material=oxide above=0
+DEPOSIT conformal material=Oxide thickness=0.03
+
+DIFFUSE time=50 minutes temp=700 t.final=1000 
+DIFFUSE time=300 minutes temp=1000 
+DIFFUSE time=100 minutes temp=1000 t.final=700	
+
+DIFFUSE time=50 minutes temp=700 t.final=900 
+DIFFUSE time=150 minutes temp=900 
+DIFFUSE time=100 minutes temp=900 t.final=700
+
+
+## ---------------------------------- ##
+## ----------- Pbody Loop ----------- ##
+## -----------------------------------##
+
+# P-BODY IMPLANT	
+IMPLANT boron energy=180 dose=1e13 tilt=0 rotation=0 bca n.ion=20000
+ 
+# PBODY ANNEAL	
+DIFFUSE time=50 minutes temp=700 t.final=1100
+DIFFUSE time=350 minutes temp=1100 
+DIFFUSE time=50 minutes temp=1100 t.final=700
+
+ETCH wet material=oxide thickness=0.01
+
+# NP IMPLANT	
+IMPLANT arsenic energy=60 dose=6e15 tilt=0 bca n.ion=20000
+  
+# NP ANNEAL	
+DIFFUSE time=50 minutes temp=700 t.final=900
+DIFFUSE time=200 minutes temp=900  
+
+# ILD 
+DEPOSIT material=oxide thickness=0.2 conformal 
+DEPOSIT material=oxide thickness=0.6 conformal
+
+DIFFUSE time=50 minutes temp=700 t.final=950 
+DIFFUSE time=50 minutes temp=950 
+DIFFUSE time=50 minutes temp=950 t.final=700
+
+# CT ETCH
+ETCH dry material=oxide thickness=1.8 outside.x=0,1.3 angle=86
+ETCH dry thickness=0.4 right.to=1.3 angle=86 
+ETCH dry material=polysilicon thickness=0.4 left.to=0.3 angle=86 
+
+# CT IMPLANT	
+IMPLANT bf2 energy=25 dose=3e15 tilt=0 bca n.ion=20000 amorphous 
+
+# CT RTA
+DIFFUSE time=5 seconds temp=600 t.final=800 
+DIFFUSE time=20 seconds temp=800 
+DIFFUSE time=10 seconds temp=800 t.final=600 
+
+
+## ---------------------------------- ##
+## ---------BACKSIDE Loop ----------- ##
+## -----------------------------------##
+	
+IMPLANT phosphorus energy=650 dose=5e12 tilt=0 back bca n.ion=20000
+IMPLANT phosphorus energy=200 dose=7e12 tilt=0 back bca n.ion=20000
+IMPLANT boron 	   energy=20 dose=2e13 tilt=0 back bca n.ion=20000
+
+DIFFUSE time=10 seconds temp=600 
+
+
+## ---------------------------------- ##
+## ---------Contact Loop ------------ ##
+## -----------------------------------##
+
+DEPOSIT min material=tungsten thickness=1.1
+
+ELECTRODES name=gate  x=0.5 z=1
+ELECTRODES name=emitter  x=1.5 z=-0.5
+ELECTRODES name=collector substrate
+
+SAVE name=$'name'_VP_sv conformalstr
+
+
+## ---------------------------------- ##
+## ------------ Re-Meshing ---------- ##
+## -----------------------------------##
+
+####### STRUCTURE REMESHING #######
+# Use VictoryMesh to prepare the structure for VictoryDevice simulation
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv 
+
+REMESH delaunay
+
+REFINE max.size=1 regions="*" 
+REFINE max.size=0.4 regions="material:oxide" 
+REFINE max.size=1 regions="material:tungsten" 
+REFINE max.size=0.4 regions="material:polysilicon" 
+
+REFINE interface.region="Silicon" other.interface.region="sio2" \ 
+	max.interface.size=0.05 \ 
+	max.interface.size.distance=0.1 \ 
+	max.interface.distance=0.3 \ 
+	max.interface.distance.size=0.15 grading="exponential"  
+
+REFINE regions="material:Silicon" \ 
+	max.junction.size=0.04 \ 
+	max.junction.size.distance=0.1 \ 
+	max.junction.distance=0.8 \ 
+	max.junction.distance.size=0.05 grading="exponential"  
+
+REFINE regions="material:Silicon" imp="acceptor" \  
+	max.impurity.gradient=0.4 \ 
+	min.impurity.size=0.04 \ 
+	impurity.floor=1e15 
+REFINE regions="material:Silicon" imp="donor" \  
+	max.impurity.gradient=0.4 \ 
+	min.impurity.size=0.04 \ 
+	impurity.floor=1e15
+
+SAVE out=$'name'_VM_del.str
+
+## ---------------------------------- ##
+## ----------- Device:Ic/Vce--------- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str width=1
+
+#### MATERIAL/PHYSICAL MODELS ####
+CONTACT name=gate n.poly 
+
+MODELS fermi bgn srh auger cvt fldmob print
+IMPACT selberherr 
+
+#### NUMERICAL METHODS ####
+METHOD newton maxtrap=10 
+OUTPUT con.band val.band band.param u.srh e.mobility
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_0V.str
+
+# Vge increased from 0 up to Vge=10.0 V
+SOLVE vgate=0.1 vstep=0.1 vfinal=1 name=gate 
+SOLVE vstep=0.2 vfinal=4.8 name=gate
+SOLVE vgate=5.0 outfile=$'name'_VD_Vg5V.str 
+SOLVE vstep=0.2 vfinal=9.8 name=gate
+SOLVE vgate=10.0 outfile=$'name'_VD_Vg10V.str 
+
+# Vge=5.0 V
+# Vce increased from 0. up to Vce=20. V
+LOG outfile=$'name'_VD_IcVc_Vg5V.log
+
+LOAD infile=$'name'_VD_Vg5V.str 
+SOLVE vcollector=0.1 vstep=0.1 vfinal=1.0 name=collector
+SOLVE vstep=0.25 vfinal=8.0 name=collector
+SOLVE vstep=1.0 vfinal=20.0 name=collector
+
+LOG off
+
+SAVE outfile=$'name'_VD_Vc20V_Vg5V.str 
+
+
+# Vge=10.0 V
+# Vce increased from 0.1 up to Vce=20. V
+LOG outfile=$'name'_VD_IcVc_Vg10V.log
+
+LOAD infile=$'name'_VD_Vg10V.str 
+SOLVE vcollector=0.1 vstep=0.1 vfinal=1.0 name=collector
+SOLVE vstep=0.25 vfinal=8.0 name=collector
+SOLVE vstep=1.0 vfinal=20.0 name=collector
+
+LOG off
+
+SAVE outfile=$'name'_VD_Vc20V_Vg10V.str 
+
+
+## ---------------------------------- ##
+## ----------- Device: BVdss--------- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str width=1
+
+#### MATERIAL/PHYSICAL MODELS ####
+CONTACT name=gate n.poly 
+
+MODELS fermi bgn srh auger cvt fldmob print
+IMPACT selberherr 
+
+#### NUMERICAL METHODS ####
+METHOD newton maxtrap=10 climit=1e-4
+OUTPUT con.band val.band band.param u.srh e.mobility
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+
+SOLVE vcollector=0
+SOLVE vcollector=0.01
+SOLVE vcollector=0.02
+SOLVE vcollector=0.05 vstep=0.05 vfinal=0.5 name=collector
+SOLVE vstep=1 vfinal=15 name=collector 
+SOLVE vstep=20 vfinal=1000 name=collector 
+SOLVE vstep=25 vfinal=1500 name=collector compl=1e-9 cname=collector 
+
+CONTACT name=collector current 
+SOLVE istep=1.2 ifinal=1e-7 name=collector imult  
+
+LOG off
+
+SAVE outfile=$'name'_VD_BV.str
+
+#### DEVICE EXTRACTION ####
+# Extract the breakdown voltage.
+EXTRACT init infile=$'name'_VD_BV.log
+EXTRACT name="BVds" x.val from curve(abs(v."collector"),abs(i."collector")) where y.val = 1.0e-5
+
+
+## ---------------------------------- ##
+## ---------- Device: Switch -------- ##
+## -----------------------------------##
+
+####### DEVICE SIMULATION #######
+# Switching simulation based on double pulse test
+GO victorydevice simflags="-P 4 -80"
+
+#### MIXED MODE SETUP ####
+.BEGIN
+
+#gate pulse setting, td=1e-7s, ton=toff=3e-6s, tr=3e-7s, tf=1e-7s
+vg 5 0 0. pwl 0 0 1e-7 0 4e-7 15 3.4e-6 15 3.5e-6 0 6.5e-6 0 6.8e-6 15 9.8e-6 15 9.9e-6 0 1.0 0
+adev 1=gate 0=emitter 3=collector width=1e7 infile=$'name'_VM_del.str   
+lc 3 4 4.5e-5   #lc=Vcc*ton/Icc, Vcc=600V, Icc=40A, ton=3e-6s
+rg 1 5 10       #rg=10ohm
+ls 4 2 1e-8     #stray inductance ~10nH
+vc 2 0 0 
+# a TCAD diode is used in this example
+adio 3=base 4=emitter width=3e6 infile=Silicon_Power_ex17_Diode.str
+
+.OPTIONS print relpot temp=300   
+.NUMERIC elec.parallel.num=4 
+ 
+.SAVE outfile=$'name'_VD_MM  
+ 
+.LOG outfile=$'name'_VD_MM onefile
+
+.DC vc 0.1 1.0 0.1
+.DC vc 1.5 10 0.5
+.DC vc 12 50 2
+.DC vc 55 200 5
+.DC vc 205 300 5
+.DC vc 310 600 10
+.TRAN 10ns 1.2e-5 
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL device=adev silicon \
+         KSRHTN=2.5e-3 KSRHTP=2.5e-3   
+
+MODELS device=adev  klassen fldmob bgn.kla klasrh klaaug temperature=300
+MOBILITY device=adev n.canali p.canali MUMAXN.KLA=1417 MUMAXP.KLA=470.5
+IMPACT device=adev selberherr 
+
+CONTACT device=adev name=gate n.poly
+INTERFACE device=adev qf=-1e11
+
+MODELS device=adio fermi conmob fldmob bgn srh  
+ 
+#### NUMERICAL METHODS ####
+METHOD device=adio block.tran norm.scaling.local  
+
+OUTPUT con.band val.band
+
+## ---------------------------------- ##
+## ------- Device: Extraction - ----- ##
+## -----------------------------------##
+
+#### DEVICE EXTRACTION ####
+go victoryextract
+LOAD in=$'name'_VD_MM_tr.log
+CURVE name=tv1 x="transient time" y="V[1]"
+EXTRACT.CURVE name=Vgmax expression="maxyy(curve.tv1)"
+SET Vg10=$Vgmax*0.1 #10% Vgmax
+SET Vce02=600*0.02  #2% Vcc, Vcc=600V in this example
+SET Vg90=$Vgmax*0.9 #90% Vgmax
+
+CURVE name=ti1 x="transient time" y="I[adev_collector]"
+EXTRACT.CURVE name=Icmax expression="maxyy(curve.ti1)"
+SET Ic01=40*0.01 #1% Icc, Icc=40A in this example
+SET Ic10=40*0.1 #10% Icc
+SET Ic90=40*0.9 #90% Icc
+
+CURVE name=ti2 x="transient time" y="abs(V[1])"
+EXTRACT.CURVE name=tr0 expression="intercept(y=$Vg10, n=3, curve.ti2)"
+EXTRACT.CURVE name=tf0 expression="intercept(y=$Vg90, n=2, curve.ti2)"
+
+CURVE name=ti3 x="transient time" y="abs(V[3])"
+CURVE name=ti4 x="transient time" y="abs(I[adev_collector])"
+CURVE name=clip_ti3 expression="clip(x=6e-6, x=8e-6, curve.ti3)"
+EXTRACT.CURVE name=tr1 expression="intercept(y=$Vce02, curve.clip_ti3)"
+CURVE name=clip_ti4 expression="clip(x=2e-6, x=5e-6, curve.ti4)"
+EXTRACT.CURVE name=tf1 expression="intercept(y=$Ic01, curve.clip_ti4)"
+
+#########Tdon(10%Vg->10%Ic),Tr(10%Ic->90%Ic)  ##ns
+CURVE name=clip_ti5 expression="clip(x=6e-6, x=8e-6, curve.ti4)"
+EXTRACT.CURVE name=tr2 expression="intercept(y=$Ic10, curve.clip_ti5)"
+EXTRACT.CURVE name=tr3 expression="intercept(y=$Ic90, curve.clip_ti5)"
+EXTRACT.VDOE name=tdon expression=($tr2-$tr0)*1e9
+EXTRACT.VDOE name=tr expression=($tr3-$tr2)*1e9
+
+#########Tdoff(90%Vg->90%Ic),Tf(90%Ic->10%Ic) ##ns
+CURVE name=clip_ti6 expression="clip(x=2e-6, x=5e-6, curve.ti4)"
+EXTRACT.CURVE name=tf2 expression="intercept(y=$Ic90, n=2, curve.clip_ti6)"
+EXTRACT.CURVE name=tf3 expression="intercept(y=$Ic10, curve.clip_ti6)"
+EXTRACT.VDOE name=tdoff expression=($tf2-$tf0)*1e9
+EXTRACT.VDOE name=tf expression=($tf3-$tf2)*1e9
+
+######Eon(10%Vg->2%Vc)/Eoff(90%Vg->1%Ic)  ##mJ
+CURVE name=tiv1 x="transient time" y="abs(V[3])*abs(I[adev_collector])"
+CURVE name=clip_tiv1 expression="clip(x=$tr0, x=$tr1, curve.tiv1)"
+CURVE name=clip_tiv2 expression="clip(x=$tf0, x=$tf1, curve.tiv1)"
+EXTRACT.CURVE name=Eon expression=area(curve.clip_tiv1)
+EXTRACT.CURVE name=Eoff expression=area(curve.clip_tiv2)
+
+#####VCEsat (Full on @ ton/2)
+EXTRACT.CURVE name=VCEsat   expression="intercept(x=1.7e-6 , n=1, curve.ti3)" 
+
+
+victoryvisual $'name'_VM_del.str \
+$'name'_VD_IcVc_Vg5V.log+$'name'_VD_IcVc_Vg10V.log \
+$'name'_VD_BV.log \
+$'name'_VD_MM_tr.log:$'name'_MM.set
+
+QUIT

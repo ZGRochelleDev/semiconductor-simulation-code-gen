@@ -1,0 +1,53 @@
+***** Inversor : test dc of mosfet bsim4 model *****
+
+.verilog bsim4.va
+
+YVLGM1  OUT1  IN   0   0   N1 W=5u  L=1.3u
+YVLGM2  OUT1  IN   VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM3  OUT2  OUT1 0   0   N1 W=5u  L=1.3u
+YVLGM4  OUT2  OUT1 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM5  OUT3  OUT2 0   0   N1 W=5u  L=1.3u
+YVLGM6  OUT3  OUT2 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM7  OUT4  OUT3 0   0   N1 W=5u  L=1.3u
+YVLGM8  OUT4  OUT3 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM9  OUT5  OUT4 0   0   N1 W=5u  L=1.3u
+YVLGM10 OUT5  OUT4 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM11 OUT6  OUT5 0   0   N1 W=5u  L=1.3u
+YVLGM12 OUT6  OUT5 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM13 OUT7  OUT6 0   0   N1 W=5u  L=1.3u
+YVLGM14 OUT7  OUT6 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM15 OUT8  OUT7 0   0   N1 W=5u  L=1.3u
+YVLGM16 OUT8  OUT7 VDD VDD P1 W=10u L=1.3u
+	      
+YVLGM17 OUT9  OUT8 0   0   N1 W=5u  L=1.3u
+YVLGM18 OUT9  OUT8 VDD VDD P1 W=10u L=1.3u
+
+YVLGM19 OUT10 OUT9 0   0   N1 W=5u  L=1.3u
+YVLGM20 OUT10 OUT9 VDD VDD P1 W=10u L=1.3u
+
+YVLGM21 IN   OUT10 0   0   N1 W=5u  L=1.3u
+YVLGM22 IN   OUT10 VDD VDD P1 W=10u L=1.3u
+
+Cload   IN   0   2P
+
+VDD VDD GND PWL (1ns 0V 2ns 1.2V)
+*VDD VDD 0 1.2
+*VIN IN 0 1.2
+
+*.dc VIN 0 1.2 0.01
+
+.tran 1n 100n
+
+.include nmos.lib
+.include pmos.lib
+
+.print V(IN)
+
+.end

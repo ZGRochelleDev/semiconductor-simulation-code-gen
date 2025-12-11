@@ -1,0 +1,16 @@
+# (c) Silvaco Inc., 2024
+# Design of Experiments (DOE) using dbInternal 
+
+# Example name:
+SET name="SiC_Power_ex05"
+SET temper=300
+
+# launch "internal"
+GO internal
+
+EXTRACT init infile="$'name'_VD_tran_$'temper'K.log"
+EXTRACT name="C1" y.val from curve(time, c."cathode""anode") where x.val=2.0e-2
+EXTRACT name="C2" y.val from curve(time, c."cathode""anode") where x.val=2.2e-1
+EXTRACT name="DLTS" $'C2'-$'C1' 
+
+QUIT

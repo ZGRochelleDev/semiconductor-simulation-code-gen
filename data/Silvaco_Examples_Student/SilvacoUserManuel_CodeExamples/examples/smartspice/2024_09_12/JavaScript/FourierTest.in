@@ -1,0 +1,30 @@
+* source TEST
+ 
+V_V3         1 0  sin(0 1 100Meg)
+R_R2         0 1  1k
+
+.save all
+
+.options  fft_accurate
+
+*.TRAN 0.1n 10u 
+*.fft v(1) from=5u to=9u   np=1024;format=unormFMIN=40Meg  FMAX=120Meg
+
+
+.JS_BEGIN
+
+function FourierTest()
+{
+	simulator.execute("TRAN 0.1n 10u");
+	simulator.execute("fft v(1) from=5u to=9u np=1024");
+}
+
+FourierTest();
+
+.JS_END
+
+.control
+jsexec
+.endc
+
+.END 

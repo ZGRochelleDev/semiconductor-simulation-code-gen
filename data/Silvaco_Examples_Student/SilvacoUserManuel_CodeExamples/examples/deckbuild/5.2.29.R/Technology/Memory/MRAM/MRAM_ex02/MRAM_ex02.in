@@ -1,0 +1,98 @@
+# (c) Silvaco Inc., 2024
+
+# Switching from an Anti-Parallel to a Parallel Magnetic Orientation 
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -3D Simulator
+#   -3D MRAM
+
+# Example Name
+Set name=“MRAM_ex02” 
+
+####### STRUCTURE CREATION ####### 
+Go victorymesh simflags="-P 4"
+
+CYLINDER point.a="50.0e-3,0.0,0.0" point.b="53.7e-3,0.0,0.0" radius="0.02" out="cylinder"
+
+# Create the basic mesh of the MTJ structure
+LAYERS point="0,0,0" \
+       angle=360.0 num.edges=30 \
+       layer.offset=0 layer.deltas=20.0e-3 layer.num.edges="4" \
+       axis.deltas="50.0e-3, 1.0e-3, 1.0e-3, 1.7e-3, 50.0e-3" axis.num.edges="5, 2, 2, 2, 5" \
+       materials="(contact1, conductor2, barrier3, conductor4, contact5)" \
+       out="pillar"
+
+# Rotate the device structure
+ROTATE angle=90 point.a="0,0,0" point.b="0,1,0"
+
+# Create a delaunay mesh
+REMESH delaunay constrained
+
+# Refine the mesh
+REFINE regions="*" max.shape.size=0.002 max.shape.distance=0.04 max.shape.distance.size=0.01 shape="cylinder" grading=linear constrained
+REFINE regions="material:contact1,contact5" max.shape.size=0.0015 max.shape.distance=0.04 max.shape.distance.size=0.01 shape="cylinder" grading=linear constrained
+
+REFINE regions="material:conductor2,material:barrier3,material:conductor4" max.size=0.02 constrained
+
+MATERIAL regions="material:contact1"   value="contact"
+MATERIAL regions="material:conductor2" value="conductor"
+MATERIAL regions="material:barrier3"   value="barrier"
+MATERIAL regions="material:conductor4" value="conductor"
+MATERIAL regions="material:contact5"   value="contact"
+
+SAVE out=$'name'_VM.str ascii
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-mram -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM.str fem.bem
+
+ELECTRODE num=1 x=0.0e-9
+ELECTRODE num=2 x=103.7e-9
+
+# Specify the parameters for the LLG equation
+LLGE region=2 gilbert.damping=0.02 saturation.magnetization=1.2e6 \
+     exchange.constant=1.0e-11 anisotropy.energy=0.9e6
+LLGE region=3 gilbert.damping=0.02 saturation.magnetization=1.2e6 \
+     exchange.constant=1.0e-11 anisotropy.energy=0.9e6 free.layer
+
+# Specify the parameters for the SDD equation
+SDDE r.p=1.4e+4 r.ap=4.2e+4
+SDDE region=4 D=1e-2 rho=2e-7
+SDDE region=2 D=2e-3 rho=1e-6 lambda.sf=1e-8 lambda.j=1.0e-9 lambda.phi=0.4e-9 beta.d=0.8 beta.c=0.7
+SDDE region=1 D=2e-8 k=1.0 
+SDDE region=3 D=2e-3 rho=1e-6 lambda.sf=1e-8 lambda.j=1.0e-9 lambda.phi=0.4e-9 beta.d=0.8 beta.c=0.7
+SDDE region=5 D=1e-2 rho=2e-7
+SDDE region1=2 region2=1 Peta=0.2 alpha=1.0
+SDDE region1=1 region2=3 Peta=0.2 alpha=1.0
+
+# Define the initial magnetic orientations of the layers
+LOAD init.mag=anti-parallel
+
+# Define the logged quantities and the log-file
+PROBE magnetization.total
+PROBE magnetization.free.layer
+PROBE spin.accumulation.total
+PROBE spin.accumulation.free.layer
+LOG outfile=$'name'.log
+
+OUTPUT magnetization
+SAVE outfile=$'name'_VD.str save.time.step=3000
+
+# Perform a transient simulation
+METHOD time.integration=backward.euler llge.abs.tol=1e-10 llge.rel.tol=1e-13 llge.max.iter=10000
+SOLVE tstep=0.5e-12 tstop=1.0e-8 contact1.bias=-2.0 contact2.bias=0.0
+
+victoryvisual \
+$'name'.log:$'name'.set \
+$'name'_VD_1.str:$'name'_Dev.set \
+$'name'_VD_12001.str:$'name'_Dev.set \
+$'name'_VD_18001.str:$'name'_Dev.set
+
+QUIT
+

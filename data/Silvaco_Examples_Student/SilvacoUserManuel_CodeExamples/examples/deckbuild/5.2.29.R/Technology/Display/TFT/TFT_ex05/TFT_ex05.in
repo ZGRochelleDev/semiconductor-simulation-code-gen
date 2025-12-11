@@ -1,0 +1,249 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Amorphous TFT Simulation
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D TFT
+
+# Example Name
+SET name="TFT_ex05"
+
+###### DEVICE SIMULATION ######
+GO victoryprocess simflags="-P 4"
+
+#substrate initialization & simulation domain
+INIT oxide layout="${name}.lay" depth=5 gasheight=10 from="0, -15" to="15, 15" 
+
+#for Conformal mesh
+LINE x location=0 spacing=1
+LINE x location=2 spacing=0.5
+LINE x location=6 spacing=0.5
+LINE x location=15 spacing=1
+
+LINE y location=-15 spacing=1
+LINE y location=-1 spacing=0.5
+LINE y location=1 spacing=0.5
+LINE y location=15 spacing=1
+
+LINE z location=-1.45 spacing=0.1
+LINE z location=-1.3 spacing=0.5
+LINE z location=-1 spacing=0.05
+LINE z location=-0.9 spacing=0.05 
+LINE z location=-0.7 spacing=0.05
+LINE z location=-0.35 spacing=0.25
+LINE z location=0 spacing=1
+LINE z location=5 spacing=1
+
+# gate 
+DEPOSIT aluminum thickness=0.35 max
+ETCH aluminum mask="GATE" angle=45 max
+ELECTRODES mask="GATE" material=aluminum
+
+# Gate Oxide 
+DEPOSIT nitride thickness=0.35 max
+
+# Amorphous Silicon
+DEPOSIT silicon thickness=0.25 phosphor=2e16 max
+DEPOSIT silicon thickness=0.05 phosphor=5e20 max
+ETCH silicon thickness=0.3 mask="ACTIVE" angle=45 max
+
+# Source and Drain
+DEPOSIT aluminum thickness=0.3 max
+ETCH aluminum thickness=0.6 mask="SD" angle=45 max
+ETCH silicon thickness=0.08 mask="SD" angle=45 max
+
+# no electrode label. SD label will be assigned in device simulation
+SAVE name=${name}_VP_noSD
+
+#soure-drain electrodes
+ELECTRODES mask="SD" material=aluminum
+
+# Passivation
+DEPOSIT nitride thickness=0.15 max
+
+SAVE name=${name}_VP
+
+###### DEVICE REMESHING #####
+GO victorymesh simflags="-P 4"
+
+LOAD in=${name}_VP_noSD
+
+REMESH conformal
+
+SAVE out=${name}_VM_noSD
+
+LOAD in=${name}_VP
+
+REMESH conformal
+
+SAVE out=${name}_VM
+
+###### DEVICE SIMULATION 1 ######
+# Calculate Id-Vg and Id-Vd curves
+GO victorydevice simflags="-P 4"
+
+MESH infile="${name}_VM.str" 
+#hybridx prism delaunay verbose=2
+
+INTERFACE s.i qf=3e10
+
+CONTACT name=gate workfunction=4.3
+
+MATERIAL material=nitride permittivity=6.0
+MATERIAL material=silicon eg300=1.75 nc300=1e21 nv300=1e21 permittivity=11.8 \
+ taun0=2e-8 taup0=2e-8 
+MATERIAL material=silicon mun=0.5 mup=0.01
+MOBILITY vsatn=2e6 vsatp=2e6 
+
+DEFECTS continuous nta=5e19 wta=0.06 nga=2.75e16 ega=0.85 wga=0.5 \
+ sigtae=1e-17 sigtah=1e-15 siggae=1e-17 siggah=1e-15 numa=12 numd=0
+
+DEFECTS continuous ntd=1e20  wtd=0.11 ngd=1e17 egd=0.85 wgd=0.5 \
+ sigtde=1e-15 sigtdh=1e-19 siggde=1e-15 siggdh=1e-19 numd=12 numa=0 
+
+INTDEFECTS s.i continuous nta=0 ntd=1 wtd=0.065 ngd=1.19e11 egd=1.25 wgd=0.2 \
+ sigtde=1e-16 sigtdh=1e-16  siggde=1e-15 siggdh=1e-15 numa=0 numd=24
+
+MODELS bbt.kl e.field.derivs
+
+METHOD maxtrap=4 pam.gmres norm.scaling.local 
+#linear.max.iterations=200
+
+OUTPUT u.bbt
+
+SOLVE initial
+SOLVE previous
+
+SOLVE vdrain=0.1 
+SAVE outfile=${name}_VD_Vd0p1V.str
+SOLVE vstep=0.5 vfinal=1 name=drain previous
+SAVE outfile=${name}_VD_Vd1V.str
+SOLVE vstep=1 vfinal=20 name=drain previous
+SAVE outfile=${name}_VD_Vd20V.str
+
+LOAD infile=${name}_VD_Vd0p1V.str master
+LOG outfile=${name}_VD_IdVg_Vd0p1V_rev.log
+SOLVE vgate=0 vstep=-1 vfinal=-30 name=gate 
+LOG off
+
+LOAD infile=${name}_VD_Vd1V.str master
+LOG outfile=${name}_VD_IdVg_Vd1V_rev.log
+SOLVE vgate=0 vstep=-1 vfinal=-30 name=gate  
+LOG off
+
+LOAD infile=${name}_VD_Vd20V.str master
+LOG outfile=${name}_VD_IdVg_Vd20V_rev.log
+SOLVE vgate=0 vstep=-1 vfinal=-30 name=gate  
+LOG off
+
+LOAD infile=${name}_VD_Vd0p1V.str master
+LOG outfile=${name}_VD_IdVg_Vd0p1V_fwd.log
+SOLVE vgate=0 vstep=1 vfinal=30 name=gate 
+LOG off
+
+LOAD infile=${name}_VD_Vd1V.str master
+LOG outfile=${name}_VD_IdVg_Vd1V_fwd.log
+SOLVE vgate=0 vstep=1 vfinal=30 name=gate  
+LOG off
+
+LOAD infile=${name}_VD_Vd20V.str master
+LOG outfile=${name}_VD_IdVg_Vd20V_fwd.log
+SOLVE vgate=0 vstep=1 vfinal=30 name=gate 
+LOG off
+
+# IDVD : sweep drain bias at fixed gate bias
+
+SOLVE initial
+SOLVE vgate=0 
+SAVE outfile=${name}_VD_Vg0V.str
+SOLVE vgate=15
+SAVE outfile=${name}_VD_Vg15V.str
+SOLVE vgate=30 
+SAVE outfile=${name}_VD_Vg30V.str
+
+LOAD infile=${name}_VD_Vg0V.str master
+LOG outfile=${name}_VD_IdVd_Vg0V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+LOAD infile=${name}_VD_Vg15V.str master
+LOG outfile=${name}_VD_IdVd_Vg15V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+LOAD infile=${name}_VD_Vg30V.str master
+LOG outfile=${name}_VD_IdVd_Vg30V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+###### DEVICE SIMULATION 1 ######
+# Calculate Id-Vg and Id-Vd curves with Source and Drain switched
+GO victorydevice simflags="-P 4"
+
+MESH infile="${name}_VM_noSD.str" 
+#hybridx prism delaunay verbose=2
+
+ELECTRODE name=source region=1
+ELECTRODE name=drain region=2
+
+INTERFACE s.i qf=3e10
+
+CONTACT name=gate workfunction=4.3
+
+MATERIAL material=nitride permittivity=6.0
+MATERIAL material=silicon eg300=1.75 nc300=1e21 nv300=1e21 permittivity=11.8 \
+ taun0=2e-8 taup0=2e-8 
+MATERIAL material=silicon mun=0.5 mup=0.01
+MOBILITY vsatn=2e6 vsatp=2e6 
+
+DEFECTS continuous nta=5e19 wta=0.06 nga=2.75e16 ega=0.85 wga=0.5 \
+ sigtae=1e-17 sigtah=1e-15 siggae=1e-17 siggah=1e-15 numa=12 numd=0
+
+DEFECTS continuous ntd=1e20  wtd=0.11 ngd=1e17 egd=0.85 wgd=0.5 \
+ sigtde=1e-15 sigtdh=1e-19 siggde=1e-15 siggdh=1e-19 numd=12 numa=0 
+
+INTDEFECTS s.i continuous nta=0 ntd=1 wtd=0.065 ngd=1.19e11 egd=1.25 wgd=0.2 \
+ sigtde=1e-16 sigtdh=1e-16  siggde=1e-15 siggdh=1e-15 numa=0 numd=24
+
+MODELS bbt.kl e.field.derivs
+
+METHOD maxtrap=4 pam.gmres norm.scaling.local 
+
+OUTPUT u.bbt
+
+SOLVE initial
+SOLVE vgate=0 
+SAVE outfile=${name}_VD_revSD_Vg0V.str
+SOLVE vgate=15
+SAVE outfile=${name}_VD_revSD_Vg15V.str
+SOLVE vgate=30 
+SAVE outfile=${name}_VD_revSD_Vg30V.str
+
+LOAD infile=${name}_VD_revSD_Vg0V.str master
+LOG outfile=${name}_VD_revSD_IdVd_Vg0V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+LOAD infile=${name}_VD_revSD_Vg15V.str master
+LOG outfile=${name}_VD_revSD_IdVd_Vg15V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+LOAD infile=${name}_VD_revSD_Vg30V.str master
+LOG outfile=${name}_VD_revSD_IdVd_Vg30V.log
+SOLVE vdrain=0 vstep=0.5 vfinal=25 name=drain
+LOG off
+
+#### VISUALIZATION ####
+# device structur; plot IdVg curves; plot IdVd curves and compare with those with switched SD; 
+victoryvisual ${name}_VM.str:${name}_0.set \
+  '(${name}_VD_IdVg_Vd0p1V_fwd.log+${name}_VD_IdVg_Vd0p1V_rev.log+${name}_VD_IdVg_Vd1V_fwd.log+${name}_VD_IdVg_Vd1V_rev.log+${name}_VD_IdVg_Vd20V_fwd.log+${name}_VD_IdVg_Vd20V_rev.log)':${name}_1.set \
+  '(${name}_VD_revSD_IdVd_Vg0V.log+${name}_VD_revSD_IdVd_Vg15V.log+${name}_VD_revSD_IdVd_Vg30V.log+${name}_VD_IdVd_Vg0V.log+${name}_VD_IdVd_Vg15V.log+${name}_VD_IdVd_Vg30V.log)'
+
+QUIT

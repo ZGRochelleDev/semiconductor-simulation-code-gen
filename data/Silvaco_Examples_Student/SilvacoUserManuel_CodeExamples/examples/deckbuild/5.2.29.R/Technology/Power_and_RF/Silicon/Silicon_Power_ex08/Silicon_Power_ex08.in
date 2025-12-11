@@ -1,0 +1,210 @@
+# (c) Silvaco Inc., 2024
+
+# SEU Induced Gate Rupture (SEGR) in a Power MOSFET
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D REM
+
+# Example Name
+SET name=Silicon_Power_ex08
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=8 depth=1.0 gasheight=15 orientation=100 \
+  resolution=0.2 meshdepth=3 surface.z=7.5 flow.dim=2d_xz \
+  dopants="phosphorus" dopingvalues="1.0e20"
+
+LINE x location=0   spacing=0.02
+LINE x location=1.3 spacing=0.5
+LINE x location=2.5 spacing=0.1
+LINE x location=3.5 spacing=0.1
+LINE x location=4.5 spacing=0.5
+LINE x location=5.5 spacing=0.1
+LINE x location=6   spacing=0.1
+LINE x location=8   spacing=0.5
+
+LINE z location=0   spacing=0.001
+LINE z location=0.5 spacing=0.1
+LINE z location=1.5 spacing=0.2
+LINE z location=4.5 spacing=0.4
+LINE z location=7.5 spacing=0.2
+LINE z location=8.5 spacing=0.3
+
+METHOD model=twodim
+
+EPITAXY time=3 temperature=1000 thickness=3 \
+  dopants="phosphorus" dopingvalues="5.0e15"
+EPITAXY time=3 temperature=1000 thickness=3 \
+  dopants="phosphorus" dopingvalues="2.0e15"
+EPITAXY time=1.5 temperature=1000 thickness=1.5 \
+  dopants="phosphorus" dopingvalues="1.0e16"
+
+# Gate Formation
+DEPOSIT conformal material=oxide thickness=0.05 divisions=5 insertnewlines
+DEPOSIT conformal material=polysilicon thickness=0.6 divisions=6 \
+  insertnewlines
+DEPOSIT conformal material=photoresist thickness=1 divisions=10 insertnewlines
+ETCH material=photoresist right.to=3.5 max
+ETCH material=polysilicon dry thickness=0.6
+
+# P-Body Formation
+IMPLANT boron dose=1e13 energy=180 tilt=30 rotation=180 bca n.ion=200000 
+IMPLANT boron dose=1e13 energy=300 tilt=0 rotation=0 bca n.ion=200000
+STRIP material=photoresist
+
+# P-Plus Body Contact Formation
+DEPOSIT conformal material=photoresist thickness=1 
+ETCH material=photoresist right.to.x=5.5 max
+IMPLANT boron dose=5e14 energy=30 tilt=45 rotation=0 bca n.ion=200000
+STRIP material=photoresist
+
+# N-Plus Source Contact Formation
+DEPOSIT conformal material=photoresist thickness=1 
+ETCH material=photoresist left.to.x=6 max
+IMPLANT arsenic dose=5e14 energy=120 tilt=7 rotation=27 bca n.ion=200000 
+IMPLANT arsenic dose=5e14 energy=120 tilt=7 rotation=207 bca n.ion=200000 
+STRIP material=photoresist
+
+# Deposit Passivation and Anneal
+DEPOSIT conformal material=nitride thickness=1 
+DIFFUSE time=30 temperature=1050
+ETCH all.materials.but="silicon" right.to.x=5.5 max
+
+# Make Source Contact
+DEPOSIT conformal material=aluminum thickness=0.5 
+
+ELECTRODE name=source x=6 z=-2
+ELECTRODE name=gate x=2.5 z=-0.4
+ELECTRODE name=drain substrate
+
+# SAVE simulation status for REMESHing(conformalstr)
+# before electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+
+####### DEVICE SIMULATION #######
+# Single Event Upset Simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_sv_exVC.str cylindrical
+
+SET let=37.2
+SET density=$let*0.011
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt auger
+CONTACT name=gate n.polysilicon
+
+SINGLEEVENTUPSET entrypoint="0,0,0" exitpoint="0,8.5,0" radialgauss \
+  b.density=$density pcunits radius=0.07 t0=1e-14 tc=1e-15
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+
+PROBE name="Strike_Field" field dir=270 x=0.02 y=-0.02
+PROBE name="Source_Field" field dir=270 x=3.4 y=-0.02
+
+#### SOLUTION SOLVING ####
+# Set Up DC Bias Condition
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+SOLVE vgate=-0.1
+SOLVE vgate=-0.4 vstep=-0.5 vfinal=-13.9 name=gate
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5 vstep=0.5 vfinal=30 name=drain
+
+# Start SEU Transient Simulation
+LOG outfile=$'name'_VD_seu.log
+
+SOLVE tfinal=1e-14 dt=1e-16
+SAVE outfile=$'name'_VD_seu_10fs.str
+SOLVE tfinal=5e-12 dt=1e-16
+SAVE outfile=$'name'_VD_seu_5ps.str
+SOLVE tfinal=50e-12 dt=1e-15
+SAVE outfile=$'name'_VD_seu_50ps.str
+SOLVE tfinal=150e-12 dt=1e-14
+SAVE outfile=$'name'_VD_seu_150ps.str
+SOLVE tfinal=2e-9 dt=1e-12
+
+LOG off
+
+
+# DC Breakdown Simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_sv_exVC.str cylindrical
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt
+IMPACT selberherr
+CONTACT name=gate n.polysilicon
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_bv.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5
+SOLVE vdrain=1 vstep=1 vfinal=150 name=drain compliance=1e-10 cname=drain
+
+CONTACT name=drain current
+SOLVE previous
+SOLVE name=drain mult istep=2.0 ifinal=2.7e-2
+SAVE outfile=$'name'_VD_bv.str
+
+LOG off
+
+
+# Unsaturated Threshold Voltage Simulation
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_sv_exVC.str cylindrical
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt
+CONTACT name=gate n.polysilicon
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_Vth.log
+
+SOLVE vgate=0.1 vstep=0.1 vfinal=10 name=gate
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual  \
+$'name'_VP_sv_exVC.str:$'name'_Struct.set \
+$'name'_VD_seu.log \
+$'name'_VD_bv.log \
+$'name'_VD_Vth.log
+
+victoryvisual  \
+$'name'_VD_seu_10fs.str:$'name'_SEU_hConc.set \
+$'name'_VD_seu_50ps.str:$'name'_SEU_hConc.set \
+$'name'_VD_seu_5ps.str:$'name'_SEU_hConc.set \
+$'name'_VD_seu_150ps.str:$'name'_SEU_hConc.set
+
+QUIT

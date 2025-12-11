@@ -1,0 +1,79 @@
+# (c) Silvaco Inc., 2024
+
+# Simulation of Remote Coulomb Scattering Mobility 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name="Bulk_ex09" 
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.00 spacing=0.1
+X.MESH location=0.8 spacing=0.05
+X.MESH location=1.3 spacing=0.1
+X.MESH location=1.8 spacing=0.05
+X.MESH location=2.6 spacing=0.1
+	
+Y.MESH location=-0.004888 spacing=0.001
+Y.MESH location=0.0 spacing=0.001
+Y.MESH location=0.1 spacing=0.025
+Y.MESH location=1 spacing=0.2
+
+REGION num=1 y.min=0 y.max=1 silicon
+REGION num=2 y.max=0 material=HfO2
+
+ELECTRODE name=gate x.min=0.6 x.max=2.0 y.max=-0.004888
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.1 y.min=0 y.max=0
+ELECTRODE substrate
+
+DOPING uniform conc=3e16 p.type 
+DOPING gauss n.type conc=1e20 char=0.075 lat.char=0.05 region=1 x.max=0.6 
+DOPING gauss n.type conc=1e20 char=0.075 lat.char=0.05 region=1 x.min=2 
+
+#### MATERIAL/PHYSICAL MODELS ####  
+# the following line uses the high-k workfunction model
+CONTACT name=gate highk.al on.HfO2
+
+# Here enable remote coulomb scattering model.
+# Assign low background mobility to separate out rcs model.
+MOBILITY rcs.n rcs.p mun0=0.001 mup0=0.001 rcs.n.interface rcs.p.interface
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE 
+
+SOLVE vdrain=0.01
+
+SAVE outfile=$'name'_VD_0p01.str
+
+# Here we probe the normal field and channel charge. These are
+# used in the set file to help calculate effective channel mobility.
+PROBE name=Eperp x=1.3 y=0.0001 dir=90 field
+PROBE name=charge x=1.3 y=0.00001 n.conc
+
+LOG outfile=$'name'_VD_Vth.log
+
+SOLVE vstep=0.01 name=gate vfinal=0.5 
+
+SAVE outfile=$'name'_VD_Vg0p5.str
+
+# EXTRACT and calculate the effective mobility from the simulated - probe data
+GO victoryextract
+LOAD in="$'name'_VD_Vth.log"
+CURVE name="Effective Mobility" x="(Drain Current)/((Charge)*0.0005e-4)/0.01/1.6023E-19" y="Eperp" x.name="(drain current)/(Probe charge)" y.name="Probe Eperp"
+EXTRACT.CSV csvfile="$'name'_sim.csv"
+
+victoryvisual \
+$'name'_exp.dat:$'name'.set+\
+$'name'_sim.csv:$'name'_csv.set
+
+QUIT

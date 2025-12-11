@@ -1,0 +1,235 @@
+# (c) Silvaco Inc., 2024
+
+# Buffered Super Junction LDMOS
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Silicon_Power_ex10” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT layout="$'name'.lay" material=silicon depth=10 gasheight=5 padding=0
+
+LINE x location=0 spacing=0.5
+LINE x location=1 spacing=0.5
+LINE x location=2 spacing=0.5
+LINE x location=3 spacing=0.2
+LINE x location=3.4 spacing=0.2
+LINE x location=4.4 spacing=0.5
+LINE x location=5.4 spacing=0.5
+LINE x location=6 spacing=0.2
+LINE x location=6.4 spacing=0.2
+LINE x location=7.4 spacing=0.5
+LINE x location=8.4 spacing=0.5
+LINE x location=9.4 spacing=0.2
+LINE x location=9.8 spacing=0.2
+LINE x location=14.8 spacing=0.5
+LINE x location=15.8 spacing=0.5
+LINE x location=16.8 spacing=0.5
+LINE x location=17.8 spacing=0.5
+
+LINE y location=0 spacing=0.25
+LINE y location=0.5 spacing=0.25
+LINE y location=1.5 spacing=0.25
+LINE y location=2.5 spacing=0.25
+LINE y location=3.5 spacing=0.25
+LINE y location=4 spacing=0.25
+
+LINE z location=-0.22 spacing=0.05
+LINE z location=-0.02 spacing=0.01
+LINE z location=0 spacing=0.01
+LINE z location=10 spacing=1
+
+DEPOSIT material=oxide thickness=0.02 max
+
+MASK mask="PBASE" reverse
+DOPING material=silicon boron=1e15
+IMPLANT boron energy=80 dose=7e12 tilt=7 rotation=27
+STRIP material=barrier
+
+MASK mask="NBUFF" reverse
+IMPLANT phosphorus energy=80 dose=7e12 tilt=7 rotation=27
+STRIP material=barrier
+
+DIFFUSE temperature=1100 time=300
+
+MASK mask="NILLAR" reverse
+IMPLANT phosphorus energy=40 dose=7e12 tilt=7 rotation=27
+STRIP material=barrier
+
+DEPOSIT material=polysilicon thickness=0.4 max
+
+ETCH material=polysilicon thickness=0.4 mask="POLY" max
+
+MASK mask="PILLAR" reverse
+IMPLANT boron energy=20 dose=1.4e13 tilt=7 rotation=27
+STRIP material=barrier
+
+DIFFUSE temperature=1100 time=120
+
+MASK mask="NSD" reverse
+IMPLANT phosphorus energy=40 dose=5e15 tilt=7 rotation=27
+STRIP material=barrier
+
+MASK mask="PPLUS" reverse
+IMPLANT boron energy=40 dose=2e15 tilt=7 rotation=27
+STRIP material=barrier
+
+DIFFUSE temperature=1100 time=3
+
+ETCH material=oxide thickness=0.02 mask="CONT" reverse max
+
+MASK mask="CONT" reverse
+DEPOSIT material=aluminum thickness=0.0 max
+STRIP material=barrier
+
+ELECTRODES mask="CONT" material=aluminum
+
+# Save simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+# Delaunay refinment
+REMESH delaunay
+
+# Base Mesh
+REFINE max.size=1
+
+# Interface refinement
+REFINE max.interface.size=0.1
+
+# Junction refinement
+REFINE max.junction.size=0.1 grading="sqrt2"
+
+# Refinement on acceptors
+REFINE impurity="acceptor" max.impurity.gradient=0.5 \
+ min.impurity.size=0.25 grading="sqrt2"
+
+SAVE out=$'name'_VM_del.str
+
+####### DEVICE SIMULATION ####### 
+
+# Breakdown (BV)
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+
+# Impact ionisation - critical for breakdown simulations
+IMPACT selberherr e.side
+
+#### NUMERICAL METHODS ####  
+METHOD pam.gmres climit=1e-4 norm.scaling.local weak=1
+
+#### SOLUTION SOLVING #### 
+# Initial conditions
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+
+# Voltage ramp
+SOLVE vdrain=0.001 previous
+SOLVE vdrain=0.01 previous
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 vstep=0.5 vfinal=2 name=drain previous
+SOLVE vstep=1 vfinal=10 name=drain previous
+SOLVE vstep=2 vfinal=120 name=drain compliance=1e-10 cname=drain
+
+# Switch to current boundary breakdown/snap-back
+CONTACT name=drain current
+
+# Step current using a multiplication factor
+SOLVE mult istep=1.3 ifinal=1e-8 name=drain
+
+# Save at 1e-09A - breakdown
+SAVE outfile=$'name'_VD_BV.str
+
+LOG off
+
+# Transfer/Vth (IdVg)
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+
+#### NUMERICAL METHODS ####  
+METHOD pam.gmres climit=1e-4 norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# small voltage on drain for Vth
+SOLVE vdrain=0.1
+
+# now start saving the current / voltage on the electrodes
+# prior to the LOG statement, the electrode IV data is not saved to file
+LOG outfile=$'name'_VD_Vth.log
+
+SOLVE vgate=0.05 vstep=0.05 vfinal=4 name=gate
+
+LOG off
+
+# Output/On-state (IdVd) with Vgs=2V
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print consrh cvt fermi
+
+#### NUMERICAL METHODS ####  
+METHOD pam.gmres climit=1e-4 norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# Ramp gate voltage before sweeping drain voltage
+SOLVE vgate=0.5 vstep=0.25 vfinal=1 name=gate
+SOLVE vgate=2 vstep=1 vfinal=5 name=gate
+
+LOG outfile=$'name'_VD_IdVd.log
+
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5 vstep=0.5 vfinal=5 name=drain
+SAVE outfile=$'name'_VD_Vg5_Vd5.str
+
+LOG off
+
+# Plot structure with doping and efield at breakdown
+# SET files used to define display options
+victoryvisual \
+$'name'_VM_del.str:$'name'_Dop.set
+
+# Plot BV, Vth and IdVd curves
+victoryvisual \
+$'name'_VD_Vth.log \
+$'name'_VD_IdVd.log \
+$'name'_VD_BV.log \
+$'name'_VD_BV.str:$'name'_BVEfield.set
+
+QUIT

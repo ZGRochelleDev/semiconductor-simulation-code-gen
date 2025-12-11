@@ -1,0 +1,161 @@
+# (c) Silvaco Inc., 2024
+
+# Amorphous IGZO TFT Pixel MixedMode Simulation
+
+# Required Modules
+#  Victory Process:
+#   -2D Core Simulator
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+#   -2D MixedMode
+
+###### VARIABLES ######
+# Example Name
+SET name=TFT_ex08
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+# W/L=200um/100um
+# Lgs_overlap=10um
+
+# mesh initialize
+INIT meshdepth=2 material=aluminum from=-60 to=60 depth=0.5 gasheight=3 \
+ resolution=1,0.2
+
+LINE x location=-60 spacing=2.5
+LINE x location=-50 spacing=0.5
+LINE x location=0 spacing=5
+LINE x location=50 spacing=0.5
+LINE x location=60 spacing=2.5
+
+LINE z location=-0.5 spacing=0.01
+LINE z location=-0.45 spacing=0.005
+LINE z location=-0.4 spacing=0.01
+LINE z location=0 spacing=0.1
+LINE z location=0.5 spacing=0.2
+
+# double Gate ins depo
+DEPOSIT conformal material=Si3N4 thickness=0.4  
+DEPOSIT conformal material=SiO2 thickness=0.05 
+
+# active a-IGZO : 50nm
+DEPOSIT conformal material=IGZO thickness=0.05
+
+# S/D metal
+DEPOSIT conformal material=aluminum thickness=0.2
+
+# SD pattern
+ETCH between=-50,50 material=aluminum thickness=0.5 dry
+
+# passivation
+DEPOSIT conformal material=SiO2 thickness=0.2
+
+# S/D electrode definition 
+ELECTRODE name=gate x=0 z=0.2
+ELECTRODE name=source x=-55 z=-0.6
+ELECTRODE name=drain x=55 z=-0.6
+
+SAVE name=$'name'_VP conformalstr
+
+####### STRUCTURE REMESHING ######## 
+GO victorymesh simflags="-P 4"
+LOAD in = $'name'_VP
+REMESH conformal
+SAVE out = $'name'_VM_con.str
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-80 -P 4"
+
+# load original Athena 2D structure
+MESH infile = $'name'_VM_con.str 
+
+# modify IGZO to have a name "channel" and gate oxide to GI
+REGION number=4 modify material=IGZO  name=channel
+REGION number=6 modify material=SiO2 name=GI
+
+SAVE outfile = $'name'_VD.str
+
+go victorydevice simflags="-80 -P 4"
+
+MESH infile = $'name'_VD.str width=200
+
+############### start circuit description ########
+.BEGIN
+
+vcom 6 0 5
+vg 1 0 0 pulse 0 15 0 1us 1us 40us 180us
+vd 3 0 0 pulse 0 10 0 1us 1us 160us 320us
+
+atft 2=source 1=gate 3=drain  infile = $'name'_VD.str width=200
+
+cst 2 6 1.06p
+clc 2 6 125f
+
+.NUMERIC imaxdc=500 
+.OPTIONS fulln
+.LOG outfile = $'name'
+.TRAN 0.1us 320us
+.END
+
+####### MATERIAL/PHYSICAL MODELS #######
+# actual gate metal workfunction
+CONTACT name=gate workfunction=5 device=atft
+
+# S/D metal WF.
+CONTACT name=source workfunction=5 surf.rec vsurfn=3.272e7 vsurfp=3.272e7 \
+ device=atft
+CONTACT name=drain workfunction=5 surf.rec vsurfn=3.272e7 vsurfp=3.272e7 \
+ device=atft
+
+# GI and passivation insulator epsilon
+MATERIAL material=Si3N4 permittivity=7 device=atft
+MATERIAL material=SiO2 permittivity=3.9 device=atft
+
+# Mobility parameters
+MOBILITY material=IGZO mun0=8.15 mup0=1.63 vsatn=3.272e7 vsatp=3.272e7 \
+ device=atft
+
+# a-IGZO bandgap, density of states, and affinity
+MATERIAL material=IGZO nc300=8e18 nv300=4.5e21 eg300=3.2 affinity=4.6 \
+ device=atft
+
+# a-IGZO channel bulk DOS
+DEFECT material=IGZO continuous numa=12 numd=12 tfile = $'name'_0.dat \
+ nta=8e18 wta=0.03 nga=0 ngd=1e16 wtd=0.1 ntd=4.5e21 egd=2.9 wgd=0.1 \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14 device=atft
+
+DEFECT material=IGZO continuous numa=12 numd=12 tfile = $'name'_1.dat \
+ nta=1e17 wta=0.19 ntd=0 nga=0 ngd=0 \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14  device=atft
+
+# between AOS(Amorphous Oxide Semiconductor) and gate insul 
+INTDEFECT s.i r1material="IGZO" r2material="sio2" continuous \
+ tfile = $'name'_2.dat numa=24 numd=24  \
+ nta=2.38e12 ntd=2.25e16 wta=0.19 wtd=0.1 \
+ nga=0 ngd=0 ega=0.62 egd=0.78 wga=0.15 wgd=0.15 \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14 device=atft
+
+MATERIAL material=IGZO taun0=1e-8 taup0=1e-8 device=atft
+
+MODELS fermidirac ust device=atft print temperature=300
+
+MATERIAL d.tunnel=2e-6 me.tunnel=0.2 device=atft
+
+####### NUMERICAL METHODS #######
+METHOD maxtraps=10 
+
+####### SOLUTION SOLVING #######
+GO internal
+
+####### RESULTS DISPLAY #######
+victoryvisual $'name'_VP_exVC.str:$'name'_str.set \
+  $'name'_tr.log:$'name'_tr.set
+
+QUIT

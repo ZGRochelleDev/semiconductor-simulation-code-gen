@@ -1,0 +1,246 @@
+# (c) Silvaco Inc., 2024
+
+# Image Sensor Cell including 2 Pass Transistors
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D Optical
+
+# Input files
+# High Energy P-Well Implant Profiles
+# CIS_CCD_ex04_B_580_keV.dat (energy=580 dose=3.1e14 tilt=0 rotation=0 bca n.ion=400000)
+# CIS_CCD_ex04_B_145_keV.dat (energy=145 dose=2.4e14 tilt=0 rotation=0 bca n.ion=400000) 
+# CIS_CCD_ex04_B_15_keV.dat (energy=15 dose=1.8e14 tilt=0 rotation=0 bca n.ion=400000)
+
+# Example Name
+SET name=“CIS_CCD_ex04”
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT silicon layout="$"name".lay" gasheight=1 depth=3 
+
+CARTESIAN mask="PWELL" spac=0.1 all.point 
+
+LINE x location=0 spacing=0.25
+LINE x location=0.5 spacing=0.125
+LINE x location=0.75 spacing=0.125
+LINE x location=1 spacing=0.125
+LINE x location=1.25 spacing=0.175
+LINE x location=1.5 spacing=0.125
+LINE x location=2 spacing=0.125
+LINE x location=2.5 spacing=0.25
+LINE x location=4.25 spacing=0.875
+LINE x location=6 spacing=0.25
+LINE x location=6.5 spacing=0.25
+
+LINE y location=0 spacing=0.15
+LINE y location=0.25 spacing=0.125
+LINE y location=0.5 spacing=0.15
+LINE y location=1 spacing=0.25
+LINE y location=2 spacing=0.25
+LINE y location=2.5 spacing=0.25
+LINE y location=3 spacing=0.125
+LINE y location=3.5 spacing=0.175
+LINE y location=4 spacing=0.125
+LINE y location=4.5 spacing=0.175
+LINE y location=5 spacing=0.125
+LINE y location=5.5 spacing=0.175
+LINE y location=6 spacing=0.15
+LINE y location=6.25 spacing=0.125
+LINE y location=6.5 spacing=0.15
+
+LINE z location=0 spac=0.002
+LINE z location=0.9 spac=0.3
+LINE z location=1.8 spac=0.1
+LINE z location=3 spac=0.5
+
+ETCH silicon thick=2 max
+DOPING silicon boron=1e19 
+DEPOSIT silicon thick=2 phosphorus=1.5e15 max
+
+MASK "PWELL" reverse
+
+PROFILE infile="$"name"_B_580_keV.dat" boron lstddev=0.01
+PROFILE infile="$"name"_B_145_keV.dat" boron lstddev=0.01
+PROFILE infile="$"name"_B_15_keV.dat" boron lstddev=0.01
+
+STRIP resist
+
+DEPOSIT oxide thick=0.006 max
+DEPOSIT polysilicon thick=0.2 max
+
+ETCH polysilicon thick=0.2 max mask="POLY"
+ELECTRODES mask=POLY material=polysilicon
+DEPOSIT oxide thick=0.01 conformal
+
+MASK "NPLUS" reverse
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=27
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=117 
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=207 
+IMPLANT phosphor energy=20 dose=2.5e14 tilt=7 rotation=297 
+STRIP resist
+
+MASK "BF2" reverse
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=27 
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=117
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=207
+IMPLANT bf2 energy=30 dose=5e13 tilt=7 rotation=297
+STRIP resist
+
+DIFFUS time=2 temperature=1050 
+
+ETCH oxide thick=0.02 max mask="CONT" reverse
+
+MASK "CONT" reverse
+DEPOSIT aluminum thick=0.206 min
+STRIP resist
+ELECTRODES mask=CONT material=aluminum
+
+SAVE name=$"name"_VP
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$"name"_VP
+
+REMESH conformal
+
+SAVE out=$"name"_VM.str
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+# Vt Simulation of the Pass Transistors
+
+MESH infile=$"name"_VM.str
+
+MODELS consrh cvt
+
+CONTACT name=cgate n.poly
+CONTACT name=ngate n.poly
+CONTACT name=ngate common=cgate
+
+METHOD pas norm.scaling.local
+
+OUTPUT band.param con.band val.band
+
+PROBE n.conc x=1 y=3.25 z=0.002 name=cg_conc
+PROBE n.conc x=1 y=5.5 z=0.002 name=ng_conc
+
+SOLVE init
+SOLVE previous
+LOG outfile=$"name"_0.log
+SOLVE vcgate=0.01
+SOLVE vcgate=0.1 vstep=0.1 vfinal=3.3 name=cgate
+SAVE outfile=$"name"_Vg3p3.str
+
+# First Simulate Dark Curent Image Sensor Characteristics
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_VM.str
+
+MODELS consrh cvt fermi
+CONTACT name=cgate n.poly
+CONTACT name=ngate n.poly
+
+METHOD pas tol.time=100 norm.scaling.local
+
+OUTPUT band.param con.band val.band
+
+PROBE n.conc x=4.25 y=3.25 z=1 name=cis_conc
+PROBE potential x=1 y=4.5 z=0.002 name=fd_potential
+PROBE potential x=4.25 y=3.25 z=1 name=cis_potential
+
+SOLVE init
+SOLVE previous
+SAVE outf=$"name"_0V.str
+
+# Deplete the Image Sensor of Electrons
+LOG outfile=$"name"_1.log
+SOLVE vcgate=3.3 ramptime=1e-6 dt=1e-8 tstop=1e-6
+SOLVE tstop=2e-6 dt=1e-8
+
+PROBE name=pot potential max.file material=silicon dx.max.file=0.125 dy.max.file=0.125 dz.max.file=0.1
+
+SAVE outfile=$"name"_depleted_dark.str
+SAVE max.file=$"name"_1.csv max.probe=pot
+
+# Dark Recovery Time
+SOLVE tstop=0.1 dt=1e-7
+METHOD constant.timestep
+SOLVE tstop=1 dt=0.05
+
+SAVE outfile=$"name"_filled_dark.str
+SAVE max.file=$"name"_2.csv max.probe=pot
+
+# SAME SIMULATION BUT AT SOLAR AM-1.5 ILLUMINATION at 0.01 Watts/cm2
+
+# At this illumination intensity, an integration time of 0.0008 seconds
+# yields a change in output voltage approximately half the maximum
+
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_VM.str
+
+MODELS consrh cvt fermi
+CONTACT name=cgate n.poly
+CONTACT name=ngate n.poly 
+
+METHOD pas tol.time=100 lte.timestep
+
+OUTPUT band.param con.band val.band
+
+BEAM num=1 am1.5 z.origin=-2 nx=104 nz=104 metal.reflect \
+ wavel.num=10 wavel.start=0.281 wavel.end=1.281 raytrace=raytrace.str
+
+PROBE n.conc x=4.25 y=3.25 z=1 name=cis_conc
+PROBE potential x=1 y=4.5 z=0.002 name=fd_potential
+PROBE potential x=4.25 y=3.25 z=1 name=cis_potential
+
+SOLVE init
+SOLVE previous
+
+# Deplete the Image Sensor of Electrons
+LOG outfile=$"name"_2.log
+SOLVE vcgate=3.3 ramptime=1e-6 dt=1e-8 tstop=1e-6 b1=0.001
+SOLVE tstop=2e-6 dt=1e-8 b1=0.001
+SAVE outfile=$"name"_depleted_light.str
+
+# Light Integration Time
+SOLVE tstop=0.0008 dt=1e-7 b1=0.001
+
+SAVE outfile=$"name"_read.str
+
+SOLVE tstop=1 dt=1e-7 b1=0.001
+
+PROBE name=pot potential max.file material=silicon dx.max.file=0.125 dy.max.file=0.125 dz.max.file=0.1
+
+SAVE outfile=$"name"_light_saturated.str
+SAVE max.file=$"name"_3.csv max.probe=pot
+
+GO victoryextract
+LOAD in=$'name'_2.log
+CURVE name=tfd x="Transient time" y="fd_potential"
+EXTRACT.CURVE name="Potential at 0.001 W/cm2" expression=intercept(x=0.0008, curve.tfd)
+
+victoryvisual $"name"_VM.str:$"name"_VM.set 
+
+victoryvisual \
+$"name"_0.log:$"name"_0.set \
+$"name"_1.log:$"name"_1.set \
+$"name"_2.log:$"name"_2.set \
+$"name"_1.log:$"name"_1_2.set+\
+$"name"_2.log:$"name"_1_2.set
+
+QUIT
+
+
+
+

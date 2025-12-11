@@ -1,0 +1,91 @@
+# (c) Silvaco Inc., 2024
+
+# Joining two or more structure files together (JOIN)
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#   -2D Solid Modeling
+
+# Example Name
+Set name=“VM_Str_Edit_ex04” 
+
+####### PROCESS SIMULATION ####### 
+# First structure with half a trench MOS gate.
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=2 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+ETCH min material=silicon thickness=1.1 right.to.x=1.8
+ETCH conformal thickness=0.2 material=silicon right.to.x=1.8
+
+DEPOSIT conformal material=oxide thickness=0.01
+ETCH material=oxide above=0
+DEPOSIT material=polysilicon thickness=0 max
+
+DOPING boron conc=1e20 gauss.sigma=0.05 peak=2
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_Half_sv conformalstr
+
+####### PROCESS SIMULATION ####### 
+# Second structure with full trench MOS gate.
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=3 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+ETCH min material=silicon thickness=1.1 between.x="1.8,2.2"
+ETCH conformal thickness=0.2 material=silicon between.x="1.8,2.2"
+
+DEPOSIT conformal material=oxide thickness=0.01
+ETCH material=oxide above=0
+DEPOSIT material=polysilicon thickness=0 max
+
+DOPING boron conc=1e20 gauss.sigma=0.05 peak=2
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_Full_sv conformalstr
+
+# Join half cell to right hand side of full cell
+GO victorymesh simflags="-P 4"
+
+# Load in full cell
+LOAD in="$'name'_VP_Full_sv"
+
+# Load in half cell
+LOAD in="$'name'_VP_Half_sv"
+
+# Full cell x is from 1 to 3, half cell is from 1 to 2.
+# Half cell needs to be shifted to the right by 2um (to x=3) so
+# its left hand edge co-ordinate coincides with the right
+# hand edge co-ordinate of the full cell
+TRANSLATE delta="2,0"
+
+JOIN in.a="$'name'_VP_Full_sv" in.b="$'name'_VP_Half_sv" out="$'name'_VM_Com"
+
+REMESH delaunay 
+
+# Base mesh
+REFINE max.size=0.05 regions="*"
+
+# Interface refinement but increase the distance over which
+# the refinement grades over
+REFINE max.interface.size=0.01 max.interface.distance=0.5 grading=linear
+
+# Junction refinement
+REFINE max.junction.size=0.02 grading="linear"
+
+SAVE out="$'name'_VM_Join"
+
+victoryvisual \
+$'name'_VP_Full_sv_exVC.str \
+$'name'_VP_Half_sv_exVC.str \
+$'name'_VM_Join.str
+
+QUIT

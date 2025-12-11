@@ -1,0 +1,30 @@
+**Note:** This example assumes that you have already created the necessary components in your circuit design.
+
+### Generated Netlist:
+
+```plaintext
+/* Divider Op */
+V1 in 0 5
+R1 1k in out
+R2 1k out 0
+.op
+.print V1
+.end
+
+/* RC Step Response */
+VIN in 0 PULSESIN(0 3.6 0 1ns 1ns 100ns 1000ns)
+R1 2k in out
+C1 1n out 0
+.tran 1ns 200ns
+.print tran V1
+.end
+
+/*
+RC Low-Pass Filter
+*/
+V1 in 0 SINE(0 5 0.1 1k)
+D1 1k in 0
+C1 1u out 0
+.ac dec 5 10 1k
+.print ac V1
+.end

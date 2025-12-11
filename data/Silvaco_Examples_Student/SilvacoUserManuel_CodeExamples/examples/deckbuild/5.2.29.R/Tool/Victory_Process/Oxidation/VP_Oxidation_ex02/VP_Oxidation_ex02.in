@@ -1,0 +1,54 @@
+# (c) Silvaco Inc., 2024
+
+# Substrate rotation dependent oxidation
+
+# Required Modules
+#  Victory Process
+#   -2D Oxidation
+#   -2D Diffusion & Implantation
+
+# Example Name
+Set name=“VP_Oxidation_ex02” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Initialize with orientation of sidewalls along 100 direction
+INIT meshdepth=2 orient=100 sub.rot=0 from=-1 to=1 depth=4 gasheight=2 resolution=0.02,0.02 material=silicon
+
+# Anisotropic silicon etch
+ETCH silicon right.to.x=0 thickness = 2 min
+
+# Field oxidation
+DIFFUSE time=20 temperature=1000 wet 
+
+# Extract oxide thickness on surface and sidewall
+EXTRACT3D name="OxTop_100" THICKNESS material="sio2" X.VAL=0.5
+EXTRACT3D name="OxSide_100'" THICKNESS material="sio2" Y.VAL=1.05
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_100.str"
+
+# Substrate rotation=45
+# Initialize with orientation of sidewalls along 110 direction
+INIT meshdepth=2 orient=100 sub.rot=45 from=-1 to=1 depth=4 gasheight=2 resolution=0.02,0.02 material=silicon
+
+# Anisotropic silicon etch
+ETCH silicon right.to.x=0 thickness = 2 min
+
+# Field oxidation
+DIFFUSE time=20 temperature=1000 wet 
+
+# Extract oxide thickness on surface and sidewall
+EXTRACT3D name="OxTop_100" THICKNESS material="sio2" X.VAL=0.5
+EXTRACT3D name="OxSide_100'" THICKNESS material="sio2" Y.VAL=1.05
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_110.str"
+
+victoryvisual \
+$'name'_100.str+$'name'_110.str
+
+QUIT

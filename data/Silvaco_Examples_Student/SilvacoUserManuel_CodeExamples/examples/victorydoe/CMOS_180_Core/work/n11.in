@@ -1,0 +1,49 @@
+source n3.var
+source n0c3.var
+GO victoryprocess simflags="-P 4"
+#vpm_title = VP_LDD
+load name = n7_VP_Poly 
+
+## ---------------------------------- ##
+## ------------ LDD Loop ------------ ##
+## -----------------------------------##
+
+# mesh Adjustment: 
+
+LINE x location = $Lgate/2 spacing = 0.01 remove 
+LINE x location = $Lgate/2-0.05 spacing = 0.01 
+LINE x location = $Lgate/2 spacing = 0.005 
+LINE x location = $Lgate/2+0.1 spacing = 0.015 
+
+LINE z location = 0.04 spacing = 0.005 
+LINE z location = 0.10 spacing = 0.02 
+LINE z location = 0.20 spacing = 0.01 
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+# offset spacer 
+DEPOSIT conformal material = oxide thickness = 0.005
+
+if cond = ($type = "NMOS") 
+# NLDD Implant 
+# Note for tilt implant: to use "dose = " for beam dose, to use "dose.wafer = " for wafer dose. 
+IMPLANT indium energy = 120 dose.wafer = 3.0e13 tilt = 30 rotation = 45 n.rot = 4 reflective bca n.ion = 30000 traj.split plus.n
+IMPLANT arsenic energy = 5 dose = 5.0e14 tilt = 0 rotation = 0 reflective bca n.ion = 30000 traj.split plus.n
+#export structure = VP_LDD_asimp.str
+if.end 
+
+if cond = ($type = "PMOS") 
+# PLDD Implant 
+# Note for tilt implant: to use "dose = " for beam dose, to use "dose.wafer = " for wafer dose. 
+IMPLANT arsenic energy = 100 dose.wafer = 3.0e13 tilt = 30 rotation = 45 n.rot = 4 reflective bca n.ion = 30000 traj.split plus.n
+IMPLANT bf2 energy = 3 dose = 5.0e14 tilt = 0 rotation = 0 reflective bca n.ion = 30000 traj.split plus.n 
+#export structure = VP_LDD_asimp.str
+if.end 
+
+
+# LDD RTA 
+DIFFUSE time = 10 sec temperature = 600 t.final = 1000
+DIFFUSE time = 10 sec temperature = 1000
+DIFFUSE time = 10 sec temperature = 1000 t.final = 600
+
+save name = n11_VP_LDD conformalstr

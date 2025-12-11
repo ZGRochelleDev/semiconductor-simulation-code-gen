@@ -1,0 +1,28 @@
+* IP3
+
+.include 'LNAcircuit.inc'
+.param prf=-10_dBm
+.param rpar21=470
+
+Pout 9  0  R=40
+Prf  in 0  R=50 
++    MTS1=(prf 0 45) ; freq1 = 900MegHz
++    MTS2=(prf 0 46) ; freq2 = 920MegHz
+$ ----------------------
+
+.param fund_freq=20meg
+.param f1='45*fund_freq'
+.param f3='47*fund_freq'
+
+.HARMONIC
++ FUND='fund_freq' nharm=63
++ annotate=3 
++ waves
++ SWEEP prf -30 10 2
+
+.LET HARM_SP POUT=r(@Pout[POUT])              ; real part save pout sign
+.MEASURE HARM_SP POUT_1 FIND POUT AT=f1       ; AT=900Meg - 1st order harmonic
+.MEASURE HARM_SP POUT_3 FIND POUT AT=f3       ; AT=940Meg - 3rd order harmonic
+.MEASURE MEAS resIP3 IP3 POUT_1 POUT_3 EP=-25
+
+.END

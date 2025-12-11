@@ -1,0 +1,7 @@
+**NMOS_DC_Sweep**
+Vin in 0 DC 0
+M1 in out 1K
+.out 0 0
+.dc vin 0 5 0.1
+.print dc V(out)
+.end

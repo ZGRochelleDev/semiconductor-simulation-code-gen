@@ -1,0 +1,6 @@
+* Main spice file
+.INCLUDE lpf_cp.sub
+
+.TRAN 100p 200n
+
+.END

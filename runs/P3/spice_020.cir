@@ -1,0 +1,10 @@
+*Mos_Current_Mirror
+vdd in 5V
+M2 in out -10k
+.Mos_1 Bias Bias 0 0 NM
+Rref in bias 1k
+Rload in out 1k
+.print
+.plot
+.meas
+.end

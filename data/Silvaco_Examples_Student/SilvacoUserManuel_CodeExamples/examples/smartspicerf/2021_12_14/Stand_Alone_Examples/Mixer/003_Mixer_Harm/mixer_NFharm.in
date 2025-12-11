@@ -1,0 +1,21 @@
+* NF_meas
+
+.include HBT_ne600p.inc
+
+.param kfn=1.e-10
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf gnd  
+Vlo lo gnd  mag1=vlo
+
+*-------- Noise Figure Measurement -----
+.HNOISE Pif Prf
++   DEC 10 1kHz 2GHz
++   fund=1GHz
++   refSB=-1
++   Kmax=10
++   Annotate=3
++   WAVES
+
+.END

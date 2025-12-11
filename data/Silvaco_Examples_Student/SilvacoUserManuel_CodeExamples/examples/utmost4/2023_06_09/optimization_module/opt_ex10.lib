@@ -1,0 +1,121 @@
+.MODEL IGBT_sil PNP (
++LEVEL    = 3              version  = '1.20'         info     = 0              
++show     = 0              corsrd   = 0              corg     = 0              
++coiprv   = 0              copprv   = 1              coadov   = 1              
++coisub   = 0              coiigs   = 0              cogidl   = 0              
++coovlp   = 0              coovlps  = 1              coflick  = 0              
++coisti   = 0              conqs    = 0              cothrml  = 0              
++coign    = 0              codfm    = 0              corbnet  = 0              
++coselfheat = 0
++cosym    = 0              bjtne    = 2.32758e+15    bjtnb    = 9.9516e+13     
++bjtnc    = 5.53329e+18    bjtwb    = 4.5378e-05     
++bjtwhalfcell = 1e-07
++bjtninj  = 0              
++bjtninjmax = 1
++bjtwdepmax = 0.999725
++bjtmuep  = 499.397        bjtmuen  = 1487.69        bjtmueqn = 2.149          
++bjttaue  = 1e-06          bjttaub  = 1.59947e-05    bjttauc  = 5.33743e-05    
++bjtnref  = 1e+17          bjtgminc = 0              bjtgmine = 0              
++bjtldec  = 0.101583       bjtpmin  = 1e+15          bjtrb    = 1              
++bjtrbvg11 = 0.5
++bjtrbvg12 = 33.2725
++bjtrc    = 7198.93        bjtre    = 0.5            bjtqdep  = 1              
++bjtqex   = 0.1            vmax     = 1e+06          bgtmp1   = 9.025e-05      
++bgtmp2   = 1e-07          eg0      = 1.1785         tox      = 1e-07          
++toxedge  = 1e-07          xld      = 3e-08          lovers   = 1.01e-09       
++rdov11   = 0              rdov12   = 1              rdov13   = 1              
++rdslp1   = 0              rdict1   = 1              rdslp2   = 1              
++rdict2   = 0              loverld  = 1.3e-06        ldrift1  = 1e-06          
++ldrift2  = 1e-06          ldrift1s = 0              ldrift2s = 1e-06          
++subld1   = 0              subld2   = 0              ddltmax  = 1              
++ddltslp  = 0              ddltict  = 10             vfbover  = -0.5           
++nover    = 1e+16          novers   = 1e+19          xwd      = 0              
++xl       = 0              xw       = 0              saref    = 1e-06          
++sbref    = 1e-06          ll       = 0              lld      = 0              
++lln      = 0              wl       = 0              wl1      = 0              
++wl1p     = 1              wl2      = 0              wl2p     = 1              
++wld      = 0              wln      = 0              rsh      = 0              
++rshg     = 0              xqy      = 0              xqy1     = 0              
++xqy2     = 2              rs       = 0              rd       = 0.005          
++vfbc     = -1.06685       vbi      = 1.1            nsubc    = 6.70373e+16    
++parl2    = 1e-08          lp       = 0              nsubp    = 1e+19          
++nsubp0   = 6.46008        nsubwp   = 1              scp1     = 1              
++scp2     = 0.1            scp3     = 0              sc1      = 1              
++sc2      = 1              sc3      = 0              sc4      = 0              
++pgd1     = 0              pgd2     = 1              pgd3     = 0.8            
++pgd4     = 0              ndep     = 0.138508       ndepl    = 0              
++ndeplp   = 1              ninv     = 0.879066       muecb0   = 112.267        
++muecb1   = 55.7554        mueph0   = 0.348615       mueph1   = 2827.52        
++muephw   = 0              muepwp   = 1              muephl   = 0              
++mueplp   = 1              muephs   = 0              muepsp   = 1              
++vtmp     = 0              wvth0    = 0              muesr0   = 2.2            
++muesr1   = 1.84877e+15    muesrl   = 0              muesrw   = 0              
++mueswp   = 1              mueslp   = 1              muetmp   = 1.7            
++bb       = 2              sub1     = 0.05           sub2     = 100            
++svgs     = 0.8            svbs     = 0.5            svbsl    = 0              
++svds     = 0.8            slg      = 3e-08          sub1l    = 0.0025         
++sub2l    = 2e-06          fn1      = 50             fn2      = 0.00017        
++fn3      = 0              fvbs     = 0.012          svgsl    = 0              
++svgslp   = 1              svgswp   = 1              svgsw    = 0              
++svbslp   = 1              slgl     = 0              slglp    = 1              
++sub1lp   = 1              nsti     = 1e+17          wsti     = 0              
++wstil    = 0              wstilp   = 1              wstiw    = 0              
++wstiwp   = 1              scsti1   = 0              scsti2   = 0              
++vthsti   = 0              vdsti    = 0              muesti1  = 0              
++muesti2  = 0              muesti3  = 1              
++nsubpsti1 = 0
++nsubpsti2 = 0
++nsubpsti3 = 1
++lpext    = 1e-50          npext    = 1e+17          scp21    = 0              
++scp22    = 0              bs1      = 0              bs2      = 0.9            
++tpoly    = 2e-07          cgbo     = 1e-15          js0      = 5e-07          
++js0sw    = 0              nj       = 1              njsw     = 1              
++xti      = 2              cj       = 0.0005         cjsw     = 5e-10          
++cjswg    = 5e-10          mj       = 0.5            mjsw     = 0.33           
++mjswg    = 0.33           pb       = 1              pbsw     = 1              
++pbswg    = 1              xti2     = 0              cisb     = 0              
++cvb      = 0              ctemp    = 0              cisbk    = 0              
++cvbk     = 0              divx     = 0              clm1     = 0.05           
++clm2     = 2              clm3     = 1              clm5     = 1              
++clm6     = 0              vover    = 0              voverp   = 1.48926        
++wfc      = 0              nsubcw   = 0              nsubcwp  = 1              
++qme1     = 0              qme2     = 1              qme3     = 0              
++vovers   = 0              voversp  = 0              gidl1    = 2              
++gidl2    = 3e+07          gidl3    = 0.9            gidl4    = 0.9            
++gidl5    = 0.2            gleak1   = 50             gleak2   = 1e+07          
++gleak3   = 0.06           gleak4   = 4              gleak5   = 7500           
++gleak6   = 0.25           gleak7   = 1e-06          glpart1  = 0.5            
++glksd1   = 1e-15          glksd2   = 5e+06          glksd3   = -5e+06         
++glkb1    = 5e-16          glkb2    = 1              glkb3    = 0              
++egig     = 0              igtemp2  = 0              igtemp3  = 0              
++vzadd0   = 0.01           pzadd0   = 0.005          nftrp    = 1e+10          
++nfalp    = 1e-19          cit      = 0              falph    = 1              
++kappa    = 3.9            cgso     = 1e-15          cgdo     = 1e-15          
++pthrou   = 0              vdiffj   = 0.0006         dly1     = 1e-10          
++dly2     = 0.7            dly3     = 8e-07          tnom     = 27             
++ovslp    = 2e-08          ovmag    = 500            gbmin    = 1e-12          
++rbpb     = 50             rbpd     = 50             rbps     = 50             
++rbdb     = 50             rbsb     = 50             ibpc1    = 0              
++ibpc2    = 0              mphdfm   = -0.3           rdvg11   = 0              
++rdvg12   = 100            rth0     = 0.1            cth0     = 1e-07          
++powrat   = 1              tcjbd    = 0              tcjbs    = 0              
++tcjbdsw  = 0              tcjbssw  = 0              tcjbdswg = 0              
++tcjbsswg = 0              dlyov    = 0              qdftvd   = 1              
++xldld    = 1e-06          rdvd     = 0.07           qovsm    = 0.2            
++rd20     = 0              rd21     = 1              rd22     = 0              
++rd22d    = 0              rd23     = 0.005          rd24     = 0              
++rd25     = 0              rdvdl    = 0              rdvdlp   = 1              
++rdvds    = 0              rdvdsp   = 1              rd23l    = 0              
++rd23lp   = 1              rd23s    = 0              rd23sp   = 1              
++rds      = 0              rdsp     = 1              rdtemp1  = 0              
++rdtemp2  = 0              
++rdvdtemp1 = 0
++rdvdtemp2 = 0
++rth0w    = 0              rth0wp   = 1              cvdsover = 0              
++ninvd    = 0              vbsmin   = -10.5          rdvb     = 0              
++rth0nf   = 0              lmin     = 0              lmax     = 1              
++wmin     = 0              wmax     = 1              lbinn    = 1              
++wbinn    = 1              
++bjtrbtemp1 = 0
++bjtrbtemp2 = 0
++cobjtnqs = 1 )

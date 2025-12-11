@@ -1,0 +1,20 @@
+* ConvGain
+.include 'LNAcircuit.inc'
+.param rpar21=470
+
+Pout 9  0  r=40
+Prf  in 0  r=50 
+
+$ ----------- Voltage Gain ------------
+.HTF v(9,0)
++ LIN 101 10Meg 1.2GHz
++ FUND=900MegHz nharm=7
++ SB=(0, 0)
++ annotate=3 waves
+
+.let HTF PrfGain='db(tfh0_prf)'
+.let HTF SupplyGain='db(tfh0_vdc)'
+.MEASURE HTF ConvGain FIND PrfGain AT=900MegHz
+.MEASURE HTF SupplyRej FIND SupplyGain AT=900MegHz
+
+.END

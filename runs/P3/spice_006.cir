@@ -1,0 +1,9 @@
+*RlcBandPass
+V1 in 0 AC
+R1 in N1 50
+N1 out L1
+L1 out C1
+.C1 out 10e9
+.AC Sweep Dec 200 200Mhz
+.Print Sweep V(out)
+.END

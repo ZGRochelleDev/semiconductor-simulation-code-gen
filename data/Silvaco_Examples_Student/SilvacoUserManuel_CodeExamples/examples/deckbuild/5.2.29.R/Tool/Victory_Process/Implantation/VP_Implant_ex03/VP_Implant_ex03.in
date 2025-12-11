@@ -1,0 +1,48 @@
+# (c) Silvaco Inc., 2024
+
+# Selecting appropriate number of ions for MC implant
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+SET name=VP_Implant_ex03
+
+############ PROCESS SIMULATION ###########################
+
+# Monte Carlo Implantation
+
+LOOP steps=4
+ASSIGN name=nions n.value=(10000,50000,100000,500000)
+
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=1 depth=1.2 gasheight=0.3 resolution=0.05 meshdepth=2 flow.dim=2d_xz
+
+#setting volume mesh using Line statements to get accurate doping profile
+LINE x location=0 spacing=0.01
+LINE x location=0.1 spacing=0.01
+
+LINE z location=0 spacing=0.005
+LINE z location=0.5 spacing=0.005
+LINE z location=1.2 spacing=0.01
+
+IMPLANT arsenic energy=90 dose=5e13 tilt=7 rotation=20 \
+bca n.ions=$nions
+
+EXPORT name=$"name"_VP_implant_$"nions".str
+
+go victoryextract
+load in=$"name"_VP_implant_$"nions".str
+EXTRACT.PROFILE csvfile="$'name'_$'nions'" regions="silicon" field="Arsenic" x.val=0.05
+
+L.END
+
+victoryvisual \
+$'name'_10000.csv:$'name'_csv.set \
+$'name'_50000.csv:$'name'_csv.set \
+$'name'_100000.csv:$'name'_csv.set \
+$'name'_500000.csv:$'name'_csv.set
+
+QUIT

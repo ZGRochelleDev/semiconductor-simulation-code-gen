@@ -1,0 +1,24 @@
+*BJT Differential Oscillator - HOSCIL Analysis
+
+.options acct nomod
+
+.include 'DifOsc_Resonator.inc'
+
+.include 'DifOsc_circuit.inc'
+
+X1   VoL  VoR  Resonator
+
+.HOSCIL Probe (VoL, VoR) v(VoL, VoR)
++ DEC_ENG   10  1Hz   100MegHz
+* + DEC_ENG   10   -10kHz   10kHz
++ Fund_Osc=1.9e+09Hz nharm=15
++ Ftype=REL Relharm=1
++ Faxis=REL 
++ DEVPTS=1
++ DEVcon=5
++ annotate=4
++ waves
+
+* .PROBE  ALL(v)
+
+.END 

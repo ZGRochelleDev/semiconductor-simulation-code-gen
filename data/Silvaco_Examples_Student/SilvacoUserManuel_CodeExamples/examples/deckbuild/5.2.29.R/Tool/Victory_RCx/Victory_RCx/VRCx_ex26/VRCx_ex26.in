@@ -1,0 +1,200 @@
+# (c) Silvaco Inc., 2024
+
+# Simulation and Analysis of Liquid Crystal on Silicon Pixels 
+# for Augmented Reality and Holography Applications - Static 
+# Phase Calculation 
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex26” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+set Pitch=3.8
+set Gap=0.2
+set tLC=2
+set hfPitch=$Pitch/2
+set lpix=$Pitch-$Gap
+set hfpix=$lpix/2
+
+set Rc=0.1
+set cir_cen=$hfpix-$Rc
+
+#substrate and initilaization
+INIT depth=1 nitride gasheight=6 from="-$hfPitch,-$hfPitch" to="$hfPitch,$hfPitch"
+
+#generate template mask 
+SPECIFYMASKPOLY maskname=Pixel1 p1="-$hfpix,-$hfpix" p2="$hfpix,-$hfpix" p3="$hfpix,$hfpix" p4="-$hfpix,$hfpix"
+SPECIFYMASKPOLY maskname=Sqcorner p="$hfpix,$hfpix" p="$hfpix,$cir_cen" p="$cir_cen,$cir_cen" p="$cir_cen,$hfpix" \
+   n.xminus=1 gap.x=$lpix-2*$Rc n.yminus=1 gap.y=$lpix-2*$Rc
+SPECIFYMASKPOLY maskname=Sphcorner circle center="$cir_cen,$cir_cen" radius=$Rc npoints=20 \
+   n.xminus=1 gap.x=$lpix-4*$Rc n.yminus=1 gap.y=$lpix-4*$Rc
+SPECIFYMASKPOLY newmask=Pixel2 mask1=Pixel1 subtract mask2=Sqcorner
+SPECIFYMASKPOLY newmask=Corner mask1=Sqcorner and mask2=Sphcorner
+SPECIFYMASKPOLY newmask=Pixel mask1=Pixel2 or mask2=Corner
+
+#conformal X-mesh(lateral plane)
+LINE x loc=-$hfPitch spac=$Gap/4
+LINE x loc=-$hfpix spac=$lpix/20
+LINE x loc=$hfpix spac=$lpix/20
+LINE x loc=$hfPitch spac=$Gap/4
+
+#conformal y-mesh(lateral plane)
+LINE y loc=-$hfPitch spac=$Gap/4
+LINE y loc=-$hfpix spac=$lpix/20
+LINE y loc=$hfpix spac=$lpix/20
+LINE y loc=$hfPitch spac=$Gap/4
+
+# z-mesh(depth)
+LINE z loc=-0.75-$tLC  spac=0.05
+LINE z loc=-0.7-$tLC  spac=0.05
+LINE z loc=-0.65-$tLC  spac=0.1
+LINE z loc=-0.65-$tLC/2  spac=0.2
+LINE z loc=-0.65  spac=0.1
+LINE z loc=-0.6  spac=0.05
+LINE z loc=-0.5  spac=0.1
+LINE z loc=0  spac=0.5
+
+#deposit pixel metal
+DEPOSIT material=aluminum thickness=0.5 min
+
+#pixel electrode with electrode
+ETCH mask="Pixel" material=aluminum thickness=0.5 min 
+ELECTRODES name="Pix" x=0 y=0 z=-0.25
+
+# SiNx deposit
+DEPOSIT nitride thick=0.1 max
+
+#PI deposit
+DEPOSIT material="PI" thick=0.05 min
+
+#Liquid Crystal deposit
+DEPOSIT material=LC thickness=$tLC min
+
+#PI deposit
+DEPOSIT material="PI" thick=0.05 min
+
+#common electrode metal deposit & attach eletrode
+DEPOSIT material=ITO thickness=0.05 min
+ELECTRODES  name="Com" x=0 y=0 z=-0.725-$tLC 
+
+#Deposit SiOx
+DEPOSIT oxide thick=1 min 
+
+# save Victoryprocess information
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+# load VP structure
+LOAD in=$'name'_VP_sv
+#do Remeshing
+REMESH conformal
+#save remesh structure for victoryrcx simulation
+SAVE mode=victoryrcx out=$'name'_VM
+
+# reflective phase-only LCos
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+#half pitch size
+set hfPitch=3.8/2
+
+#load LCos structure
+# this is reflective display
+# light travels twice. Effective gap is 2*d( d is LC thickness)
+INIT structure = "$'name'_VM.str"
+
+#define material properties : electrical data
+MATERIAL ITO conductivity=1000
+MATERIAL aluminum conductivity=1000
+MATERIAL oxide permittivity=3.9
+MATERIAL nitride permittivity=6.5
+MATERIAL material("PI") permittivity=6.4
+
+#set LC property 
+setlc epsparadir=10.7 epsvertdir=3.7 splay=14.4e-12 twist=6.9e-12 bend=18.3e-12 cpenalty=1000 gama=0.1
+
+#boundary conditioin of initial LC distribution
+LCBNDARYB partition(-$hfPitch,$hfPitch) rubangle(0) tiltangle(1)
+LCBNDARYT partition(-$hfPitch,$hfPitch) rubangle(0) tiltangle(1)          
+
+#numerial solver options
+SOLVER linearsolver=pam pamsolver=gmres ddprecond=RAS preconditioner=amp multilevel=0 fillratio=1e-3 lsmaxiter=200 lstolerance=1.0e-10 nlsmaxiter=70 nlstolerance=1.0e-8
+
+OPTION lsconvergeinfo=1 nlsconvergeinfo
+
+# apply dc bias to pixel electrode
+SETPIXELBIAS("Pix", 0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5)
+
+# do the interconnect simulation
+INTERCONNECT capacitance domainboundarycondition=cyclic structure="$'name'_2" log="$'name'"
+
+# phase extraction for static simulation
+# Extract Phase-X and Phase-Y component
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+SET outfile="$'name'_1.dat"
+SYSTEM rm $outfile
+
+# specify the wavelength and the LC refractive index at the wavelength
+SET Wavel=0.55
+# extraordinary refractive index
+SET Ne=1.6026
+# ordinary refractive index
+SET No=1.4903
+
+SET N=11
+SET Volt=0
+LOOP steps=$N
+LOAD in=$'name'_2.V$'Volt'.str
+
+#XZ plane cut
+CUTPLANE axis=y offset=0 out=xz
+SAVE
+
+EXTRACT init inf="xz.str"
+EXTRACT name="nx" curve(depth, impurity="LC Director X" material="LC" mat.occno=1) outfile="$'name'_2_nx.dat"
+SYSTEM sed -i '1,4d' $'name'_2_nx.dat
+
+#YZ plane cut
+CUTPLANE axis=x offset=0 out=yz
+SAVE
+
+# LC director profile is normalized component
+EXTRACT init inf="yz.str"
+EXTRACT name="ny" curve(depth, impurity="LC Director y" material="LC" mat.occno=1 ) outfile="$'name'_2_ny.dat"
+SYSTEM sed -i '1,4d' $'name'_2_ny.dat
+
+SYSTEM cut -d' ' -f2 $'name'_2_ny.dat > $'name'_2_temp.dat  
+SYSTEM paste -d' ' $'name'_2_nx.dat $'name'_2_temp.dat > $'name'_2_n.dat
+
+#calculate phase component in each X and Y direction
+# $'name'_2_n.log file have normalized LC director component
+# variable $2 and $3 in *.awk file represents each column compoment(LC-X and LC-Y) in $'name'_2_n.log
+# cos(theta) is x-component(normalized) in LC director 
+# See Figure 2 in the reference.
+SYSTEM awk -f $'name'_integral.awk -v xaxis=$Volt wavel=$Wavel ne=$Ne no=$No outfile=$outfile $'name'_2_n.dat 
+
+set Volt=$Volt+0.5
+L.END
+SYSTEM sed -i "1i\Phase vs. bias voltage\n$'N' 3 3\nPixel Voltage (V)\nPhase x-polarization (PI)\nPhase y-polarization (PI)" $outfile
+
+# Plot the structure and the remeshed structure along with calculated phase
+# Phase will be 2 times large when the light is reflected at
+# mirror side and measured at the incidence of light.
+# Function considers only LC thickness for light travel
+# From this, phase retardation can also be calculated
+
+victoryvisual $'name'_VM.str $'name'_1.dat
+
+QUIT

@@ -1,0 +1,17 @@
+plaintext
+/*
+ * Corrected netlist for RC low-pass Filter
+ *
+ * This netlist includes the necessary elements and parameters to perform
+ * an AC analysis from 50Hz to 1MHz with 100 steps per decade.
+ *
+ * The output format is adjusted to include a dBm unit for the voltage
+ * magnitude measurement.
+ */
+
+V1 in 0 AC1
+R1 in out 1K
+C1 out 0 0.1uF
+.ac dec 1000 10000 1M
+.plot ac |V(out)| dBm
+.end

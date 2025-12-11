@@ -1,0 +1,25 @@
+
+.LIB demo
+
+.PARAM Lind = 9.07152e-10
+.PARAM Rind = 3.29719
+.PARAM Cind = 3.56451e-15
+.PARAM Cpar1 = 1.43449e-14
+.PARAM Rpar1 = 963.065
+.PARAM Cpar2 = 1.50785e-14
+.PARAM Rpar2 = 974.599
+
+.SUBCKT ind1 P1S P2S G
+
+Lind P1S mid 'Lind'
+Rind mid P2S 'Rind'
+Cind P1S P2S 'Cind'
+Cpar1 P1S G 'Cpar1'
+Rpar1 P1S G 'Rpar1'
+Cpar2 P2S G 'Cpar2'
+Rpar2 P2S G 'Rpar2'
+
+.ENDS
+
+.ENDL demo
+

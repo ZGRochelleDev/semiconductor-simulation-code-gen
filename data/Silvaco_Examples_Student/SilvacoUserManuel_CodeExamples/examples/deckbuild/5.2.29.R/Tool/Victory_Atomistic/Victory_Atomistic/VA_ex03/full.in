@@ -1,0 +1,2072 @@
+* Victory Atomistic Version 1.7.1
+* Victory Atomistic Release date: Sep 20 2022 at 15:30:00
+* HOST Device : uklxsrv2807.silvaco.com
+* HOST Time : Thu May 25 20:34:16 2023
+
+/*
+* Structure
+*/
+Structure
+{
+  Material
+  {
+    Bands:TB:sp3d5sstar:param_set = param_Boykin
+    crystal_structure = diamond
+    doping_density = 1E15
+    doping_type = N
+    name = Si
+    regions = (1)
+    tag = Si_device
+    /* DB Parameters */
+  }
+  Material
+  {
+    Bands:TB:sp3d5sstar:param_set = param_Boykin
+    crystal_structure = diamond
+    doping_density = 1E20
+    doping_type = N
+    name = Si
+    regions = (2)
+    tag = Si_source
+    /* DB Parameters */
+  }
+  Material
+  {
+    Bands:TB:sp3d5sstar:param_set = param_Boykin
+    crystal_structure = diamond
+    doping_density = 1E20
+    doping_type = N
+    name = Si
+    regions = (3)
+    tag = Si_drain
+    /* DB Parameters */
+  }
+  Material
+  {
+    Bands:BandEdge:Eg_X = 8.8
+    Bands:BandEdge:ml_X = 0.5
+    Bands:BandEdge:mstar_c_dos = 0.5
+    Bands:BandEdge:mt_X = 0.5
+    Lattice:epsilon_dc = 3.9
+    crystal_structure = diamond
+    doping_density = 0.0
+    doping_type = N
+    name = Si
+    regions = (4)
+    tag = Si_gate
+    /* DB Parameters */
+  }
+  Material
+  {
+    Bands:BandEdge:Eg_X = 5.09
+    Bands:BandEdge:ml_X = 0.5
+    Bands:BandEdge:mstar_c_dos = 0.5
+    Bands:BandEdge:mt_X = 0.5
+    Lattice:epsilon_dc = 12
+    crystal_structure = diamond
+    doping_density = 0.0
+    doping_type = N
+    name = Si
+    regions = (5)
+    tag = Si_spacer_source
+    /* DB Parameters */
+  }
+  Material
+  {
+    Bands:BandEdge:Eg_X = 5.09
+    Bands:BandEdge:ml_X = 0.5
+    Bands:BandEdge:mstar_c_dos = 0.5
+    Bands:BandEdge:mt_X = 0.5
+    Lattice:epsilon_dc = 12
+    crystal_structure = diamond
+    doping_density = 0.0
+    doping_type = N
+    name = Si
+    regions = (6)
+    tag = Si_spacer_drain
+    /* DB Parameters */
+  }
+  Domain
+  {
+    base_material = Si_device
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (65,8,8)
+    leads = (source_contact,drain_contact)
+    name = device
+    output = (xyz, coupling)
+    passivation_regions = (4, 5, 6)
+    periodic = (false,false,false)
+    regions = (4,1,2,3,5,6)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (0,-2,-2)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_drain
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (2,4,4)
+    leads = (device,drain_drain_contact)
+    name = drain_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,3)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (65,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_drain
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    leads = (drain_contact,drain_drain_drain_contact)
+    name = drain_drain_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,3)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (67,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_drain
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    leads = (drain_drain_contact)
+    name = drain_drain_drain_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,3)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (68,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_drain
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    name = drain_drain_mode_contact
+    output = (xyz, coupling)
+    periodic = (true,false,false)
+    regions = (1,3)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (71,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_drain
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    name = drain_mode_contact
+    output = (xyz, coupling)
+    periodic = (true,false,false)
+    regions = (1,3)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (69,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_source
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (2,4,4)
+    leads = (device,source_source_contact)
+    name = source_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,2)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (-2,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_source
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    name = source_mode_contact
+    output = (xyz, coupling)
+    periodic = (true,false,false)
+    regions = (1,2)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (-5,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_source
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    leads = (source_contact,source_source_source_contact)
+    name = source_source_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,2)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (-3,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_source
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    name = source_source_mode_contact
+    output = (xyz, coupling)
+    periodic = (true,false,false)
+    regions = (1,2)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (-7,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    base_material = Si_source
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+    dimension = (1,4,4)
+    leads = (source_source_contact)
+    name = source_source_source_contact
+    output = (xyz, coupling)
+    periodic = (false,false,false)
+    regions = (1,2)
+    space_orientation_dir1 = (1, 0, 0)
+    space_orientation_dir2 = (0, 1, 0)
+    starting_cell_coordinate = (-4,0,0)
+    type = pseudomorphic
+  }
+  Domain
+  {
+    mesh_from_domain = device
+    name = fem_device
+    number_of_refinement_steps = 1
+    refinement_regions = (4,1,2,3,5,6)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = drain_contact
+    name = fem_drain_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,3)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = drain_drain_contact
+    name = fem_drain_drain_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,3)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = drain_drain_drain_contact
+    name = fem_drain_drain_drain_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,3)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = drain_drain_mode_contact
+    name = fem_drain_drain_mode_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,3)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = drain_mode_contact
+    name = fem_drain_mode_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,3)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = source_contact
+    name = fem_source_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,2)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = source_mode_contact
+    name = fem_source_mode_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,2)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = source_source_contact
+    name = fem_source_source_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,2)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = source_source_mode_contact
+    name = fem_source_source_mode_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,2)
+    type = finite_elements
+  }
+  Domain
+  {
+    mesh_from_domain = source_source_source_contact
+    name = fem_source_source_source_contact
+    number_of_refinement_steps = 1
+    periodic = (false,false,false)
+    refinement_regions = (1,2)
+    type = finite_elements
+  }
+  Geometry
+  {
+    Region
+    {
+      max = (28.2412,2.172,2.172)
+      min = (7.0603,0,0)
+      priority = 4
+      region_number = 1
+      shape = cuboid
+    }
+    Region
+    {
+      max = (39.6463,2.172,2.172)
+      min = (28.2412,0,0)
+      priority = 3
+      region_number = 3
+      shape = cuboid
+    }
+    Region
+    {
+      max = (21.1809,3.258,3.258)
+      min = (14.1206,-1.086,-1.086)
+      priority = 1
+      region_number = 4
+      shape = cuboid
+    }
+    Region
+    {
+      max = (7.0603,2.172,2.172)
+      min = (-4.3448,0,0)
+      priority = 3
+      region_number = 2
+      shape = cuboid
+    }
+    Region
+    {
+      max = (28.2412,3.258,3.258)
+      min = (21.1809,-1.086,-1.086)
+      priority = 2
+      region_number = 6
+      shape = cuboid
+    }
+    Region
+    {
+      max = (14.1206,3.258,3.258)
+      min = (7.0603,-1.086,-1.086)
+      priority = 2
+      region_number = 5
+      shape = cuboid
+    }
+  }
+}
+/*
+* Solvers
+*/
+Solvers
+{
+  solver {
+    name = scborn
+    type = Dummy1
+    _solve = (device_structure, Test_MS, bands_drain_zero_pot, bands_source_zero_pot, poisson_device_init, ramper)
+    iterator {
+      set {
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        atomistic_output = (potential, charge, free_charge_cm-3)
+        custom_convergence_test = true
+        drain_voltage = 0.3
+        gate_voltage = 0.8
+        material_density = 2336
+        material_device = Si_device
+        metal_work_function = 4.2
+        name = scborn
+        optical_deformation_constant = 110
+        optical_phonon_energy = 0.063
+        output_file_suffix = ''
+        output_line_corners = [(0,1.086,1.086),(35.3015,1.086,1.086)]
+        poisson_max_iterations = 30
+        ramper_chkpt_restart = true
+        ramper_contact = gate
+        ramper_voltage_range = [0.8, -0.1, -0.05]
+        regions_to_exclude_in_output = (4, 5, 6)
+        restart_data_input_file = rgf_complex_potential
+        restart_data_output_file = rgf_complex_potential
+        scattering_types = (deformation_potential, optical_deformation_potential)
+        scborn_max_iterations = 0
+        sound_velocity = 8433
+        source_drain_spacers = true
+        source_voltage = 0.0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn
+        type = MetaSCBorn
+        unitary_matrix_filename = ./Unitary_matrix.dat
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_device_init
+    type = NonlinearPoisson
+    boundary_condition {
+      name = source_contact
+      single_surface_normal = (-1,0,0)
+      surface_of_regions = 2
+      type = OhmicContact
+      voltage = 0.0
+    }
+    boundary_condition {
+      name = drain_contact
+      single_surface_normal = (1,0,0)
+      surface_of_regions = 3
+      type = OhmicContact
+      voltage = 0.3
+    }
+    boundary_condition {
+      exclude_surface_normal = (1,0,0)
+      metal_work_function = 4.2
+      name = gate
+      semiconductor = Si_drain
+      surface_of_regions = (4)
+      type = SchottkyContact
+      voltage = 0.8
+    }
+    iterator {
+      set {
+        CB_initial_shift = 0.1
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        Newton_step_only = 0
+        SpacialIncompleteIonization = 0
+        SpacialIncompleteIonization_Solver = ''
+        VB_initial_shift = 0.1
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        abs_tolerance = 1e-08
+        activate_potential_damping = 0
+        atom_resolved_jacobian = 0
+        atomistic_field_output = 0
+        atomistic_output = (potential, charge, free_charge_cm-3)
+        auto_restart = false
+        average_over_cell = true
+        calculate_density_only = false
+        charge_model = electron_hole
+        chem_pot = 0
+        confined_band_solvers = (scborn__bands_source_zero_pot, scborn__bands_drain_zero_pot)
+        continue_restart_numbering = 0
+        custom_convergence_test = 0
+        density_solver = scborn__semiclassical_charge
+        do_input_initial_nonlinearpoisson_potential = 0
+        do_nonlinearpoisson_outputs_xyz_format = 0
+        do_output_nonlinearpoisson_potential = 0
+        do_output_potential_each_iteration = false
+        do_outputs_from_density_solver = 0
+        domain = fem_device
+        doping_on_atoms = 0
+        equilibrium_el_chem_pot = -0.4
+        fem_output = (potential)
+        full_Newton_step = 0
+        ignore3Dinterface = 0
+        import_initial_potential_from_solver = 0
+        interpolation_power = 2
+        ksp_type = preonly
+        limit_poisson_mesh = 0
+        line_search = bt
+        linear_search_damping = 1
+        linear_search_step_tolerance = 5e-8
+        linear_solver_family = petsc
+        localize_solution_after_solve = 0
+        max_function_evals = 1000
+        max_iterations = 100
+        max_nonlinear_step = 1e2
+        multilayer_device = 0
+        name = poisson_device_init
+        node_potential_output = false
+        not_solve_only_import = 0
+        number_of_interpolation_points = 4
+        number_of_output_points = 100
+        one_dim_output_average = 1
+        output_at_each_iteration = false
+        output_atomistic_data_at_each_iteration = 0
+        output_energy_mesh_at_each_iteration = 0
+        output_file_suffix = ''
+        output_jacobian = 0
+        output_line_corners = [(0,1.086,1.086),(35.3015,1.086,1.086)]
+        output_norms = 1
+        output_residual = 0
+        output_yz_integrated_density = 0
+        pc_type = lu
+        petsc_solver_algorithm = tr
+        read_potential_from_OMEN = 0
+        rel_tolerance = 1e-8
+        restart_data_input_file = ''
+        restart_data_input_file_for_first_voltage_only = 0
+        restart_data_output_file = ''
+        search_step_tolerance = 1e-07
+        semiclassical_stabilisation = 0
+        set_initial_field = 0
+        set_initial_potential = true
+        solve_on_single_replica = true
+        step_abs_tolerance = 1e-6
+        step_rel_tolerance = 1e-10
+        stop_if_diverged = 1
+        tic_toc_name = scborn__poisson_device_init
+        turn_off_core_charge_correction = 0
+        type = NonlinearPoisson
+        use_average_density_as_a_guess = 0
+        use_classical_jacobian = 0
+        use_finite_difference_jacobian = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__semiclassical_charge
+    type = Semiclassical
+    iterator {
+      set {
+        Ef_approximation = x_linear_drop
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        contacts_control = (1.0, 1.0)
+        dimensionality = 3
+        domain = device
+        eff_mass_materials = (Si, Si)
+        equilibrium_contacts = (source_contact, drain_contact)
+        equilibrium_regions = [(2),(3)]
+        fermi_level_solver_names = [(scborn__bands_source_zero_pot), (scborn__bands_drain_zero_pot)]
+        fermilevel = 0.0
+        fermilevel_location = global
+        fermilevel_solver = scborn__poisson_device_init
+        name = semiclassical_charge
+        no_free_charge_regions = (4, 5, 6)
+        non_equilibrium_regions = ()
+        output_file_suffix = ''
+        potential_solver = scborn__poisson_device_init
+        quasi_fermi_level_contacts = ()
+        read_effective_mass_from_database = 0
+        small_coordinate_contact = source_contact
+        temperature = 300
+        tic_toc_name = scborn__semiclassical_charge
+        type = Semiclassical
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_device
+    type = NonlinearPoisson
+    boundary_condition {
+      adaptive_grid_solver = scborn__adaptive_grid_generator
+      adaptive_grid_voltage_option = Source_chemical_potential
+      fermi_level_calculator = scborn__bands_drain_zero_pot
+      name = source
+      single_surface_normal = (-1, 0, 0)
+      surface_of_regions = (2)
+      transport_solver = scborn__rgf_test
+      transport_voltage_option = chemical_potential_for_source_contact_scborn__source_module_test_1
+      type = OhmicContact
+      voltage = 0.0
+    }
+    boundary_condition {
+      adaptive_grid_solver = scborn__adaptive_grid_generator
+      adaptive_grid_voltage_option = Drain_chemical_potential
+      fermi_level_calculator = scborn__bands_drain_zero_pot
+      name = drain
+      single_surface_normal = (1, 0, 0)
+      surface_of_regions = (3)
+      transport_solver = scborn__rgf_test
+      transport_voltage_option = chemical_potential_for_drain_contact_scborn__drain_module_test_0
+      type = OhmicContact
+      voltage = 0.3
+    }
+    boundary_condition {
+      exclude_surface_normal = (1,0,0)
+      metal_work_function = 4.2
+      name = gate
+      semiconductor = Si_drain
+      surface_of_regions = (4)
+      type = SchottkyContact
+      voltage = -0.1
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        Newton_step_only = 0
+        SpacialIncompleteIonization = 0
+        SpacialIncompleteIonization_Solver = ''
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        abs_tolerance = 0.001
+        activate_potential_damping = 0
+        atom_resolved_jacobian = 0
+        atomistic_field_output = 0
+        atomistic_output = (potential, charge, free_charge_cm-3)
+        auto_restart = true
+        auto_save = true
+        average_over_cell = true
+        calculate_density_only = false
+        charge_model = electron_hole
+        chem_pot = 0
+        confined_band_solvers = (scborn__bands_source_zero_pot, scborn__bands_drain_zero_pot)
+        continue_restart_numbering = 0
+        custom_convergence_test = true
+        density_solver = scborn__density_cool
+        dependent_solvers = (scborn__poisson_source_contact, scborn__poisson_source_source_contact, scborn__poisson_source_source_source_contact, scborn__poisson_drain_contact, scborn__poisson_drain_drain_contact, scborn__poisson_drain_drain_drain_contact, scborn__poisson_source_mode_contact, scborn__poisson_drain_mode_contact, scborn__bands_source_mode_contact, scborn__bands_drain_mode_contact, scborn__adaptive_grid_generator)
+        do_nonlinearpoisson_outputs_xyz_format = 0
+        do_output_nonlinearpoisson_potential = 0
+        do_output_potential_each_iteration = false
+        do_outputs_from_density_solver = 0
+        domain = fem_device
+        doping_on_atoms = 0
+        equilibrium_el_chem_pot = 0
+        fem_output = (potential)
+        friends = (scborn__poisson_drain_contact, scborn__poisson_source_contact)
+        full_Newton_step = false
+        ignore3Dinterface = 0
+        import_initial_potential_from_solver = true
+        import_on_FEM_grid = true
+        initial_potential_source = scborn__poisson_device_init
+        interpolate_from_potential_source = 0
+        interpolation_power = 2
+        ksp_type = preonly
+        level_checkpoint = 0
+        limit_poisson_mesh = 0
+        line_search = basic
+        linear_search_damping = 1
+        linear_search_step_tolerance = 5e-8
+        linear_solver_family = petsc
+        localize_solution_after_solve = 0
+        max_function_evals = 1000
+        max_iterations = 30
+        max_nonlinear_step = 1e2
+        multilayer_device = 0
+        name = poisson_device
+        node_potential_output = false
+        not_solve_only_import = 0
+        number_of_interpolation_points = 4
+        number_of_output_points = 100
+        one_dim_output_average = 1
+        output_at_each_iteration = false
+        output_atomistic_data_at_each_iteration = 0
+        output_dependent_solvers = (scborn__bands_source_mode_contact, scborn__bands_drain_mode_contact, scborn__adaptive_grid_generator)
+        output_energy_mesh_at_each_iteration = 0
+        output_file_suffix = ''
+        output_jacobian = 0
+        output_line_corners = [(0,1.086,1.086),(35.3015,1.086,1.086)]
+        output_norms = 1
+        output_residual = 0
+        output_yz_integrated_density = 0
+        pc_type = lu
+        petsc_solver_algorithm = tr
+        read_potential_from_OMEN = 0
+        regions_to_exclude_in_output = (4, 5, 6)
+        rel_tolerance = 1e-8
+        restart_data_input_file = rgf_complex_potential
+        restart_data_input_file_for_first_voltage_only = 0
+        restart_data_output_file = rgf_complex_potential
+        search_step_tolerance = 1e-07
+        semiclassical_stabilisation = 0
+        set_initial_field = 0
+        set_initial_potential = false
+        solve_on_single_replica = true
+        step_abs_tolerance = 1e-6
+        step_rel_tolerance = 0.001
+        stop_if_diverged = 1
+        tic_toc_name = scborn__poisson_device
+        turn_off_core_charge_correction = 0
+        type = NonlinearPoisson
+        use_average_density_as_a_guess = 0
+        use_classical_jacobian = 0
+        use_finite_difference_jacobian = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_source_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_device
+      single_surface_normal = (1, 0, 0)
+      surface_of_regions = (2)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_source_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_source_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_source_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_source_source_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_source_contact
+      single_surface_normal = (1, 0, 0)
+      surface_of_regions = (2)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_source_source_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_source_source_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_source_source_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_source_source_source_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_source_source_contact
+      single_surface_normal = (1, 0, 0)
+      surface_of_regions = (2)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_source_source_source_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_source_source_source_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_source_source_source_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_drain_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_device
+      single_surface_normal = (-1, 0, 0)
+      surface_of_regions = (3)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_drain_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_drain_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_drain_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_drain_drain_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_drain_contact
+      single_surface_normal = (-1, 0, 0)
+      surface_of_regions = (3)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_drain_drain_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_drain_drain_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_drain_drain_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_drain_drain_drain_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_drain_drain_contact
+      single_surface_normal = (-1, 0, 0)
+      surface_of_regions = (3)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_drain_drain_drain_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_drain_drain_drain_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_drain_drain_drain_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_source_mode_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_source_source_source_contact
+      single_surface_normal = (1, 0, 0)
+      surface_of_regions = (2)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_source_mode_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_source_mode_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_source_mode_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__poisson_drain_mode_contact
+    type = Poisson
+    boundary_condition {
+      potential_simulation = scborn__poisson_drain_drain_drain_contact
+      single_surface_normal = (-1, 0, 0)
+      surface_of_regions = (3)
+      type = PotentialFromSolver
+    }
+    iterator {
+      set {
+        Delta_function_like_charge = 1
+        Dirichlet_nodes_output = 0
+        FEM_integration_order = 2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        activate_potential_damping = 0
+        atomistic_output = (potential, charge)
+        average_over_cell = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        consider_doping = 0
+        domain = fem_drain_mode_contact
+        doping_on_atoms = 0
+        fem_output = (potential)
+        ignore3Dinterface = 0
+        ksp_type = gmres
+        laplacian = (x)
+        linear_solver_family = petsc
+        name = poisson_drain_mode_contact
+        neglect_polarization = 0
+        node_potential_output = false
+        output_file_suffix = ''
+        tic_toc_name = scborn__poisson_drain_mode_contact
+        type = Poisson
+        use_average_density_as_a_guess = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__Transformation1
+    type = Transformation
+    iterator {
+      set {
+        LRA_RGF = 0
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        allow_memory_management = 1
+        basis_generator = scborn__lra_module
+        density_solver = scborn__lra_module
+        derivative_electron_density_over_potential_solver = scborn__rgf_test
+        domain = device
+        free_charge_solver = scborn__lra_module
+        load_basis_material_by_tag = 0
+        name = Transformation1
+        output_file_suffix = ''
+        tic_toc_name = scborn__Transformation1
+        transform_density = 0
+        transformation_method = ''
+        type = Transformation
+      }
+    }
+  }
+  solver {
+    name = scborn__Propagation_Parallelizer
+    type = Green_Propagation
+    iterator {
+      set {
+        Hamilton_constructor = scborn__rgf_test
+        NEGF_object_list = ()
+        Parallelizer = scborn__Propagation_Parallelizer
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        add_combine_solver_matrices = 0
+        always_ready = 0
+        avoid_copying_hamiltonian = 0
+        chemical_potential = 0
+        chemical_potential1 = 0
+        chemical_potential2 = 0
+        clean_all_in_reinit = true
+        clean_up = 0
+        debug_output = 0
+        debug_output_job_list = 0
+        disable_meshclean = 0
+        do_output = 0
+        domain = drain_contact
+        electron_hole_model = 0
+        energy_constructor = scborn__adaptive_grid_generator
+        force_start_if_required = true
+        ignore_callers_ready_map = 1
+        inversion_method = exact
+        momentum_names = (energy)
+        name = Propagation_Parallelizer
+        no_file_output = 0
+        one_energy_only = 0
+        output_file_suffix = ''
+        output_raw_current = 1
+        print_all_mesh_points = 0
+        remove_meshes = 1
+        save_local_sigma = 0
+        sigma_convert_dense = 0
+        skip_book_keeping = 0
+        solve_on_single_replica = 1
+        temperature = 300
+        temperature1 = 300
+        temperature2 = 300
+        threshold_energy_for_lead = -1e+10
+        threshold_energy_for_lead1 = -1e+10
+        threshold_energy_for_lead2 = -1e+10
+        tic_toc_name = scborn__Propagation_Parallelizer
+        type = Green_Propagation
+        voltage_value = ''
+      }
+    }
+  }
+  solver {
+    name = scborn__Cbands
+    type = Schroedinger
+    iterator {
+      set {
+        Hamilton_constructor_drain_drain_drain_contact = scborn__Cbands2
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1)
+        assume_all_atom_active = 0
+        automatic_threshold = 0
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        chem_pot = 0
+        convergence_limit = 1e-7
+        domain = drain_drain_contact
+        eigen_values_solver = lapack
+        input_shift_subbandbased_for_restart = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure)
+        k_degeneracy = 1
+        k_points = [(0,0,0)]
+        k_space_basis = cartesian
+        name = Cbands
+        number_of_nodes = (1)
+        output = (energies, k-points)
+        output_file_suffix = ''
+        output_precision = 7
+        parallelize_here = 1
+        potential_solver = ''
+        preconditioner = mumps
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        solve_on_single_replica = 0
+        sort_like_electrons = true
+        spatially_varying_threshold = 0
+        strain_model = ''
+        tb_basis = sp3d5sstar
+        tic_toc_name = scborn__Cbands
+        type = Schroedinger
+        use_multidof = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__Cbands2
+    type = Schroedinger
+    iterator {
+      set {
+        Hamilton_constructor_drain_drain_contact = scborn__Cbands
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1)
+        assume_all_atom_active = 0
+        automatic_threshold = 0
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        chem_pot = 0
+        convergence_limit = 1e-7
+        domain = drain_drain_drain_contact
+        eigen_values_solver = lapack
+        input_shift_subbandbased_for_restart = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure)
+        k_degeneracy = 1
+        k_points = [(0,0,0)]
+        k_space_basis = cartesian
+        name = Cbands2
+        number_of_nodes = (1)
+        output = (energies, k-points)
+        output_file_suffix = ''
+        output_precision = 7
+        parallelize_here = 1
+        potential_solver = ''
+        preconditioner = mumps
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        solve_on_single_replica = 0
+        sort_like_electrons = true
+        spatially_varying_threshold = 0
+        strain_model = ''
+        tb_basis = sp3d5sstar
+        tic_toc_name = scborn__Cbands2
+        type = Schroedinger
+        use_multidof = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__Test_MS
+    type = ApplyModeSpace
+    iterator {
+      set {
+        Material_name_1 = Si
+        Unitary_matrix_filename = ./Unitary_matrix.dat
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        coupling_band_solver = scborn__Cbands2
+        debug_output = 0
+        domain = drain_drain_contact
+        eigensolver_gen_type = krylovschur
+        lead_domain = drain_drain_drain_contact
+        load_unitary_matrix = true
+        load_unitary_matrix_for_test = 0
+        name = Test_MS
+        onsite_band_solver = scborn__Cbands
+        output_file_suffix = ''
+        save_Ek_to_file = 1
+        save_unitary_matrix_matlab = 0
+        store_E_data = 0
+        test_type = 2
+        tic_toc_name = scborn__Test_MS
+        type = ApplyModeSpace
+      }
+    }
+  }
+  solver {
+    name = scborn__rgf_test
+    type = SelfconsistentBornModule
+    iterator {
+      set {
+        BlockDiagonalRGF = true
+        Debye_screening_length = 0
+        Hamilton_constructor = ''
+        LRA_method = ''
+        Parallelizer = scborn__Propagation_Parallelizer
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        assure_current_conservation = 0
+        avoid_copying_hamiltonian = false
+        block_diagonal_nonlocal_scattering = true
+        build_communication_table = fully_sequential
+        calculate_local_current_from_right = 1
+        check_current_convergence = true
+        check_inversion_stability = true
+        chem_pot = 0.0
+        chemical_potential_for_drain_contact_scborn__drain_module_test_0 = -0.75
+        chemical_potential_for_source_contact_scborn__source_module_test_1 = 0
+        communication_table_holder = ''
+        compute_blockdiagonal_self_energy = true
+        current = 0
+        current_conservation_tolerance = 0.001
+        damp_scattering_self_energy = 0
+        damping_coefficient = 0
+        debug_output = 0
+        debug_output_job_list = 0
+        deformation_potential = 8.8
+        deformation_potential_tensor = 0
+        density_of_states_output = 0
+        density_output = true
+        diagonal_Greens_function = false
+        disable_blocking_operations = 0
+        domain = device
+        electron_hole_heuristics = omen_smooth_scattering
+        electron_hole_model = true
+        end_leads = (drain_contact_scborn__drain_module_test_0)
+        end_leads_solver = scborn__drain_module_test
+        energy_constructor = scborn__adaptive_grid_generator
+        energy_interpolated_output = 0
+        energy_resolved_density = 0
+        energy_resolved_density_of_states_output = 0
+        energy_resolved_density_output = 0
+        energy_resolved_per_k_density = 1
+        erase_retarded_sigma = real
+        external_Hamilton_Constructor = scborn__lra_module
+        fixed_number_of_iterations = 0
+        general_SK = 1
+        high_freq_dielectric_constant = 0
+        interpolated_scattering = 0
+        inversion_stability_tolerance = 1e-07
+        invert_solver = petsc
+        is_electron = 1
+        k_resolved_density = 0
+        k_resolved_density_of_states_output = 0
+        k_resolved_density_output = 0
+        landauer_current = 0
+        lead_surface_green_drain_contact_scborn__drain_module_test_0 = scborn__drain_module_test_retarded_Green_Fermion_drain_contact
+        lead_surface_green_source_contact_scborn__source_module_test_1 = scborn__source_module_test_retarded_Green_Fermion_source_contact
+        local_comm_table = true
+        local_current_density = 1
+        material_density = 2336
+        max_Poisson_residual_change = 0.01
+        maximum_number_of_iterations = 0
+        maximum_number_of_scattering_in_lead_iterations = 0
+        mixed_Jacobian = 0
+        momentum_names = (energy)
+        name = rgf_test
+        no_file_output = 0
+        non_rectangular_energy = false
+        number_of_interpolation_points = 100
+        optical_deformation_constant = 110
+        optical_deformation_potential_tensor = 0
+        optical_phonon_energy = 0.063
+        output_current_debug_info = false
+        output_file_suffix = ''
+        output_raw_transmission_data = 0
+        output_slab_resolved_current = true
+        output_slab_resolved_current_per_poisson_iteration = false
+        output_slab_resolved_energy_current = false
+        output_solver = scborn__lra_module
+        particle_type_is_Fermion = 1
+        passivate_Hamiltonian = true
+        passivation_regions = (4, 5, 6)
+        potential_solver = scborn__poisson_device
+        radial_RGF = 0
+        readin_coupling_table = 0
+        reduced_real_space_transformation = 0
+        repartition_strategy = based_on_unit_cells
+        reuse_hamiltonian = true
+        save_Hamiltonian = true
+        save_local_sigma = true
+        scattering_energy_interval = 0.
+        scattering_in_lead = 0
+        scattering_momentum_interval = 1E20
+        scattering_types = (deformation_potential, optical_deformation_potential)
+        scborn__drain_module_test_retarded_Green_Fermion_drain_contact_solver = scborn__drain_module_test
+        scborn__source_module_test_retarded_Green_Fermion_source_contact_solver = scborn__source_module_test
+        sigma_convert_dense = true
+        single_entry_comm_table = true
+        solve_Jacobian_with_scattering_RGF = true
+        solve_on_single_replica = true
+        sound_velocity = 8433
+        spatial_resolved_current = 0
+        start_leads = (source_contact_scborn__source_module_test_1)
+        start_leads_solver = scborn__source_module_test
+        static_dielectric_constant = 0
+        store_atom_blockdiagonal = 0
+        store_atom_blockidagonal = 0
+        store_atomic_offdiagonals = 0
+        strain_model = ''
+        strained_boykin_2002 = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        temperature_for_drain_contact_scborn__drain_module_test_0 = 300
+        temperature_for_source_contact_scborn__source_module_test_1 = 300
+        threshold_energy_for_drain_contact_scborn__drain_module_test_0 = -1e+10
+        threshold_energy_for_source_contact_scborn__source_module_test_1 = -1e+10
+        tic_toc_name = scborn__rgf_test
+        transform_HG_to_atoms = 1
+        transmission = true
+        type = SelfconsistentBornModule
+        type_of_MPI_reduce = asynchronous_split_less
+        use_RGF = true
+        use_dynamical_convergence = false
+        use_interpolated_scattering = true
+        use_modified_correlation_equation = 1
+        use_monomials = true
+        use_multidof = 0
+        use_scaling_law = false
+        use_scattering_Jacobian = 0
+        use_scattering_RGF_solver = true
+        use_smart_dofmap = 0
+        use_triangular_averaging = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__source_module_test
+    type = PartitionRetardedSurfaceGreenModule
+    iterator {
+      set {
+        Hamilton_constructor = ''
+        Hamilton_momenta = ()
+        Parallelizer = scborn__Propagation_Parallelizer
+        Sancho_Rubio_tolerance = 1e-05
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        avoid_copying_hamiltonian = true
+        constant_lead_eta = 1e-10
+        debug_output = 0
+        domain = source_contact
+        electron_hole_model = true
+        end_leads = (device)
+        energy_constructor = scborn__adaptive_grid_generator
+        external_Hamilton_Constructor = scborn__lra_module
+        invert_solver = lapack
+        maximum_Sancho_iterations = 50
+        momentum_names = (energy)
+        name = source_module_test
+        non_rectangular_energy = false
+        output_file_suffix = ''
+        particle_type_is_Fermion = 1
+        passivate_Hamiltonian = true
+        potential_solver = scborn__poisson_source_contact
+        repartition_strategy = based_on_coupling
+        retarded_lead_method = Sancho_Rubio
+        save_local_sigma = false
+        start_leads = (source_source_contact)
+        tb_basis = sp3d5sstar
+        tic_toc_name = scborn__source_module_test
+        type = PartitionRetardedSurfaceGreenModule
+        use_smart_dofmap = 1
+        wire_nonSO_basis = true
+      }
+    }
+  }
+  solver {
+    name = scborn__drain_module_test
+    type = PartitionRetardedSurfaceGreenModule
+    iterator {
+      set {
+        Hamilton_constructor = ''
+        Hamilton_momenta = ()
+        Parallelizer = scborn__Propagation_Parallelizer
+        Sancho_Rubio_tolerance = 1e-05
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        avoid_copying_hamiltonian = true
+        constant_lead_eta = 1e-10
+        debug_output = 0
+        domain = drain_contact
+        electron_hole_model = true
+        end_leads = (drain_drain_contact)
+        energy_constructor = scborn__adaptive_grid_generator
+        external_Hamilton_Constructor = scborn__lra_module
+        invert_solver = lapack
+        maximum_Sancho_iterations = 50
+        momentum_names = (energy)
+        name = drain_module_test
+        non_rectangular_energy = false
+        output_file_suffix = ''
+        particle_type_is_Fermion = 1
+        passivate_Hamiltonian = true
+        potential_solver = scborn__poisson_drain_contact
+        repartition_strategy = based_on_coupling
+        repartitioned_from_device = true
+        retarded_lead_method = Sancho_Rubio
+        save_local_sigma = false
+        start_leads = (device)
+        target_domain = device
+        tb_basis = sp3d5sstar
+        tic_toc_name = scborn__drain_module_test
+        type = PartitionRetardedSurfaceGreenModule
+        use_smart_dofmap = 1
+        wire_nonSO_basis = true
+      }
+    }
+  }
+  solver {
+    name = scborn__adaptive_grid_generator
+    type = AdaptiveGrid
+    iterator {
+      set {
+        Drain_chemical_potential = 0.0
+        EOffset = 0.646301
+        Elimit = 0.05
+        Emin_tail = 0.004
+        Parallelizer = scborn__Propagation_Parallelizer
+        Source_chemical_potential = 0.0
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        bandstructure_smart_parallelization = 0
+        bandstructure_solver_drain = scborn__bands_drain_mode_contact
+        bandstructure_solver_source = scborn__bands_source_mode_contact
+        dE_f = 0.004
+        dE_in = 0.001
+        dE_sep = 0.0001
+        energy_cutoff_in_kT = 25
+        initial_percent_of_points = 0.8
+        lead_flavored_grid = 0
+        name = adaptive_grid_generator
+        new_nanowire_simulation_flow = true
+        new_point_MPI_strategy = cluster
+        non_rectangular = 0
+        nonuniform_grid_type = DOS
+        output_file_suffix = ''
+        recalculate = 0
+        ref_drain_atom_4matprop = 0
+        ref_source_atom_4matprop = 0
+        remove_duplicate_energies = 1
+        scale_inhomogeneous_energy_steps = 1
+        small_number_of_points = 455
+        strategy = omen
+        temperature = 300
+        tic_toc_name = scborn__adaptive_grid_generator
+        type = AdaptiveGrid
+        use_electron_core_model = 0
+        use_previous_energy_mesh = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__density_cool
+    type = DensityWrapper
+    iterator {
+      set {
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        approximate_derivative = false
+        compensate_inhomogeneous_core_charge = 0
+        conversion_factor = 2.0
+        debug_output = 0
+        density_solver = scborn__Transformation1
+        domain = device
+        external_solver = (scborn__lra_module, scborn__rgf_test, scborn__source_module_test, scborn__drain_module_test)
+        external_solver_for_jacobian = ()
+        name = density_cool
+        output_charge = 0
+        output_charge_derivative = 0
+        output_file_suffix = ''
+        potential_solver = scborn__poisson_device
+        solve_before_density = (scborn__Reinit, scborn__Propagation_Parallelizer)
+        tic_toc_name = scborn__density_cool
+        type = DensityWrapper
+      }
+    }
+  }
+  solver {
+    name = scborn__Reinit
+    type = PythonSolver
+    iterator {
+      set {
+        QTBM = scborn__lra_module
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        name = Reinit
+        output_file_suffix = ''
+        parallelizer = scborn__Propagation_Parallelizer
+        python_solver = ReinitSolversIteration.py
+        tic_toc_name = scborn__Reinit
+        type = PythonSolver
+      }
+    }
+  }
+  solver {
+    name = scborn__ramper
+    type = IV
+    iterator {
+      set {
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        auto_load = true
+        auto_save = true
+        checkpoint_slave = scborn__poisson_device
+        contact = gate
+        current_conversion_factor = 2.0
+        current_solver = scborn__rgf_test
+        device_type = wire
+        external_output = (scborn__bands_source_mode_contact, scborn__bands_drain_mode_contact, scborn__adaptive_grid_generator)
+        external_solve = (scborn__Propagation_Parallelizer)
+        import_potential_at_every_bias = 0
+        name = ramper
+        output_file_suffix = ''
+        output_format = ASCII
+        poisson_solver = scborn__poisson_device
+        prediction = 0
+        re_solve_for_current = false
+        save_separate_IV_files = 0
+        semiclassical_IV = 0
+        tic_toc_name = scborn__ramper
+        type = IV
+        voltage = (0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05, -0.0, -0.05, -0.1)
+      }
+    }
+  }
+  solver {
+    name = scborn__bands_source_zero_pot
+    type = Schroedinger
+    iterator {
+      set {
+        Neumann_BC = 0
+        Peierls_Phase = 1
+        Zeeman_Splitting = 1
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        assume_all_atom_active = 0
+        automatic_threshold = true
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        calculate_elastic_overlap = 0
+        calculate_integrated_electron_density = 0
+        calculate_integrated_hole_density = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        compute_edges_masses = 0
+        convergence_limit = 1e-7
+        cutoff_distance_to_bandedge = 0.05
+        domain = source_source_mode_contact
+        eigen_values_solver = krylovschur
+        electron_temperature = 300
+        exchange_interaction_strength = 0
+        explicit_passivation = 0
+        input_shift_subbandbased_for_restart = 0
+        intel_periodicity_correction = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure,calculate_Fermi_level)
+        k_degeneracy = 1
+        k_points = [(-0.5),(0.5)]
+        k_space_basis = reciprocal
+        linear_solver = ''
+        max_number_iterations = 300
+        monitor_convergence = false
+        name = bands_source_zero_pot
+        number_of_eigenvalues = 70
+        number_of_eigenvalues_to_use = 16
+        number_of_nodes = 256
+        output = (energies, k-points)
+        output_file_suffix = ''
+        output_precision = 7
+        output_shift_subbandbased_for_restart = 0
+        parallelize_here = 1
+        passivate_all_around = 0
+        passivate_with_oxide = 0
+        passivation_energy = 0
+        potential_solver = ''
+        preconditioner = mumps
+        random_passivation = 0
+        ref_domain_atom_for_matprop = 0
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        shift = 0.001
+        solve_on_single_replica = 0
+        solver_transformation_type = sinvert
+        sort_like_electrons = true
+        sparse_storage_format = CSR
+        spatially_varying_threshold = 0
+        strain_model = ''
+        strict_threshold = true
+        surface_atom_potential = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn__bands_source_zero_pot
+        type = Schroedinger
+        use_multidof = 0
+        use_scaling_law = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__bands_drain_zero_pot
+    type = Schroedinger
+    iterator {
+      set {
+        Neumann_BC = 0
+        Peierls_Phase = 1
+        Zeeman_Splitting = 1
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        assume_all_atom_active = 0
+        automatic_threshold = true
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        calculate_elastic_overlap = 0
+        calculate_integrated_electron_density = 0
+        calculate_integrated_hole_density = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        compute_edges_masses = 0
+        convergence_limit = 1e-7
+        cutoff_distance_to_bandedge = 0.05
+        domain = drain_drain_mode_contact
+        eigen_values_solver = krylovschur
+        electron_temperature = 300
+        exchange_interaction_strength = 0
+        explicit_passivation = 0
+        input_shift_subbandbased_for_restart = 0
+        intel_periodicity_correction = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure,calculate_Fermi_level)
+        k_degeneracy = 1
+        k_points = [(-0.5),(0.5)]
+        k_space_basis = reciprocal
+        linear_solver = ''
+        max_number_iterations = 300
+        monitor_convergence = false
+        name = bands_drain_zero_pot
+        number_of_eigenvalues = 70
+        number_of_eigenvalues_to_use = 16
+        number_of_nodes = 256
+        output = (energies, k-points)
+        output_file_suffix = ''
+        output_precision = 7
+        output_shift_subbandbased_for_restart = 0
+        parallelize_here = 1
+        passivate_all_around = 0
+        passivate_with_oxide = 0
+        passivation_energy = 0
+        potential_solver = ''
+        preconditioner = mumps
+        random_passivation = 0
+        ref_domain_atom_for_matprop = 0
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        shift = 0.001
+        solve_on_single_replica = 0
+        solver_transformation_type = sinvert
+        sort_like_electrons = true
+        sparse_storage_format = CSR
+        spatially_varying_threshold = 0
+        strain_model = ''
+        strict_threshold = true
+        surface_atom_potential = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn__bands_drain_zero_pot
+        type = Schroedinger
+        use_multidof = 0
+        use_scaling_law = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__bands_source_mode_contact
+    type = Schroedinger
+    iterator {
+      set {
+        Neumann_BC = 0
+        Peierls_Phase = 1
+        Zeeman_Splitting = 1
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        allow_reinit_k_points = 0
+        assume_all_atom_active = 0
+        automatic_threshold = true
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        calculate_elastic_overlap = 0
+        calculate_integrated_electron_density = 0
+        calculate_integrated_hole_density = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        compute_edges_masses = 0
+        convergence_limit = 1e-7
+        create_k_space_at_reinit = 0
+        cutoff_distance_to_bandedge = 0.05
+        domain = source_mode_contact
+        eigen_values_solver = krylovschur
+        electron_temperature = 300
+        exchange_interaction_strength = 0
+        explicit_passivation = 0
+        input_shift_subbandbased_for_restart = 0
+        intel_periodicity_correction = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure)
+        k_degeneracy = 1
+        k_points = [(-0.5),(0.5)]
+        k_space_basis = reciprocal
+        linear_solver = ''
+        max_number_iterations = 300
+        monitor_convergence = false
+        name = bands_source_mode_contact
+        number_of_eigenvalues = 70
+        number_of_eigenvalues_to_use = 16
+        number_of_nodes = 256
+        output = ()
+        output_file_suffix = ''
+        output_precision = 7
+        parallelize_here = 1
+        passivate_all_around = 0
+        passivate_with_oxide = 0
+        passivation_energy = 0
+        potential_solver = scborn__poisson_source_mode_contact
+        preconditioner = mumps
+        random_passivation = 0
+        reinit_parallelize = 0
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        shift = 0.001
+        solve_on_single_replica = 0
+        solver_transformation_type = sinvert
+        sort_like_electrons = true
+        sparse_storage_format = CSR
+        spatially_varying_threshold = 0
+        strain_model = ''
+        strict_threshold = true
+        surface_atom_potential = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn__bands_source_mode_contact
+        type = Schroedinger
+        use_multidof = 0
+        use_scaling_law = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__bands_drain_mode_contact
+    type = Schroedinger
+    iterator {
+      set {
+        Neumann_BC = 0
+        Peierls_Phase = 1
+        Zeeman_Splitting = 1
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        allow_reinit_k_points = 0
+        assume_all_atom_active = 0
+        automatic_threshold = true
+        calculate_automatic_shift_subbandbased = 0
+        calculate_brillouin_zone = 0
+        calculate_elastic_overlap = 0
+        calculate_integrated_electron_density = 0
+        calculate_integrated_hole_density = 0
+        charge_model = electron_hole
+        chem_pot = 0
+        compute_edges_masses = 0
+        convergence_limit = 1e-7
+        create_k_space_at_reinit = 0
+        cutoff_distance_to_bandedge = 0.05
+        domain = drain_mode_contact
+        eigen_values_solver = krylovschur
+        electron_temperature = 300
+        exchange_interaction_strength = 0
+        explicit_passivation = 0
+        input_shift_subbandbased_for_restart = 0
+        intel_periodicity_correction = 0
+        job_list = (assemble_H,passivate_H, calculate_band_structure)
+        k_degeneracy = 1
+        k_points = [(-0.5),(0.5)]
+        k_space_basis = reciprocal
+        linear_solver = ''
+        max_number_iterations = 300
+        monitor_convergence = false
+        name = bands_drain_mode_contact
+        number_of_eigenvalues = 70
+        number_of_eigenvalues_to_use = 16
+        number_of_nodes = 256
+        output = ()
+        output_file_suffix = ''
+        output_precision = 7
+        parallelize_here = 1
+        passivate_all_around = 0
+        passivate_with_oxide = 0
+        passivation_energy = 0
+        potential_solver = scborn__poisson_drain_mode_contact
+        preconditioner = mumps
+        random_passivation = 0
+        reinit_parallelize = 0
+        reuse_hamiltonian = true
+        shadow_copies = 1
+        shift = 0.001
+        solve_on_single_replica = 0
+        solver_transformation_type = sinvert
+        sort_like_electrons = true
+        sparse_storage_format = CSR
+        spatially_varying_threshold = 0
+        strain_model = ''
+        strict_threshold = true
+        surface_atom_potential = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn__bands_drain_mode_contact
+        type = Schroedinger
+        use_multidof = 0
+        use_scaling_law = 0
+      }
+    }
+  }
+  solver {
+    name = scborn__lra_module
+    type = LRAModule
+    iterator {
+      set {
+        BlockDiagonalRGF = true
+        FF_dense_self_energy = false
+        FF_mode_diagonal = false
+        FF_mode_diagonal_self_energy = false
+        IV_solver = ramper
+        LRA_method = form_factor
+        Momentum_ordering_solver = scborn__Propagation_Parallelizer
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        active_regions = (1, 2, 3)
+        active_regions_end_leads = (1,3)
+        active_regions_start_leads = (1,2)
+        basis_generator = scborn__Test_MS
+        chem_pot = 0.0
+        debug_output = 0
+        density_of_states_output = true
+        density_output = true
+        detailed_memory_profiling = 0
+        domain = device
+        electron_hole_heuristics = omen_smooth_scattering
+        electron_hole_model = true
+        end_leads = drain_contact
+        energy_resolved_density_output = 0
+        general_SK = 1
+        imaginary_part_of_density_prefactor = -1
+        integrate_blockdiagonals_for_density = true
+        integrate_blockdiagonals_for_density_v2 = true
+        interpolation_power = 2
+        is_electron = 1
+        load_basis_material_by_tag = 0
+        memory_slim_form_factor = 0
+        name = lra_module
+        number_of_interpolation_points = 4
+        omp_apply_form_factor = true
+        omp_generate_form_factor = true
+        output_EH_density = 1
+        output_along_line = [(0,1.086,1.086),(35.3015,1.086,1.086)]
+        output_along_line_file_output = true
+        output_along_line_resolution = 60
+        output_energy_and_orbital_resolved_density = 0
+        output_energy_resolved_DOS = true
+        output_energy_resolved_density = true
+        output_file_suffix = ''
+        output_format = VTK
+        output_slab_resolved_current = false
+        passivate_Hamiltonian = 1
+        potential_solver_device = scborn__poisson_device
+        potential_solver_end_leads = scborn__poisson_drain_contact
+        potential_solver_start_leads = scborn__poisson_source_contact
+        quantum_number_order = ''
+        real_part_of_density_prefactor = 0
+        repartition_solver_device = scborn__rgf_test
+        repartition_solver_end_leads = scborn__drain_module_test
+        repartition_solver_start_leads = scborn__source_module_test
+        reuse_hamiltonian = true
+        save_Hamiltonian = true
+        save_separate_bias_files = true
+        start_leads = source_contact
+        strain_model = ''
+        strained_boykin_2002 = 0
+        tb_basis = sp3d5sstar
+        temperature = 300
+        tic_toc_name = scborn__lra_module
+        transformation_method = modespace_TB
+        transport_solver = scborn__rgf_test
+        type = LRAModule
+        use_monomials = true
+        use_multidof = 0
+        use_scaling_law = false
+        use_scattering_RGF_solver = true
+      }
+    }
+  }
+  solver {
+    name = scborn__device_structure
+    type = Structure
+    iterator {
+      set {
+        _disable_output = 0
+        _search_flag = 2
+        _trigger_flag = 4
+        domain = device
+        name = device_structure
+        output_file_suffix = ''
+        output_format = vtk
+        structure_file = device_structure.vtk
+        tic_toc_name = scborn__device_structure
+        type = Structure
+      }
+    }
+  }
+}
+/*
+* Global
+*/
+Global
+{
+  check_consistent_tics = 0
+  input_deck_generate_full = true
+  input_deck_generate_full_file = full.in
+  logfile = ./VA_ex03.log
+  messaging_level = 3
+  solve = (scborn)
+  solver_separator = __
+  /* DB Parameters */ 
+  disable_database = true 
+  H:atomic_number = 1
+  Phys:Tkel = 300
+  Si:atomic_number = 14
+  Si:Bands:BandEdge:Ec = Ec_X + VBO
+  Si:Bands:BandEdge:Ec_X = Eg_X
+  Si:Bands:BandEdge:Eg_X = 1.17-4.73E-4*Phys:Tkel*Phys:Tkel/(636+Phys:Tkel)
+  Si:Bands:BandEdge:Ev = 0.0 + VBO
+  Si:Bands:BandEdge:VBO = 0.0
+  Si:Bands:BandEdge:electron_affinity = 4.05
+  Si:Bands:BandEdge:ml_X = 0.98
+  Si:Bands:BandEdge:mstar_c_dos = (ml_X*mt_X^2)^(1.0/3.0)*(6.0^(2.0/3.0))
+  Si:Bands:BandEdge:mstar_v_dos = (ml_X*mt_X^2)^(1.0/3.0)*(6.0^(2.0/3.0))
+  Si:Bands:BandEdge:mt_X = 0.19
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Dx2~y2_Si = 13.7895 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Dxy_Si = 13.7895 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Dxz_Si = 13.7895 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Dyz_Si = 13.7895 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Dz2_Si = 13.7895 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Px_Si = 4.22925 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Py_Si = 4.22925 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Pz_Si = 4.22925 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_S_Si = -2.15168 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:E_Sstar_Si = 19.1165 + VBO
+  Si:Bands:TB:sp3d5sstar:param_Boykin:VBO = 0.0
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_D_D_Delta_Si_Si = -1.814
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_D_D_Pi_Si_Si = 2.5888
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_D_D_Sigma_Si_Si = -1.68136
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_P_D_Pi_Si_Si = 2.38479
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_P_D_Sigma_Si_Si = -1.35554
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_P_P_Pi_Si_Si = -1.51801
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_P_P_Sigma_Si_Si = 4.10364
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_D_Sigma_H_Si = -0
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_D_Sigma_Si_Si = -2.28485
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_P_Sigma_H_Si = defaults:global_passivation_parameter * sqrt(3)
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_P_Sigma_Si_Si = 3.02562
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_S_Sigma_H_Si = -1.0 * defaults:global_passivation_parameter
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_S_Sigma_Si_Si = -1.95933
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_Sstar_Sigma_H_Si = -0
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_S_Sstar_Sigma_Si_Si = -1.5223
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_Sstar_D_Sigma_Si_Si = -0.80993
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_Sstar_P_Sigma_Si_Si = 3.15565
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_Sstar_S_Sigma_Si_Si = -1.5223
+  Si:Bands:TB:sp3d5sstar:param_Boykin:V_Sstar_Sstar_Sigma_Si_Si = -4.24135
+  Si:Lattice:a_lattice = 0.54310
+  Si:Lattice:element = Si
+  Si:Lattice:epsilon_dc = 11.9
+  Si:Lattice:pyroelectric_polarization = 0
+  defaults:global_passivation_parameter = 2.7386
+}

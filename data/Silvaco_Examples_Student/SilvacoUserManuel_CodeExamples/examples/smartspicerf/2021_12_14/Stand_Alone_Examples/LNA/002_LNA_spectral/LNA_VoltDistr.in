@@ -1,0 +1,20 @@
+* OutputVoltDistribution
+
+.include 'LNAcircuit.inc'
+.param prf=-10_dBm
+.param rpar21=470
+
+Pout 9  0  r=40
+Prf  in 0 
++    MTS1=(prf 0 45) MTS2=(prf 0 46)
+$ ----------------------
+.HARM 
++  FUND=20MegHz nharm=63
++  annotate=3 waves
+
+.let HARM_SP VoltOut='vdb(8)'
+.MEASURE HARM_SP sp20  FIND VoltOut AT=20MegHz
+.MEASURE HARM_SP sp900 FIND VoltOut AT=900MegHz
+.MEASURE HARM_SP sp920 FIND VoltOut AT=920MegHz
+
+.END

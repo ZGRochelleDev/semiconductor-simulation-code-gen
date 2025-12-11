@@ -1,0 +1,55 @@
+* D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA_iip3
+* Gateway 2.12.7.R Spice Netlist Generator
+* Workspace name:       D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA.workspace
+* Simulation name:      D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA_iip3.schlr
+* Simulation timestamp: 06-May-2010 10:58:30
+
+* Schematic name: LNA_iip3
+XC1 NET7 Vout mimcap LT=6.5728U M=5
+C1 NET3 Vin 200p
+Pout Vout GND R=50
+Prf Vin GND R=50
++MTS1(prf 0 48 )
++MTS2(prf 0 49 )
+V1 NET1 GND DC 2
+XL1 NET1 NET7 ind WIDTH=10u RAD=60u SPACE=2u NR=6.5 M=1
+XL2 NET6 GND ind WIDTH=10u RAD=60u SPACE=2u NR=2.5 M=1
+XL3 NET3 NET4 ind WIDTH=10u RAD=60u SPACE=2u NR=6.5 M=1
+XM1 NET7 NET1 NET8 NET8 rfnmos2v LR=240N WR=5U NR=40 M=1
+XM2 NET8 NET4 NET6 NET6 rfnmos2v LR=240N WR=5U NR=64 M=1
+XM3 NET5 NET5 GND GND rfnmos2v LR=240N WR=5U NR=8 M=1
+XR1 NET1 NET5 rpoly W=2U L=65.007U nc=3 M=1
+XR2 NET5 NET4 rpoly_rf L=30U W=2U NC=2 M=1
+
+* Global Nodes Declarations
+.GLOBAL GND VDD
+
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE V(Vout)
+
+* Schematic Netlist rebuilt at runtime
+
+*
+.inc ..\libraries\models\sbcd_rf.lib
+.OP
+*
+.PARAM PRF=-40_dBm
+.OPTIONS EXPERT=777
+
+************************************************************
+* SIMULATION 3 (IIP3 plot) *
+************************************************************
+.HARMONIC
++ FUND=50MegHz nharm=50
++ annotate=3 waves
++ SWEEP prf -60 -10 5
+.LET HARM_SP POUT=r(@Pout[POUT]) ; real part saves pout (dBm)sign
+.MEASURE HARM_SP POUT_1 FIND POUT AT=2400Meg ; 1st order harmonic
+.MEASURE HARM_SP POUT_3 FIND POUT AT=2500Meg ; 3rd order harmonic
+.MEASURE MEAS resIP3 IP3 POUT_1 POUT_3 EP=-55
+
+.END

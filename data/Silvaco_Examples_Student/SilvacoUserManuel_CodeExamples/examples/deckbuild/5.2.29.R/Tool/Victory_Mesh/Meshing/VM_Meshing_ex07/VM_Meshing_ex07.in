@@ -1,0 +1,113 @@
+# (c) Silvaco Inc., 2024
+
+# Remeshing a Victory Device structure
+
+# Required Modules
+#  Victory Mesh
+#   -2D Meshing
+
+# Example Name
+Set name=“VM_Meshing_ex07” 
+
+# The original mesh specified for this structure in Victory Device
+
+#X.MESH location=0.00 spacing=0.5
+#X.MESH location=3.00 spacing=0.2
+#X.MESH location=5.00 spacing=0.25
+#X.MESH location=7.00 spacing=0.25
+#X.MESH location=9.00 spacing=0.2
+#X.MESH location=12.00 spacing=0.5
+#
+#Y.MESH location=0.00 spacing=0.1
+#Y.MESH location=1.00 spacing=0.1
+#Y.MESH location=2.00 spacing=0.2
+#Y.MESH location=5.00 spacing=0.4
+
+# Rebuild the conformal mesh using LINE statements in Victory Mesh
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VD.str
+
+LINE x location=0.00 spacing=0.5
+LINE x location=3.00 spacing=0.1
+LINE x location=9.00 spacing=0.1
+LINE x location=12.00 spacing=0.5
+
+LINE y location=0.00 spacing=0.05
+LINE y location=2.00 spacing=0.1
+LINE y location=5.00 spacing=0.4
+
+REMESH conformal
+
+SAVE out="$'name'_ConfRemesh"
+
+# Rebuild the conformal mesh using LINE statements in Victory Mesh
+# plus some refinment on junctions and on electric field
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VD.str
+
+INFO fields="*"
+
+LINE x location=0.00 spacing=0.5
+LINE x location=12.00 spacing=0.5
+
+LINE y location=0.00 spacing=0.2
+LINE y location=1.00 spacing=0.2
+LINE y location=2.00 spacing=0.1
+LINE y location=3.00 spacing=0.2
+LINE y location=5.00 spacing=0.2
+
+REMESH conformal simplex.minimal
+
+REFINE max.junction.size="0.05,0.05" max.junction.distance=1.5 \
+max.junction.distance.size=0.5 regions="material:silicon" grading="linear"
+
+REFINE impurity="electric field" max.impurity.gradient=200 \
+ min.impurity.size="0.05"
+
+SAVE out="$'name'_ConfRefine"
+
+# Build a uniform conformal base mesh (different values in x and z)
+# plus some refinment on junctions and on electric field
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VD.str
+
+INFO fields="*"
+
+REMESH conformal simplex.minimal
+REFINE max.size="0.5,0.2"
+
+REFINE max.junction.size="0.05,0.05" max.junction.distance=1.5 max.junction.distance.size=0.5 regions="material:silicon" grading="linear"
+
+REFINE impurity="electric field" max.impurity.gradient=200 \
+ min.impurity.size="0.05"
+
+SAVE out="$'name'_ConfBaseRefine"
+
+# Build a delaunay base mesh 
+# plus some refinment on junctions and on electric field
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VD.str
+
+INFO fields="*"
+
+REMESH delaunay
+REFINE max.size=0.2
+
+REFINE max.junction.size="0.05" max.junction.distance=1.5 max.junction.distance.size=0.2 regions="material:silicon" grading="linear"
+
+REFINE impurity="electric field" max.impurity.gradient=200 \
+ min.impurity.size="0.05"
+
+SAVE out="$'name'_DelBaseRefine"
+
+victoryvisual \
+$'name'_ConfRemesh.str:$'name'_Mesh.set \
+$'name'_ConfRefine.str:$'name'_Mesh.set \
+$'name'_ConfBaseRefine.str:$'name'_Mesh.set \
+$'name'_DelBaseRefine.str:$'name'_Mesh.set 
+
+QUIT

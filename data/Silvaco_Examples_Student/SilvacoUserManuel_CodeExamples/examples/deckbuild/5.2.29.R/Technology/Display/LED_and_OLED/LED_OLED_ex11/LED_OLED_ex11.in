@@ -1,0 +1,99 @@
+# (c) Silvaco Inc., 2024
+
+# Quantum Dot
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+
+# Example Name
+SET name=“LED_OLED_ex11”
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 2"
+
+# create surface mesh domain as sio2
+CUBOID from="-0.01,-0.01,-0.0415" to="0.01,0.01,0.0515" material="sio2" out="dot"
+SKELETON
+
+# create outer sphere surface mesh and prepare for combine with domain
+SPHERE center="0,0,0" radius=0.0015 material="cds" out="outer_sphere" num.edges=32
+SKELETON
+SPLICE regions="cds" material="sio2"
+
+# create inner sphere surface mesh and prepare for combine with outer sphere
+SPHERE center="0,0,0.0" radius=0.001 material="cdse" out="inner_sphere" num.edges=32
+SKELETON
+SPLICE regions="cdse" material="cds"
+
+# combine spheres and domain
+COMBINE in.a="dot" in.b="outer_sphere"
+COMBINE in.b="inner_sphere"
+
+# regions for anode and silicon
+SLICE from="-0.01,-0.01,-0.0415" to="0.01,0.01,-0.0315"
+SLICE from="-0.01,-0.01,-0.0315" to="0.01,0.01,-0.0014"
+
+# regions for cathode and zno
+SLICE from="-0.01,-0.01,0.0415" to="0.01,0.01,0.0515"
+SLICE from="-0.01,-0.01,0.0014" to="0.01,0.01,0.0415"
+
+# set regions materials
+TAG from="-0.01,-0.01,-0.0415" to="0.01,0.01,-0.0316" value="to_ito"
+TAG from="-0.01,-0.01,-0.0314" to="0.01,0.01,-0.00141" value="to_zno"
+TAG from="-0.01,-0.01,0.0416" to="0.01,0.01,0.0515" value="to_aluminum"
+TAG from="-0.01,-0.01,0.00141" to="0.01,0.01,0.0414" value="to_organic"
+
+MATERIAL regions="to_organic" value="silicon"
+MATERIAL regions="to_zno" value="zno"
+MATERIAL regions="to_aluminum" value="aluminum"
+MATERIAL regions="to_ito" value="ito"
+
+# merge adjacent regions of same material
+MERGE
+
+# create 2d mesh
+CUTPLANE axis="x" offset="0" out="dot_2d"
+
+# create 2d device mesh
+REMESH delaunay out="delaunay_dot_2d"
+REFINE max.size=0.0015 regions="*"
+REFINE max.size=0.0001 regions="cdse,cds"
+REFINE regions="silicon,zno,sio2" interface.regions="cds" \
+       max.interface.size=0.00005 grading="quadratic"
+
+# assign electrodes
+TAG point="0,-0.0414" value="to_anode"
+TAG point="0,0.0514" value="to_cathode"
+ELECTRODE regions="to_anode" name="anode"
+ELECTRODE regions="to_cathode" name="cathode"
+SAVE out="$'name'_VM_0.str"
+
+# create 3d device mesh
+REMESH in="dot" delaunay out="delaunay_dot"
+REFINE max.size=0.0015 regions="*"
+REFINE max.size=0.0001 regions="cdse,cds"
+REFINE regions="silicon,zno,sio2" interface.regions="cds" \
+       max.interface.size=0.00005 grading="quadratic"
+
+# assign electrodes
+TAG point="0,0,-0.0414" value="to_anode"
+TAG point="0,0,0.0514" value="to_cathode"
+ELECTRODE regions="to_anode" name="anode"
+ELECTRODE regions="to_cathode" name="cathode"
+SAVE out="$'name'_VM_1.str"
+
+# show interior of Delaunay mesh
+CLIP from="-0.01" to="0" out="delaunay_dot_clip"
+SAVE out="$'name'_VM_2.str"
+
+victoryvisual \
+$'name'_VM_0.str:$'name'_VM_0.set \
+$'name'_VM_1.str \
+$'name'_VM_2.str:$'name'_VM_2.set
+
+victoryvisual $'name'_VM_0.str:$'name'_VM_0.set --png=$'name'_01.png
+victoryvisual $'name'_VM_1.str --png=$'name'_02.png
+victoryvisual $'name'_VM_2.str:$'name'_VM_2.set --png=$'name'_03.png
+
+QUIT

@@ -1,0 +1,108 @@
+# (c) Silvaco Inc., 2024
+
+# High Dose Rate Radiation Detector Circuit
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation 
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D REM
+#   -2D MixedMode
+
+# Eaxmple Name
+SET name=“Rad_Rel_ex05”
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon c.antimony=1.31e18 resolution="10,5" from=0 to=1217.5 depth=102 gasheight=100 orientation=100 meshdepth=4
+
+LINE X loc=0       spac=100
+LINE X loc=1000    spac=1
+LINE X loc=1006.25 spac=2
+LINE X loc=1012.5  spac=0.2
+LINE X loc=1100    spac=40
+LINE X loc=1187.5  spac=0.2
+LINE X loc=1217.5  spac=15
+
+LINE Z loc=0 spac=0.05
+LINE Z loc=0.5 spac=0.01
+LINE Z loc=4 spac=2
+LINE Z loc=50 spac=10
+LINE Z loc=92 spac=2
+LINE Z loc=102 spac=2
+
+ETCH material=silicon thick=92 dry
+
+LOOP steps=10
+DEPOSIT material=silicon thickness=0.1 c.antimony=3e12 max
+DIFFUSE temp=1000 time=10
+L.END
+LOOP steps=45
+DEPOSIT material=silicon thickness=2 c.antimony=3e12 max 
+DIFFUSE temp=1000 time=2
+L.END 
+
+LOOP steps=10
+DEPOSIT material=silicon thickness=0.1 c.antimony=3e12 max
+DIFFUSE temp=1000 time=10
+L.END 
+
+DEPOSIT material=oxide thick=0.01 max
+DEPOSIT material=barrier thick=0.2 max
+ETCH material=barrier left.to=1000.0 thick=0.2 dry
+ETCH material=barrier between="1012.5,1187.5" thick=0.3 dry
+
+IMPLANT boron dose=5e14 energy=10 tilt=7 rotation=0 
+ETCH material=barrier dry
+DIFFUSE time=5 temp=1050 
+ETCH material=oxide dry
+DEPOSIT material=aluminum thick=0.1 conformal
+ETCH material=aluminum left.to=800.0 thick=0.2 dry
+ETCH material=aluminum between="1000,1012.51" thick=0.2 dry
+ETCH material=aluminum right.to=1187.5 thick=0.2 dry
+
+ELECTRODE name=anode x=900
+ELECTRODE name=pgate x=1100
+ELECTRODE name=cathode substrate
+
+SAVE name=$'name'_vp_0
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_vp_0
+
+REMESH conformal
+REFINE max.obtuseness=1
+
+SAVE out=$'name'_0.str
+
+GO internal
+
+LOAD infile=$'name'_aux.in
+
+SWEEP parameter=radiation type=list data="1e08, 1e12"
+
+#
+# Extraction of derivative of total radiation dose vs transient time
+# radiation = 1e08
+extract init infile="$'name'_1_tr.log"
+extract name="derivTRD" deriv(elect."Transient time", elect."Total Radiation Dose") outf="$'name'_1_dTRD_dt_tr.dat"
+# Extraction of derivative of total radiation dose vs transient time
+# radiation = 1e12
+extract init infile="$'name'_2_tr.log"
+extract name="derivTRD" deriv(elect."Transient time", elect."Total Radiation Dose") outf="$'name'_2_dTRD_dt_tr.dat" 
+
+victoryvisual \
+$'name'_1_tr.log:$'name'_1_2_tr.set+\ 
+$'name'_2_tr.log:$'name'_1_2_tr.set \
+$'name'_1_tr.log:$'name'_1_2_tr2.set+\ 
+$'name'_2_tr.log:$'name'_1_2_tr2.set \
+$'name'_1_dTRD_dt_tr.dat:$"name"_dTRD_dt_tr.set+\
+$'name'_2_dTRD_dt_tr.dat:$"name"_dTRD_dt_tr.set
+
+QUIT

@@ -1,0 +1,10 @@
+material  material("aluminum_m")   conductivity=376676 
+material  material("aSi_m")   permittivity=7.514 
+material  material("Cr_m")   conductivity=5000
+material  material("ITO_m")   conductivity=5000
+material  material("Passiv_m")  permittivity=9.225
+material  material("SiN_m")  permittivity=6.21
+material  material("t_silicon_m")  permittivity=16.5
+material  material("SiON_m")  permittivity=7.82
+material  material("M4aluminum_m") conductivity=5000
+

@@ -1,0 +1,30 @@
+# (c) Silvaco Inc., 2024
+# Doping Dependent Hopping Mobility
+#
+# Required Modules
+# Victory Device
+#  - 2D Simulator
+#  - 2D Organic
+
+##### VARIABLES #####
+
+# Example name
+SET name="LED_OLED_ex06"
+
+###### PARAMETER SWEEP ######
+# Simulate mobility with various "doping_percent." 
+GO internal
+
+# Load input deck
+LOAD infile=$'name'.in
+# Prepare a file to save values extracted in organicex03.in
+SAVE type=sdb outfile=$'name'_Mobility_vs_DopantDensity.log
+# Execute "dopant_density" [1/cm3] sweep
+SWEEP parameter=dopant_density type=power range="1e17,1e20,10"
+ENDSAVE
+
+# Plot hole mobility [cm2/Vs] to dopant density [1/cm3]
+victoryvisual $'name'_Mobility_vs_DopantDensity.log:$'name'_Mobility_vs_DopantDensity.set
+
+QUIT
+

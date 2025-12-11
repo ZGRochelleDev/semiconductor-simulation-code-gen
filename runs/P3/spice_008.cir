@@ -1,0 +1,6 @@
+ngspice
+.V1 in 0 SIN(.t 0 2 1K)
+.R1 in out 1K
+.DCLIP
+.out 0
+.end

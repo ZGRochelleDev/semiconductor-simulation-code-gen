@@ -1,0 +1,198 @@
+# (c) Silvaco Inc., 2024
+
+# AlGaN/GaN Electro-Thermal simulation
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -3D Simulator
+#   -2D Giga
+#   -3D Giga
+
+# Example Name
+SET name=“GaN_Power_ex10” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+MESH space.mult=1
+
+# x plane meshing
+X.M l=0.0 s=0.25
+X.M l=0.5 s=0.25
+X.M l=1.0 s=0.25
+X.M l=3.0 s=0.15
+X.M l=3.5 s=0.15
+X.M l=5.5 s=0.15
+X.M l=6.0 s=0.15
+X.M l=8   s=0.25
+X.M l=8.5 s=0.25
+X.M l=9   s=0.25
+
+# y plane meshing
+Y.M l=0 s=0.25
+Y.M l=0.4 s=0.05
+Y.M l=0.5 s=0.001
+Y.M l=0.524 s=0.001
+Y.M l=0.525 s=0.001
+Y.M l=0.526 s=0.001
+Y.M l=0.6 s=0.05
+Y.M l=0.7 s=0.1
+Y.M l=1.0 s=0.2
+Y.M l=2.0 s=1
+
+REGION num=1 x.min=0 x.max=9 y.min=0.5 y.max=0.525 mat=AlGaN x.comp=0.3 
+REGION num=2 x.min=0 x.max=9 y.min=0.0 y.max=0.5 mat=nitride 
+REGION num=3 x.min=0 x.max=9 y.min=0.525 y.max=2 mat=GaN  substrate 
+REGION num=4 x.min=1 x.max=3 y.min=0 y.max=0.4 mat=oxide
+REGION num=5 x.min=6 x.max=8 y.min=0 y.max=0.4 mat=oxide
+
+ELECTRODE num=1 name=source x.min=0 x.max=0.5 y.min=0.1 y.max=0.6
+ELECTRODE num=2 name=drain x.min=8.5 x.max=9 y.min=0.1 y.max=0.6
+ELECTRODE num=3 name=gate x.min=3.5 x.max=5.5 y.min=0.2 y.max=0.5 
+ELECTRODE num=4 substrate
+
+CONTACT name=gate work=5
+CONTACT name=source work=4
+CONTACT name=drain work=4
+
+MODELS print srh 
+MOBILITY albrct.n 
+MODELS POLARIZATION CALC.STRAIN TENSOR.SCALE=0 PSP.SCALE=0.8 PIEZO.SCALE=0.8
+MODELS lat.temp
+
+THERMCONTACT num=1 y.min=2 y.max=2 x.min=0 x.max=9 ext.temp=300 
+
+OUTPUT con.band val.band charge polar.charge band.par qss
+
+METHOD trap maxtrap=20 
+
+SOLVE init
+SAVE outf=$'name'_0.str
+
+SOLVE vdrain=1
+LOG outf=$'name'_0.log
+SOLVE vgate=0 name=gate vfinal=-7.6 vstep=-0.2
+LOG off
+
+SOLVE init
+SOLVE vgate=-3
+LOG outf=$'name'_1.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=-2
+LOG outf=$'name'_2.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=-1
+LOG outf=$'name'_3.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=0
+LOG outf=$'name'_4.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+
+GO victorydevice simflags="-P 4"
+
+MESH space.mult=1 three.d
+
+X.M l=0.0 s=0.25
+X.M l=0.5 s=0.25
+X.M l=1.0 s=0.25
+X.M l=3.0 s=0.15
+X.M l=3.5 s=0.15
+X.M l=5.5 s=0.15
+X.M l=6.0 s=0.15
+X.M l=8   s=0.25
+X.M l=8.5 s=0.25
+X.M l=9   s=0.25
+
+Y.M l=0 s=0.25
+Y.M l=0.4 s=0.05
+Y.M l=0.5 s=0.001
+Y.M l=0.524 s=0.001
+Y.M l=0.525 s=0.001
+Y.M l=0.526 s=0.001
+Y.M l=0.6 s=0.05
+Y.M l=0.7 s=0.1
+Y.M l=1.0 s=0.2
+Y.M l=2.0 s=1
+
+Z.M l=0 spac=0.5
+Z.M l=1 spac=0.5
+
+REGION num=1 x.min=0 x.max=9 y.min=0.5 y.max=0.525 z.min=0 z.max=1 mat=AlGaN x.comp=0.3 
+REGION num=2 x.min=0 x.max=9 y.min=0.0 y.max=0.5 z.min=0 z.max=1 mat=nitride 
+REGION num=3 x.min=0 x.max=9 y.min=0.525 y.max=2 z.min=0 z.max=1 mat=GaN  substrate 
+REGION num=4 x.min=1 x.max=3 y.min=0 y.max=0.4 z.min=0 z.max=1 mat=oxide
+REGION num=5 x.min=6 x.max=8 y.min=0 y.max=0.4 z.min=0 z.max=1 mat=oxide
+
+ELECTRODE num=1 name=source x.min=0 x.max=0.5 y.min=0.1 y.max=0.6 z.min=0 z.max=1
+ELECTRODE num=2 name=drain x.min=8.5 x.max=9 y.min=0.1 y.max=0.6 z.min=0 z.max=1 
+ELECTRODE num=3 name=gate x.min=3.5 x.max=5.5 y.min=0.2 y.max=0.5 z.min=0 z.max=1
+ELECTRODE num=4 substrate
+
+CONTACT name=gate work=5
+CONTACT name=source work=4
+CONTACT name=drain work=4
+
+MODELS print srh 
+mobility albrct.n 
+MODELS POLARIZATION CALC.STRAIN TENSOR.SCALE=0 PSP.SCALE=0.8 PIEZO.SCALE=0.8
+MODELS lat.temp 
+
+THERMCONTACT num=1 y.min=2 y.max=2 z.min=0 z.max=1 x.min=0 x.max=9 ext.temp=300 
+
+OUTPUT con.band val.band charge polar.charge band.par qss
+
+METHOD direct trap maxtrap=20 norm.scaling.local
+
+SOLVE init
+SAVE outf=$'name'_0_3D.str
+
+SOLVE name=drain vfinal=1 vstep=0.1
+
+LOG outf=$'name'_0_3D.log
+SOLVE vgate=0 name=gate vfinal=-7.6 vstep=-0.2
+LOG off
+
+SOLVE init
+SOLVE vgate=-3
+LOG outf=$'name'_1_3D.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=-2
+LOG outf=$'name'_2_3D.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=-1
+LOG outf=$'name'_3_3D.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+#
+SOLVE init
+SOLVE vgate=0
+LOG outf=$'name'_4_3D.log
+SOLVE name=drain vdrain=0 vfinal=15 vstep=0.5
+LOG off
+
+victoryvisual \
+$'name'_0.log+$'name'_0_3D.log \
+$'name'_1.log+$'name'_2.log+\
+$'name'_3.log+$'name'_4.log+\
+$'name'_1_3D.log+$'name'_2_3D.log+\
+$'name'_3_3D.log+$'name'_4_3D.log \
+$'name'_0_3D.str:$'name'_0_3D.set 
+
+QUIT

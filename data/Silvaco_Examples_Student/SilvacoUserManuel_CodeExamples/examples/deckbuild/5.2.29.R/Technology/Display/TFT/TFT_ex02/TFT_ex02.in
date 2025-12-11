@@ -1,0 +1,117 @@
+# (c) Silvaco Inc., 2024
+
+# 3D TFT simulation
+
+# Required Modules
+#  Victory Device
+#   -3D Simulator
+#   -3D TFT
+
+# Example Name
+SET name="TFT_ex02"
+
+###### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH three.d
+
+X.MESH location=0 spacing=0.5
+X.MESH location=2 spacing=0.5
+X.MESH location=3.5 spacing=1
+X.MESH location=5 spacing=0.25
+X.MESH location=10 spacing=1.5
+X.MESH location=15 spacing=0.25
+X.MESH location=16.5 spac=1
+X.MESH location=18 spacing=0.5
+X.MESH location=20 spacing=0.5
+
+Y.MESH location=-0.2 spacing=0.05
+Y.MESH location=-0.1 spacing=0.05
+Y.MESH location=0 spacing=0.0075
+Y.MESH location=0.05 spacing=0.01
+Y.MESH location=0.1 spacing=0.0075
+Y.MESH location=0.5 spacing=0.25
+#Y.MESH location=10 spacing=5
+
+Z.MESH location=0 spacing=5
+Z.MESH location=15 spacing=5
+
+# Regions
+# 1=oxide 2=silicon 3-oxide
+REGION number=1 y.maximum=0 oxide
+REGION number=2 y.minimum=0 y.maximum=0.1 silicon
+REGION number=3 y.minimum=0.1 oxide
+
+# Electrodes
+# 1=gate 2=source 3=drain 4=substrate
+ELECTRODE number=1 name=gate \
+ x.minimum=5 x.maximum=15 y.minimum=-0.2 y.maximum=-0.1
+ELECTRODE number=2 name=source \
+ x.minimum=0 x.maximum=2 y.minimum=-0.1 y.maximum=0
+ELECTRODE number=3 name=drain \
+ x.minimum=18 x.maximum=20 y.minimum=-0.1 y.maximum=0
+ELECTRODE number=4 name=substrate substrate
+
+# Doping profiles
+DOPING region=2 uniform concentration=7e14 n.type
+DOPING region=2 gauss concentration=3e18 n.type x.right=5 character=0.3
+DOPING region=2 gauss concentration=3e18 n.type x.left=15 character=0.3
+
+#### MATERIAL/PHYSICAL MODELS ####
+# Set parameters for amorphus silicon
+MATERIAL region=2 mun=20 mup=1.5 nc300=2.5e20 \
+ nv300=2.5e20 eg300=1.9
+
+# Defect states
+DEFECTS nta=1e21 ntd=1e21 wta=0.033 wtd=0.049 \
+ nga=1.5e15 ngd=1.5e15 ega=0.62 egd=0.78 wga=0.15 wgd=0.15 \
+ sigtae=1e-17 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-17  \ 
+ siggae=2e-16 siggah=2e-15 siggde=2e-15 siggdh=2e-16 continuous
+
+# Gate workfunction
+CONTACT number=1 aluminum
+
+# Models
+MODELS srh bgn temperature=300  
+
+# Impact ionization
+IMPACT selberherr
+
+#### NUMERICAL METHODS ###
+METHOD itlimit=30 bicgst maxtrap=6  trap
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SOLVE previous
+SAVE outf=${name}_VD_inital.str
+
+# Id-Vg calculations
+# ramp the drain to 0.1V
+SOLVE vdrain=0.025
+SOLVE vdrain=0.05
+SOLVE vdrain=0.1
+# Ramp the gate and store the results
+LOG outfile=${name}_VD_idvg.log
+SOLVE vstep=0.25 vfinal=1.5 name=gate
+SAVE outf=${name}_VD_vg1p5.str
+SOLVE vgate=2.0 vstep=0.5 vfinal=20 name=gate
+LOG off
+
+# Id-Vd calculations
+# Load structure file Vd=0.1V and Vg=1.5V
+LOAD infile=${name}_VD_vg1p5.str master
+SOLVE previous
+# Ramp the drain and store the results
+LOG outfile=${name}_VD_idvd.log master
+SOLVE vdrain=0.1 vstep=0.1 vfinal=1 name=drain
+SOLVE vdrain=1.25 vstep=0.25 vfinal=3 name=drain
+SOLVE vdrain=3.25 vstep=0.25 vfinal=4 name=drain
+
+#### VISUALIZATION ####
+victoryvisual ${name}_VD_inital.str:${name}_0.set \
+  ${name}_VD_vg1p5.str:${name}_3.set \
+  ${name}_VD_idvg.log \
+  ${name}_VD_idvd.log 
+
+QUIT

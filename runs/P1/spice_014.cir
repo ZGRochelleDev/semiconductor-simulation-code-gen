@@ -1,0 +1,4 @@
+.subckt DIV in out g nd
+    R1 = 1k ohm
+    R2 = 1k oh m
+.end

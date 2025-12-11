@@ -1,0 +1,54 @@
+# (c) Silvaco Inc., 2024
+
+# 2D Shape Generation
+
+# In this example, 2D shapes are generated
+
+# Required Modules
+#  VictoryMesh
+#   -2D Meshing
+#   -2D Solid Modeling
+
+# Example Name
+SET name = "VM_Solid_Model_ex01"
+
+GO victorymesh simflags = "-P 4"
+
+# Cone
+CONE point.a = "0,0" point.b = "1,1" radius.x.a = 0.5 radius.x.b = 1 \
+out = "cone"
+
+REMESH delaunay out = "cone"
+
+SAVE out = "$'name'_cone"
+
+# Rectangle
+CUBOID from = "0,0" to = "1,2" out = "rectangle"
+
+REMESH delaunay out = "rectangle"
+
+SAVE out = "$'name'_rectangle"
+
+# Ellipse
+ELLIPSOID center = "0,0" radius.x = 0.5 radius.y = 0.25 \
+height = 0.125 num.edges = 10 out = "ellipse"
+
+REMESH delaunay out = "ellipse"
+
+SAVE out = "$'name'_ellipse"
+
+# Circle
+SPHERE center = "0,0" radius = 0.5 num.edges = 10 \
+out = "circle"
+
+REMESH delaunay out = "circle"
+
+SAVE out = "$'name'_circle"
+
+# VictoryVisual is used to generate the plots
+victoryvisual $'name'_cone.str $'name'_rectangle.str \
+$'name'_ellipse.str $'name'_circle.str
+ 
+QUIT
+
+

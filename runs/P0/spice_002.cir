@@ -1,0 +1,8 @@
+plaintext
+.MODEL RC r=1 k=1 c=1e-9
+.Vout 0
+.Rin 1k
+.Cin 10e-9
+.Pulse V1 0 5 1ns 100ns 200ns
+.TRAN 1us 1ns
+.END

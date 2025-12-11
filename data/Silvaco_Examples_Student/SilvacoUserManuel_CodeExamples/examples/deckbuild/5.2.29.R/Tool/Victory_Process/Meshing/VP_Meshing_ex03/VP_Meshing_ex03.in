@@ -1,0 +1,86 @@
+# (c) Silvaco Inc., 2024# (c) Silvaco Inc., 2023
+
+# Effect of LINE on doping profiles
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+Set name=“VP_Meshing_ex03” 
+
+####### PROCESS SIMULATION ####### 
+# "Coarse" density volume mesh - low accuracy on the doping profile
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+LINE x location=0 spacing=0.05
+LINE x location=2 spacing=0.05
+
+LINE z location=0 spacing=0.2
+LINE z location=1 spacing=0.2
+LINE z location=2 spacing=0.2
+
+IMPLANT boron dose=8e12 energy=100 left.to=1
+
+EXPORT name=$'name'_VP_0p2
+
+# use Victory Extract to take 1D cutline of doping through structure
+go victoryextract
+LOAD in=$'name'_VP_0p2
+EXTRACT.PROFILE csvfile="$'name'_0p2" regions="Silicon" field="Boron" x.val=0.5
+
+# "Medium" density volume mesh - moderate accuracy on the doping profile
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+LINE x location=0 spacing=0.05
+LINE x location=2 spacing=0.05
+
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=0.1
+LINE z location=2 spacing=0.2
+
+IMPLANT boron dose=8e12 energy=100 left.to=1
+
+EXPORT name=$'name'_VP_0p1
+
+# use Victory Extract to take 1D cutline of doping through structure
+go victoryextract
+LOAD in=$'name'_VP_0p1
+EXTRACT.PROFILE csvfile="$'name'_0p1" regions="Silicon" field="Boron" x.val=0.5
+
+# "High" density volume mesh - good accuracy on the doping profile
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+LINE x location=0 spacing=0.05
+LINE x location=2 spacing=0.05
+
+LINE z location=0 spacing=0.02
+LINE z location=1 spacing=0.02
+LINE z location=2 spacing=0.2
+
+IMPLANT boron dose=8e12 energy=100 left.to=1
+
+EXPORT name=$'name'_VP_0p02
+
+# use Victory Extract to take 1D cutline of doping through structure
+go victoryextract
+LOAD in=$'name'_VP_0p02
+EXTRACT.PROFILE csvfile="$'name'_0p02" regions="Silicon" field="Boron" x.val=0.5
+
+victoryvisual \
+$'name'_0p2.csv+$'name'_0p1.csv+$'name'_0p02.csv
+
+QUIT
+

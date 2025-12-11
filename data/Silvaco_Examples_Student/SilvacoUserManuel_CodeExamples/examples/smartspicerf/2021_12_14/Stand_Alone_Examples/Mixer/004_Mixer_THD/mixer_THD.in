@@ -1,0 +1,25 @@
+* THD
+.include HBT_ne600p.inc
+
+.param prf=-30_dBm
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf gnd  MTS1=(prf 0 23)
+Vlo lo gnd  MTS1=(vlo 0 25)
+
+*-------- Harmonic Distortion Measurement -----
+.HARMONIC
++ FUND=40MegHz nharm=31
++ annotate=3
++ waves 
+
+.MEASURE HARM_SP dbH2 FIND vdb(out) AT=80MegHz
+.MEASURE HARM_SP dbH4 FIND vdb(out) AT=400MegHz
+.MEASURE HARM_SP dbH6 FIND vdb(out) AT=600MegHz
+.MEASURE HARM_SP modH4 FIND vm(out) AT=160MegHz
+.MEASURE HARM_SP modH6 FIND vm(out) AT=240MegHz
+
+.MEASURE HARM_SP THD EXPR VAL=db10(modH4*modH4+modH6*modH6)-dbH2'
+
+.END

@@ -1,0 +1,90 @@
+# (c) Silvaco Inc., 2024
+
+# Local Interconnect - MOS Current Source
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex13” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.lay material=silicon depth=1.0 gasheight=2 padding=3
+
+OPTION cartesian.spacing.on
+
+CARTESIAN mask=LOCOS spacing=0.1
+CARTESIAN mask=POLY  spacing=0.5
+CARTESIAN mask=CONT  spacing=0.2
+CARTESIAN mask=SD    spacing=0.5
+CARTESIAN mask=INT   spacing=0.5
+
+## Pad oxide ##
+DEPOSIT material=oxide thickness=0.01 max
+
+## LOCOS ##
+DEPOSIT material=nitride thickness=0.1 max 
+ETCH Material=nitride thickness=0.2 max mask=LOCOS
+OXIDIZE thickness=0.572
+ETCH material=nitride max
+
+## Gate ##
+DEPOSIT material=polysilicon thickness=0.2 conformal 
+ETCH material=polysilicon max mask=POLY
+
+## Deposit Local Interconnect Oxide ##
+DEPOSIT material=oxide thickness=0.04 conformal
+ETCH material=oxide max mask=OXIDE reverse
+
+## Deposit Local Interconnect ##
+DEPOSIT material=tini thickness=0.06 conformal
+ETCH material=tini mask=INT
+
+## Deposit BPSG ##
+DEPOSIT material=BPSG thickness=0.7 conformal 
+ETCH material=BPSG mask=CONT reverse
+
+## Source-Drain Contacts ##
+ETCH material=oxide min mask=CONT reverse
+DEPOSIT material=aluminum thickness=0.4 conformal 
+ETCH material=aluminum mask=SD
+ELECTRODES mask=SD material=aluminum
+
+save name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal
+SAVE out=$'name'_VP_sv_3D.str mode=victoryrcx
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" structure="$'name'_VP_sv_3D.str"
+
+MATERIAL titaniumnitride conductivity=187000
+
+INTERCONNECT resistance adaptr=0.05
+
+SAVE spice="$'name'.net"
+
+#####   NOW DO A 2D CUTLINE AND PLOT IN 2D   #####
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" structure="$'name'_VP_sv_3D.str"
+
+CUT line=(0, 13.5, 27, 13.5)
+
+SAVE structure="$'name'_VP_sv_2D.str"
+
+victoryvisual $'name'_VP_sv_3D.str:$'name'_VP_sv_3D.set $'name'_VP_sv_2D.str
+
+QUIT

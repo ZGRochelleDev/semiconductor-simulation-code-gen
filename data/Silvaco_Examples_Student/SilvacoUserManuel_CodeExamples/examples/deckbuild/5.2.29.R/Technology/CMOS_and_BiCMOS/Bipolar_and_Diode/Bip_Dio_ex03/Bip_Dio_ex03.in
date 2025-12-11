@@ -1,0 +1,101 @@
+# (c) Silvaco Inc., 2024
+
+# NPN Gummel Plot and fT Extraction
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bip_Dio_ex03” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 from=0 to=0.8 depth=1 gasheight=2.75 resolution=0.02,0.02 material=silicon dopants="arsenic" dopingvalues="2e16"
+
+LINE x location=0 spacing=0.01
+LINE x location=0.35 spacing=0.01 
+LINE x location=0.8 spacing=0.1
+
+LINE z location=0.4 spacing=0.05
+LINE z location=0.0 spacing=0.01
+LINE z location=1 spacing=0.02 
+
+IMPLANT boron energy=18 dose=2.5e13
+DIFFUSE time=60 temperature=920
+
+DEPOSIT material=polysilicon thick=0.3 max
+
+IMPLANT arsenic dose=7.5e15 energy=50
+
+ETCH material=polysilicon outside.x="-0.2,0.2" max
+
+DIFFUSE time=25 temperature=920 dryo2 
+DIFFUSE time=50 temperature=900
+
+IMPLANT boron dose=2.5e13 energy=18
+
+DEPOSIT conformal material=oxide thick=0.4
+
+Etch material=oxide dry thick=0.5 
+
+IMPLANT boron dose=1e15 energy=30
+
+DIFFUSE time=60 temperature=900 
+
+DEPOSIT conformal material=aluminum thick=0.05 outside.x="-0.65,0.65"
+
+ELECTRODE x=0.0 name=emitter
+ELECTRODE x=0.7 name=base
+ELECTRODE substrate name=collector
+
+# Save simulation status and generate conformal (based off LINE statements)
+# mesh (conformalstr) for electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VP_sv_exVC.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL silicon taun0=5e-6 taup0=5e-6
+
+CONTACT name=emitter n.poly surf.rec
+
+MODELS conmob fldmob bgn consrh auger print 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+SOLVE vcollector=0 vstep=0.2 vfinal=2 name=collector
+
+SOLVE vbase=0.1
+SOLVE vbase=0.2
+
+LOG outfile=$'name'_VD_Gum.log
+
+SOLVE vbase=0.3 vstep=0.05 vfinal=0.9 name=base ac freq=1e6 aname=base
+
+SAVE outfile=$'name'_VD.str
+
+# Now extract some design parameters
+GO victoryextract
+LOAD in=$'name'_VD_Gum.log
+CURVE name=ib x="abs(Base Voltage)" y="abs(Collector Current)" 
+EXTRACT.CURVE name="peak collector current" expression=maxyy(curve.ib)
+EXTRACT.LOG name="peak gain" expression=max((Collector Current)/(Base Current))
+EXTRACT.LOG name="max fT" expression=max((G Collector>Base)/(2*3.1415* (C Base>Base)))
+
+victoryvisual $'name'_VP_sv_exVC.str \
+$'name'_VD_Gum.log:$'name'.set
+
+QUIT

@@ -1,0 +1,12 @@
+.LIB demo
+
+.MODEL dio D (
++LEVEL    = 1              IS       = 7.82198e-15    ISW      = 1e-18          
++RS       = 10.8026        N        = 1.01199        BV       = 47.418         
++IBV      = 0.00774265     CJO      = 8.91642e-12    VJ       = 1              
++MJ       = 0.46959        FC       = 0.5            CJSW     = 1e-10          
++VJSW     = 0.8            MJSW     = 0.3            FCSW     = 0.5            
++AF       = 1              XTI      = 3              EG       = 1.17            )
+
+.ENDL demo
+

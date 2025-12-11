@@ -1,0 +1,22 @@
+* Three Input NOR Gate
+
+.verilog "dnor.va"
+
+* Input Waveforms
+vin1 in1 0 pulse(0 5 0u 1n 1n 1u 2u)
+vin2 in2 0 pulse(0 5 1u 1n 1n 2u 4u)
+vin3 in3 0 pulse(0 5 1u 1n 1n 4u 8u)
+
+* Instance NOR Gate with size parameter
+YVLG_NOR in1 in2 in3 out norg size=3
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 10n 20u
+
+* Output WaveForms
+.iplot   v(in1) v(in2) v(in3) v(out)
+
+.end

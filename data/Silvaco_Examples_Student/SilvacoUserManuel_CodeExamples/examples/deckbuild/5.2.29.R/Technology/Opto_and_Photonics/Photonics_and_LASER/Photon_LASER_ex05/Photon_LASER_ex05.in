@@ -1,0 +1,109 @@
+# (c) Silvaco Inc., 2024
+
+# Simulating a Multi-Quantum Well AlGaInP Laser Diode
+
+# Required Modules
+#  Atlas
+#   -Blaze
+#   -Laser
+#   -Quantum
+
+# Example Name
+SET name=“Photon_LASER_ex05” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 2"
+
+# ~630nm GaInP/AlGaInP edge-emitter
+# The Effect of High Compressive Strain on the Operation of 
+# AlGaInP Quantum-Well Lasers
+# IEEE Journal of Quantum ELECTRODEtronics, VOL. 34, NO. 9, September 1998
+# mesh space.mult=0.8 diag.flip
+
+MESH  space.mult=1.0 diag.flip width=300 auto
+# 
+X.MESH loc=0.00 spac=0.50
+X.MESH loc=5.00 spac=0.50
+#
+
+REGION num=1 material=InAlGaP thick=1.5 sy=.15   x.comp=0.364 y.comp=0.156 \
+	 acceptor=5e18 bottom
+
+REGION num=2 material=InAlGaP thick=0.095 sy=.01 x.comp=0.208 y.comp=0.312 \
+	 donor=2e14 bottom
+
+REGION num=3 material=InGaP thick=0.01 sy=0.001  x.comp=0.516 \
+	 donor=2e14 bottom
+
+REGION num=4 material=InAlGaP thick=0.095 sy=.01 x.comp=0.208 y.comp=0.312 \
+	 donor=2e14 bottom
+
+REGION num=5 material=InAlGaP thick=1.5 sy=.15   x.comp=0.364 y.comp=0.156 \
+	 donor=1e18 bottom
+
+ELECTRODE num=1 name=anode top
+ELECTRODE num=2 name=cathode bottom
+
+MATERIAL region=1 eg300=2.35 NC300=9.13e+17 NV300=7.81e+18 \
+         align=0.5 permittivity=11.39 epsinf=11.39 affinity=4.19 \
+         taun0=1e-9 taup0=2e-8 copt=1.5e-10
+
+MATERIAL region=2 eg300=2.2 NC300=9.13e+17 NV300=7.81e+18 align=0.5 \
+         permittivity=12.16 epsinf=12.16 affinity=4.26 \
+         taun0=1e-9 taup0=2e-8 copt=1.5e-10
+
+MATERIAL region=3 taun0=1e-9 taup0=2e-8 copt=1.5e-10 epsinf=13.491 \
+         align=0.5 eg300=1.92 affinity=4.4
+
+MATERIAL region=4 eg300=2.2 NC300=9.13e+17 NV300=7.81e+18 align=0.5 \
+         permittivity=12.16 epsinf=12.16 affinity=4.26 \
+         taun0=1e-9 taup0=2e-8 copt=1.5e-10
+
+MATERIAL region=5 eg300=2.35 NC300=9.13e+17 NV300=7.81e+18 align=0.5 \
+         permittivity=11.39 epsinf=11.39 affinity=4.19 \
+         taun0=1e-9 taup0=2e-8 copt=1.5e-10
+
+MODELS fldmob srh optr auger fermi consrh 
+
+MODELS region=3 yan ^optr spontaneous qwell well.ny=120 well.cnbs=1 well.vnbs=1
+# lorentz
+
+MOBILITY mun=1000 mup=500 vsatn=7.7e6 vsatp=7.7e6
+
+SOLVE init
+
+SOLVE previous
+
+OUTPUT band.param con.band val.band u.srh u.radiat u.auger flowlines
+
+PROBE name="nwell" nwell x=2.5 y=1.6
+PROBE name="pwell" pwell x=2.5 y=1.6
+
+SOLVE vstep=0.05 name=anode vfinal=1.8
+
+#
+# This case Photon Energy is extracted 1.93354 + 0.005 = 1.93854
+#
+
+MODELS fldmob srh optr auger fermi consrh gainmod=5 ^print
+
+LASER trap maxtrap=10  proj rf=8 rr=90 maxch=100 \
+      photon.energy=1.8 einit=1.5 efinal=2.0 lmodes \
+      neff=3.2 cavity.length=300 sin=1e-5 index.mode=1 ^coupled
+
+SOLVE previous
+
+LOG outf= $'name'.log
+
+SOLVE vstep=0.05 name=anode vfinal=1.9
+
+SAVE outfile= $'name'_1.str
+CONTACT name=anode current
+
+SOLVE istep=1e-3 ifinal=5e-2 name=anode
+
+SAVE outfile= $'name'_2.str
+#
+victoryvisual  $'name'.log:$'name'.set
+
+QUIT

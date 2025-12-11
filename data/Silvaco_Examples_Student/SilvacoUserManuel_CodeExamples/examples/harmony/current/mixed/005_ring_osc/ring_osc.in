@@ -1,0 +1,12 @@
+*
+* Ring Oscillator
+*
+
+.include BCD3INV_1XG1.net
+
+* Analysis
+.tran 1n 170ns
+
+.options nomod nodeck
+
+.end

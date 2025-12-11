@@ -1,0 +1,28 @@
+* bjt veriloga
+
+.verilog "bjt.va"
+
+.option conv=0 nomod brief
+
+v1 11 0 dc 0.5
+v3 33 0 dc 2.0
+v4 4  0 dc 0.0
+
+r1 11 1 1.0
+r3 3 33 0.01
+
+YVLGbip 3 1 0 4 NBJT
+
+.dc v3 0.0 2.0 0.01 v1 0.5 0.6 0.025
+
+.print v(3) v(1) i(v1) i(v3) i(v4)
+
+.model NBJT VLG module=bjt
++ rb=1
++ rc=1
++ re=1
+
+.end
+
+
+

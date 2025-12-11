@@ -1,0 +1,38 @@
+* Example_1 -  4-bit adder
+**************************************************************************
+
+.INCLUDE prol013.mod
+.INCLUDE params.spi
+.INCLUDE adder4.spi
+
+Xadder4
++ vss vdd result[3] result[2] result[1] result[0] b[3] b[2] b[1] b[0] 
++ a[3] a[2] a[1] a[0] 
++ adder4
+
+Vxdd  vdd 0  DC HIGH
+Vxss  vss 0  DC LOW
+
+*.INCLUDE pattern.spi
+.INCLUDE vectors.inc
+
+.OPTIONS
++ probe
++ nomod
++ nodeck 
++ method=gear
++ post=12
+
+.TRAN SIM_STEP SIM_WIN
+
+.PROBE TRAN v(a[0]) v(a[1]) v(a[2]) v(a[3])
++           v(b[0]) v(b[1]) v(b[2]) v(b[3])
++           v(result[0]) v(result[1]) v(result[2]) v(result[3])
+
+.measure tran m_result_0 AVG v(result[0])
+.measure tran m_result_1 AVG v(result[1])
+.measure tran m_result_2 AVG v(result[2])
+.measure tran m_result_3 AVG v(result[3])
+
+.end
+

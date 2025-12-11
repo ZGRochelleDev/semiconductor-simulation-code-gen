@@ -1,0 +1,8 @@
+plaintext
+.invert_trans
+vdd in 0 DC 1.8
+PULSE(in 0 1.8)
+M1 out vdd gate=in body=vdd
+M2 out 0 gate=in body=0
+.tran 1ns 200ns
+.print tran V(out)

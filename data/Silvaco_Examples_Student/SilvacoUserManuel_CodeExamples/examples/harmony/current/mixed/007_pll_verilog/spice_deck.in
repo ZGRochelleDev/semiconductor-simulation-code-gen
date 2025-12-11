@@ -1,0 +1,18 @@
+;-----------------------------------------------------------------
+; PLL SPICE top
+;-----------------------------------------------------------------
+.lib "./bsim3_example.lib" TYPICAL
+.include "./pll_subckt.inc"
+.include "./inv2.inc"
+
+
+.GLOBAL VDD
+VD VDD GND 3.3
+
+.TRAN 1n 1.5u
+
+.IC V(xtestbench.xdut.xd2.lp2)=1.1
+
+.OPTIONS NOMOD NODECK=1 POST=2 PROBE
+
+.END

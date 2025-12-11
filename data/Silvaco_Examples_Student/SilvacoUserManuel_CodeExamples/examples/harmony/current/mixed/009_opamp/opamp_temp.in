@@ -1,0 +1,7 @@
+.TITLE Harmony project "opamp"
+
+
+
+
+
+.INCLUDE "testopamp.in"

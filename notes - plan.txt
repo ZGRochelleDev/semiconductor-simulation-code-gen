@@ -1,0 +1,90 @@
+## plan outline ##
+
+Create model
+Qwen3 (0.6B): Qwen/Qwen3-0.6B-Base (Recommended - Latest 2025 model with strong multilingual support)
+
+Generate SPICE only
+Output must be only the SPICE netlist
+
+Use: https://huggingface.co/Qwen/Qwen3-0.6B-Base
+Run locally on RTX3080
+
+Repo folders: `prompts/`, `benchmark/`, `runs/`, `eval/`, `results/`, `figures/`
+Create a run script
+
+
+Design the benchmark
+build 20+ SPICE prompts across categories
+ToDo
+    DC sweep,
+    transient RC,
+    AC filter,
+    MOSFET inverter,
+    diode rectifier,
+    op-amp macro (optional),
+    subcircuit usage,
+    etc.
+
+Define metrics
+Metrics I will be measuring:
+​1. Syntax validity pass rate
+    Defined as a yes/no per case based on rules that I can check reliably.
+    SPICE: the presence of .end, at least one element line, at least one analysis directive, no obviously malformed lines.
+        “Pass” if the netlist meets basic SPICE structure:
+        has .end
+        has at least one element line (R, C, L, V, I, M, X, etc.)
+        includes required analysis directive(s) for that case (.tran / .ac / .dc / .op)
+        no obvious malformed tokens (you can keep this simple)
+
+​2. Parameter exact-match for key fields (like regions, doping, electrodes, models)
+    Works best if I define, per benchmark case, a small set of key-value targets to check
+    (e.g., electrode names, doping type/level, model name, region material).
+    Use exact match for strings/keywords; consider tolerance only if you allow numeric flexibility.
+    Define required items like:
+        specific component values (e.g., R1=1k, C1=10n)
+        model name presence (e.g., .model NMOS ... or .include <lib>)
+        sweep settings (e.g., .dc V1 0 5 0.1)
+
+​3. Build a 'component and section coverage' score
+    - (ask: 'does the output include the required parts for a valid TCAD input?')
+    - treat it as a checklist-based score:
+        coverage = found_required_items / total_required_items
+    required components exist (e.g., must include 1 voltage source, 2 resistors, 1 MOSFET)
+    required directives exist (.tran, .plot/.print, .model/.include, .end)
+    Score = found / expected.
+
+Next, write down how each metric will be computed - not super detailed
+
+Build the evaluation harness - need to figure out how to do this
+    * Run prompts --> capture outputs
+    * Score outputs with metrics
+    * Save results (JSON/CSV) for comparisons
+
+Create the baseline prompt
+    * One simple instruction prompt
+    * Run baseline across benchmark and record baseline scores
+
+Implement prompt technique variants
+    * Structured output constraints
+    * Few-shot examples
+    * Critique-->revise pass
+    * retrieval/context injection - may not have time for this one
+
+Run experiments and log results
+    * Keep runs reproducible (fixed seeds like 123)
+    * Store prompts + outputs + scores per run
+
+Analyze + prompting strategy
+    * Compare deltas vs baseline
+    * Collect representative successes/failures
+
+Prompting techniques:
+    P0: Baseline instruction prompt
+    P1: Structured output rules + hard constraints
+    P2: Few-shot (2–3 examples)
+    P3: Critique --> revise (2-pass)
+
+Prepare stuff to submit i.e. deliverables
+    * Slides: method, benchmark, metrics, results
+    * Report: concise writeup + plots/tables
+    * README: how to run + reproduce experiments

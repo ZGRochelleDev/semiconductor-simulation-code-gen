@@ -1,0 +1,106 @@
+# (c) Silvaco Inc., 2024
+
+# Using masks to add volume mesh
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name=“VP_Meshing_ex05” 
+
+####### PROCESS SIMULATION ####### 
+# Mask not used to add mesh lines
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=-0.5 to=2.5 depth=1 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14 at=0 \
+layout=$'name'_Mask.lay
+
+LINE x location=-0.5 spacing=0.1
+LINE x location=-0.3 spacing=0.1
+
+LINE x location=2.3 spacing=0.1
+LINE x location=2.5 spacing=0.1
+
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=0.1
+
+# call a mask and deposit a layer
+DEPOSIT material=oxide mask=barrier thick=0.1 max
+
+# EXPORT structures are for visualization only
+# Export to view original mesh
+EXPORT name=$'name'_VP_NoCartMesh
+
+# Use mask edges to add mesh lines
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=-0.5 to=2.5 depth=1 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14 at=0 \
+layout=$'name'_Mask.lay
+
+# Use mask called "barrier" and add a spacing of 0.02um
+# at the edge of this mask
+CARTESIAN  mask="barrier" spacing=0.01
+
+# Note: The structure must be in 2D or 3D mode to use CARTESIAN.
+# The simulation will naturally start in 1D unless forced into 2D/3D
+# using FLOW.DIM on the INIT statement
+
+LINE x location=-0.5 spacing=0.1
+LINE x location=-0.3 spacing=0.1
+
+LINE x location=2.3 spacing=0.1
+LINE x location=2.5 spacing=0.1
+
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=0.1
+
+# call a mask and deposit a layer
+DEPOSIT material=oxide mask=barrier thick=0.1 max
+
+# EXPORT structures are for visualization only
+# Export to view mesh with mask meshing
+EXPORT name=$'name'_VP_CartMesh
+
+# Use mask edges to add mesh lines plus extra 
+# line added under masked region
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=-0.5 to=2.5 depth=1 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14 at=0 \
+layout=$'name'_Mask.lay
+
+# use mask called "barrier" and add a spacing of 0.02um
+# at the edge of this mask
+CARTESIAN  mask="barrier" spacing=0.01
+
+LINE x location=-0.5 spacing=0.1
+LINE x location=-0.3 spacing=0.1
+
+# Add extra mesh under masked area
+LINE x location=1 spacing=0.05
+
+LINE x location=2.3 spacing=0.1
+LINE x location=2.5 spacing=0.1
+
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=0.1
+
+# call a mask and deposit a layer
+DEPOSIT material=oxide mask=barrier thick=0.1 max
+
+# EXPORT structures are for visualization only
+# Export to view mesh with mask meshing and extra lines
+EXPORT name=$'name'_VP_CartMeshPlus
+
+victoryvisual \
+$'name'_VP_NoCartMesh.str:$'name'_Mesh.set \
+$'name'_VP_CartMesh.str:$'name'_Mesh.set \
+$'name'_VP_CartMeshPlus.str:$'name'_Mesh.set
+
+QUIT

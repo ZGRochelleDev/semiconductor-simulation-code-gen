@@ -1,0 +1,10 @@
+Answer:
+**Required:**
+
+a) Write an ngspice-compatible <span style="color:#4257B2">**SPICE netlist**</span>.
+
+b) Use node $0$ as ground.
+
+c) The final line must be exactly:
+
+$$\text{.end

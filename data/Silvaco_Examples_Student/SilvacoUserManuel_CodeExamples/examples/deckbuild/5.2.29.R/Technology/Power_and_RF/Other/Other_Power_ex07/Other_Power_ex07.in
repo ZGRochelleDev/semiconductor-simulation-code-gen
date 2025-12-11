@@ -1,0 +1,171 @@
+# (c) Silvaco Inc., 2024
+
+# PHEMT High Frequency Analysis
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Other_Power_ex07” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Process to create structure is emulated in Victory Process
+INIT material=AlGaAs depth=0.36 gasheight=1 resolution=0.01 \
+   separate.layers meshdepth=2 from=0 to=4.5 at=0 \
+   dopant=boron dopingvalue=1E14
+
+LINE x location=0      spacing=0.2
+LINE x location=0.6    spacing=0.2
+LINE x location=1      spacing=0.05
+LINE x location=1.1    spacing=0.05
+LINE x location=1.5    spacing=0.05
+LINE x location=1.75   spacing=0.02
+LINE x location=2      spacing=0.05
+LINE x location=2.25   spacing=0.02
+LINE x location=2.5    spacing=0.05
+LINE x location=2.9    spacing=0.05
+LINE x location=3.2    spacing=0.1
+LINE x location=3.5    spacing=0.1
+LINE x location=3.9    spacing=0.2
+LINE x location=4.5    spacing=0.2
+
+LINE z location=-0.158 spacing=0.01
+LINE z location=-0.128 spacing=0.01
+LINE z location=-0.108 spacing=0.003
+LINE z location=-0.098 spacing=0.0002
+LINE z location=-0.088 spacing=0.003
+LINE z location=-0.074 spacing=0.005
+LINE z location=-0.069 spacing=0.005
+LINE z location=-0.06  spacing=0.0005
+LINE z location=-0.059 spacing=0.0005
+LINE z location=-0.056 spacing=0.0002
+LINE z location=-0.049 spacing=0.001
+LINE z location=-0.042 spacing=0.0002
+LINE z location=-0.039 spacing=0.0005
+LINE z location=-0.038 spacing=0.0005
+line z location=-0.02  spacing=0.01
+LINE z location=0      spacing=0.01
+LINE z location=0.1    spacing=0.05
+LINE z location=0.36   spacing=0.05
+
+# For niche materials it is requirted that the dopant type (acceptor/donor) is
+# specified for the dopants used
+IMPURITY MATERIAL="AlGaAs" quantity="boron" Acceptor
+IMPURITY MATERIAL="AlGaAs" quantity="phosphorus" Donor
+
+IMPURITY MATERIAL="InGaAs" quantity="phosphorus" Donor
+IMPURITY MATERIAL="GaAs" quantity="phosphorus" Donor
+
+DEPOSIT material=AlGaAs thickness=0.038 max x.comp=0.22 \
+   dopant=boron dopingvalue=1E14
+
+DEPOSIT material=AlGaAs thickness=0.001 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=2E18
+
+DEPOSIT material=AlGaAs thickness=0.003 max x.comp=0.22 \
+   dopant=boron dopingvalue=1.5E14
+
+DEPOSIT material=InGaAs thickness=0.014 max x.comp=0.78 \
+   dopant=phosphorus dopingvalue=5E15
+
+DEPOSIT material=AlGaAs thickness=0.003 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=5E15
+
+DEPOSIT material=AlGaAs thickness=0.001 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=8E18
+
+DEPOSIT material=AlGaAs thickness=0.038 max x.comp=0.22 \
+   dopant=phosphorus dopingvalue=5E15
+
+DEPOSIT material=GaAs thickness=0.05 max outside.x="1.1,2.9" \
+   angle=7.125 ref.z=-0.148 dopant=phosphorus dopingvalue=2E18
+
+DEPOSIT material=gold thickness=0.01 dry outside.x="1,1.75" \
+   outside.x="2.25,3.5"
+
+MASK material=barrier between.x="1,3.5"
+PROFILE infile=$'name'_prof.dat phosphorus
+STRIP material=barrier 
+
+ELECTRODE name=drain x=4 z=-0.15
+ELECTRODE name=source x=0.5 z=-0.15
+ELECTRODE name=gate x=2 z=-0.1
+
+# Save simulation status
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# load simulation status
+LOAD in=$'name'_VP_sv separate
+
+REMESH conformal
+
+SAVE out=$'name'_VM_Conf.str
+
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+# Thermionic emission model for hetero-interface
+INTERFACE s.s thermionic tunnel
+
+# Define material parameters on material-by-material basis 
+MATERIAL material=GaAs align=0.6
+MATERIAL material=AlGaAs align=0.6 
+MATERIAL material=InGaAs align=0.6 mun0=12000 mup0=2000 vsat=2.e7 \
+   taun0=1.e-8 taup0=1.e-8 
+
+# Define physical models on material-by material basis
+MODELS material=GaAs consrh fldmob evsatmod=0 cubic35 print 
+MODELS material=AlGaAs consrh fldmob evsatmod=0 cubic35 print 
+MODELS material=InGaAs srh fldmob evsatmod=0 cubic35 print
+
+MOBILITY material=GaAs n.sotoodeh p.sotoodeh
+MOBILITY material=AlGaAs n.sotoodeh p.sotoodeh
+
+# Define the workfunction for the gate contact
+CONTACT name=gate workfunction=4.55
+
+# Include bands potential, and current flowlines into output 
+OUTPUT con.band val.band flowlines 
+
+#### SOLUTION SOLVING #### 
+# Initial solution
+SOLVE init 
+SOLVE previous
+SAVE outfile=$'name'_VD_Init.str
+
+# Apply a set of biases at the gate and drain
+SOLVE vdrain=0.001 prev
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05 vstep=0.05 vfinal=1 name=drain
+SOLVE vstep=0.1 vfinal=2.0 name=drain
+
+# Frequency domain AC simulation with S-parameter outputs.
+LOG outf=$'name'_VD_ac.log gains s.param inport=gate outport=drain width=50
+
+SOLVE ac.analysis frequency=1e5 mult.freq fstep=2 ffinal=1e9
+SOLVE ac.analysis frequency=2e9 mult.freq fstep=1.3 ffinal=3e11
+
+LOG off
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+ $'name'_VD_ac.log:$'name'_Gains.set \
+ '($'name'_VD_ac.log $'name'_VD_ac.log)':$'name'_Sparam.set
+
+QUIT

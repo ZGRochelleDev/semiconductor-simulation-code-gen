@@ -1,0 +1,4 @@
+.HCELL NAND2 = logic_nand_2
+.HCELL NAND3 = logic_nand_3
+.NET DFF:VDD= logic_dff:PWR
+.NET DFF:VSS= logic_dff:GND

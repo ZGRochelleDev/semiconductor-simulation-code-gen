@@ -1,0 +1,214 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Mixed-Mode Simulation of Current Filaments in Multicell IGBT
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D Giga
+#   -3D MixedMode
+
+# Example Name
+SET name="Silicon_Power_ex12"
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+# Start Cell-mode
+INIT material=silicon depth=140 from="0,0" to="10,1" gasheight=3
+
+LINE x location=0    spacing=0.2
+LINE x location=0.4  spacing=0.1 
+LINE x location=0.5  spacing=0.1 
+LINE x location=1.25 spacing=0.75
+LINE x location=2    spacing=0.1
+LINE x location=2.1  spacing=0.1
+LINE x location=2.5  spacing=0.4
+LINE x location=2.9  spacing=0.1
+LINE x location=3.0  spacing=0.1
+LINE x location=3.75 spacing=0.75
+LINE x location=10   spacing=5
+
+LINE y location=0    spacing=1
+LINE y location=1    spacing=1 
+
+LINE z location=-1.5 spacing=0.75
+LINE z location=-1   spacing=0.5 
+LINE z location=0    spacing=0.25 
+LINE z location=0.25 spacing=0.25
+LINE z location=1.5  spacing=0.5
+LINE z location=3    spacing=0.25
+LINE z location=4.5  spacing=1
+LINE z location=6    spacing=0.5
+LINE z location=10   spacing=1.5
+LINE z location=70   spacing=20
+LINE z location=118  spacing=4
+LINE z location=126  spacing=5
+LINE z location=134  spacing=2
+LINE z location=140  spacing=4
+
+# mask for p-well doping
+SPECIFYMASKPOLY maskid=1 istransparent=false \
+    p="0,0" p="2.1,0" p="2.1,1" p="0,1"
+# mask for emitter doping
+SPECIFYMASKPOLY maskid=2 istransparent=false \
+    p="0.4,0" p="1,0" p="1,1" p="0.4,1"
+# mask for p-well contact
+SPECIFYMASKPOLY maskid=3 istransparent=false \
+    p="1,0" p="2.1,0" p="2.1,1" p="1,1"
+# mask for p-floating region doping
+SPECIFYMASKPOLY maskid=4 istransparent=false \
+    p="2.5,0" p="10,0" p="10,1" p="2.5,1"
+# mask for trench etching
+SPECIFYMASKPOLY maskid=5 istransparent=false \
+    p="0,0" p="0.5,0" p="0.5,1" p="0,1"
+SPECIFYMASKPOLY maskid=5 istransparent=false add \
+    p="2,0" p="3,0" p="3,1" p="2,1"
+# mask for gate electrodes
+SPECIFYMASKPOLY maskid=6 electrode=gate istransparent=false \
+    p="0,0" p="0.4,0" p="0.4,1" p="0,1"
+SPECIFYMASKPOLY maskid=6 electrode=gate0v istransparent=false add \
+    p="2.1,0" p="2.9,0" p="2.9,1" p="2.1,1"
+# mask for emitter opening
+SPECIFYMASKPOLY maskid=7 istransparent=false \
+    p="0.7,0" p="1.8,0" p="1.8,1" p="0.7,1"
+# mask for emitter electrode settings
+SPECIFYMASKPOLY maskid=8 electrode=emitter \
+    p="0,0" p="10,0" p="10,1" p="0,1"
+
+DOPING phosphorus=7e13 material=silicon min=0 max=125
+DOPING phosphorus=9.993e16 material=silicon min=118 max=134 
+DOPING boron=2e17 material=silicon min=134 max=140
+
+MASK maskid=1 
+DOPING boron conc=2.0e17 peak=0 gauss.sigma=0.752 lateral.sigma=1e-5 
+STRIP barrier
+
+MASK maskid=2 
+DOPING phosphorus conc=1.0e19 peak=0 gauss.sigma=0.062 lateral.sigma=0.05 
+STRIP barrier
+
+MASK maskid=3 
+DOPING boron conc=1.0e20 peak=0 gauss.sigma=0.075 lateral.sigma=0.06 
+STRIP barrier
+
+MASK maskid=4 
+DOPING boron conc=2.0e17 peak=0 gauss.sigma=1.504 lateral.sigma=1e-5 
+STRIP barrier
+
+# trench gate formation
+MASK maskid=5 
+ETCH material=silicon thickness=6 max 
+STRIP barrier
+
+DEPOSIT oxide thickness=0 max
+
+MASK maskid=6
+ETCH material=oxide thickness=5.9 max
+STRIP barrier
+
+DEPOSIT material=aluminum thickness=0 max
+
+# gate electrode setting
+ELECTRODES maskid=6 material=aluminum
+
+# emitter electrode formation
+DEPOSIT material=oxide thickness=1 max
+
+MASK maskid=7
+ETCH material=oxide thickness=1 max
+STRIP barrier
+
+DEPOSIT aluminum thickness=0.5 max
+
+# emitter & collector electrode settings
+ELECTRODES maskid=8 material=aluminum 
+ELECTRODES name=collector substrate
+
+# Save simulation status
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE MESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+# Create 8-cell structure by mirroring.
+MIRROR axes="-x, +8x"
+
+# Generate conformal mesh for electrical simulation.
+REMESH conformal
+
+SAVE out=$'name'_VM_conf.str
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### MIXED MODE SETUP ####
+.BEGIN
+
+vg 1 0 0. pwl 0 0 0.01u 15 10u 15 10.01u 0 15u 0
+rg 2 1 10
+adev 2=gate 3=emitter 4=collector 7=gate0v width=1/160e-8 infile=$'name'_VM_conf.str
+vs1 3 0 0. 
+vs2 7 0 0.
+ls 5 4 10nH
+rs 6 5 10m
+vc 6 0 0 
+
+.NODESET v(1)=0. v(2)=0. v(3)=0. v(4)=0. v(5)=0. v(6)=0. v(7)=0. 
+.OPTIONS print relpot m2ln.tr temp=300 m2ln.cutback 
+.NUMERIC amp.precond elec.parallel.num=4 tcomp=2300
+
+.SAVE outfile=$'name'_VD_MM
+
+.LOG outfile=$'name'_VD_MM onefile
+
+.DC vc 0.1 1.0 0.1
+.DC vc 2 10 1
+.DC vc 15 50 5
+.DC vc 60 200 10
+.DC vc 225 650 25
+.TRAN 1ns 8u 
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL device=adev silicon \
+         f.vsatn=$'name'.so f.vsatp=$'name'.so \
+         taun0=1e-5 taup0=3e-6 lt.taun=-1.5 lt.taup=-1.5
+
+MODELS device=adev  klassen fldmob bgn.kla srh hnsaug lat.temp 
+MOBILITY device=adev alphp.cvt=0.719 feln.cvt=5.82e30 felp.cvt=2.0546e30 \
+         n.lcrit=1e-6 p.lcrit=1e-6 n.canali p.canali 
+IMPACT device=adev selberherr 
+
+CONTACT device=adev name=gate workfunc=4.972
+THERMCONTACT device=adev name=collector ext.temp=300 alpha=1/0.3  
+
+#### NUMERICAL METHODS ####
+METHOD device=adev pas norm.scaling.local block.tran
+
+OUTPUT con.band val.band
+
+PROBE device=adev j.electron v.mag x=0 z=118 name="Jec"
+PROBE device=adev j.hole v.mag x=0 z=118 name="Jhc"
+
+GO victorydevice
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+  $'name'_VD_MM_tr.log:$'name'_trans.set
+victoryvisual \
+  $'name'_VD_MM_adev.str:$'name'_TotalCurrDens.set
+
+QUIT
+
+
+

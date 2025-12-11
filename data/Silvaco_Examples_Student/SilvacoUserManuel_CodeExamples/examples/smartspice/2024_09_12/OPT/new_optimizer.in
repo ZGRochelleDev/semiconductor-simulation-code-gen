@@ -1,0 +1,28 @@
+* Check new optimizer, which accepts several new keywords:
+* NORMLEV, NOISELEV, ERRLEV, and FORMTYPE.
+* All take numerical arguments, and no range-checking is performed.
+* Ultimately, the optimizer will be put into a separate library, 
+* to be used by UTMOST, SmartSpice, & friends.
+
+vcc 0   vss    dc -5v
+vin inp 0      dc 1.55v
+m1 2  inp  vss  vss  pm  w=wp   l=lp
+m2 2  inp  0    0    nm  w=20u  l=2.0u
+
+.MODEL  pm  PMOS ( level=3 tox=.02e-6 phi=0.576 gamma=0 vto=0 alpha=0 kappa=0)
+.model  nm  NMOS ( level=3 tox=.02e-6 phi=0.576 gamma=0 vto=0 alpha=0 kappa=0)
+
+.DC vin 0 5  0.1 
+
+.MEASURE DC maxcur MAX    i(vcc) 
+.MEASURE DC trip   CROSS  v(2)  v(inp)
+
+.PARAM wp=10u lp=1.6u
+
+.MODIF 
++ OPTIMIZE wp=OPT(2.0e-7 30e-6 10e-6) m2(w)=OPT(5u 100u 20u )
++ TARGETS  trip=1.55   maxcur=0.0019 
++ OPTIONS  MEASOFF=0 AVG=0.001 NORMLEV=0 NOISELEV=0 ERRLEV=0 FORMTYPE=0
+
+.OPTIONS nomod
+.END

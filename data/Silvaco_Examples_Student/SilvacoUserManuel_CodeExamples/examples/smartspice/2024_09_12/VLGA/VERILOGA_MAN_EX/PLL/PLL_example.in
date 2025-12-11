@@ -1,0 +1,46 @@
+* PLL (Phase-Locked Loop) 
+* SPICE/Verilog-AMS Mixed Simulation
+ 
+ * Verilog-A module files 
+.verilog "pll_pd.va"
+.verilog "pll_vco.va"
+.verilog "divider.va"
+
+* Libary
+.lib  'bsim3_example.lib'  typical
+
+* Parameters
+.global  vdd
+
+* Options
+.options  acct nomod accurate
+
+* SPICE Subcircuit files
+
+.include "pll_cp.net"                       ; Charge Pump 
+.include "pll_lpf.net"                      ; Loop Filter 
+
+* PLL Main Circuit
+YVLG_PD   ref     fb    up   down  pll_pd   ; Phase Detector  - Verilog-A module
+Xcp      up      down  lpf        pll_cp    ; Charge Pump     - SPICE subcircuit
+Xlpf     lpf                      pll_lpf   ; Low-pass filter - SPICE subcircuit
+YVLG_VCO lpf     ckout1           pll_vco   ; Voltage Controlled Oscillator - Verilog-A module
+YVLG_DIV ckout   fb               divider   ; Devider - Verilog-A module
+r1       ckout1  ckout   100
+c1       ckout   0       1p
+
+* Input Waveforms
+vref ref 0 pulse(0 3.3 22.4n 0.1n 0.1n 4.9n 10n) 
+vvdd vdd 0 3.3 
+
+* Initial conditions
+.ic   v(xlpf.cap)=1.1  v(up)=0.0  v(down)=0.0
+
+* Analysis 
+.tran 0.1n 2u
+
+* Save Waveforms
+.save v(ref) v(fb) v(up) v(down) v(lpf) v(ckout) 
+
+.end 
+

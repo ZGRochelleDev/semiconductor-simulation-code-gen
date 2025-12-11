@@ -1,0 +1,65 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Diode Simulation with Small Signal Optical AC Analysis 
+
+# Required Modules
+#  Victory Device
+#   -3D Simulator
+#   -3D Optical
+
+# Example Name
+Set name="Photodiode_ex06"
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+Mesh space.mult=4.0 three.d
+#
+X.MESH location=0.00 spacing=0.10
+X.MESH location=10.0 spacing=0.10
+#
+Y.MESH location=0.00 spacing=0.05
+Y.MESH location=5.00 spacing=0.20
+Y.MESH location=10.0 spacing=0.05
+#
+Z.MESH location=0.00 spacing=0.10
+Z.MESH location=10.0 spacing=0.10
+
+# Regions and electrodes
+REGION number=1 material=Silicon
+#
+ELECTRODE number=1 name=anode top
+ELECTRODE number=2 name=cathode substrate
+
+# Device doping
+DOPING uniform concentration=1e14 n.type
+DOPING gaussian peak=0.00 characteristic=0.1 concentration=1e18 p.type dir=y
+DOPING gaussian peak=10.0 characteristic=0.1 concentration=1e18 n.type dir=y
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL taup0=2.e-6 taun0=2.e-6 
+MODELS srh auger conmob fldmob 
+
+# Beam definition
+BEAM number=1 x.origin=5.0 y.origin=-1.0 z.origin=0.5 \
+angle=90 wavelength=0.623 nx=101 nz=101 save.rays
+
+#Solution solving		
+METHOD newton trap
+SOLVE initial 
+SOLVE previous
+SOLVE vcathode=0.1
+SOLVE vcathode=0.5
+SOLVE vcathode=1.0
+SOLVE vcathode=2.0
+#
+LOG outf=$'name'_VD.log master
+#
+SOLVE b1=0.001 ss.phot ss.light=0.001 beam=1 freq=1e5 fstep=1.5 mult.f nfstep=35
+SAVE outf=$'name'_VD.str 
+#
+victoryvisual $'name'_VD.log:$'name'_VD.set
+
+QUIT

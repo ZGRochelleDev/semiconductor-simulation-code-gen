@@ -1,0 +1,18 @@
+source n2.var
+source n0c2.var
+GO victoryextract 
+
+option datafile = n38.result
+
+load in = n34_VD_BVds.log
+
+set X = "drain Voltage"
+set Y = "drain Current"
+CURVE name = BV x = "abs($X)" y = "abs($Y)"
+
+# BVds
+extract.curve name = BVds_[V] expression = "intercept(y = 1.0e-7, CURVE.BV)"
+# Idoff_BV
+extract.curve name = Idoff_BV_[A/um] expression = "intercept(x = 1.1*$Vdd, CURVE.BV)"
+
+#quit 

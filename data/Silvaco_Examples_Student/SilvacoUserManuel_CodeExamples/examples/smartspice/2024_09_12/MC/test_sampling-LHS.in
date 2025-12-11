@@ -1,0 +1,38 @@
+* .options Sampling_Method=LHS with PRMC
+
+.options NOMOD NODECK
+.options PROBE POST=2 TNOM=25 ACCT
+.options MODMONTE=1
+
+.options Sampling_Method=LHS 
+
+
+.param
++param_l=AGAUSS(0,1,1)
++param_w=AGAUSS(0,1,1)
+
+.model nch nmos LEVEL=53 
+
+xmain1  2 11 0 0 trans
+xmain2  2 11 0 0 trans
+xmain3  2 11 0 0 trans
+
+.subckt trans 1 2 3 4
+.param
++ subparam_l = 'param_l'
++ subparam_w = 'param_w'
+main 1 2 3 4 nch W='1E-6 * (1 + subparam_l/10)' L='0.15E-6 *(1 + subparam_w/10)'
+.ends
+
+v01 2  0 1.5
+v02 11 0 0.0
+
+
+.dc v02 0 2.0 0.1 sweep monte=3 prmc
+
+.meas dc ids_11 find par('i(xmain1.main)*1E3') when v(11)=1.5
+.meas dc ids_12 find par('i(xmain2.main)*1E3') when v(11)=1.5
+.meas dc ids_13 find par('i(xmain3.main)*1E3') when v(11)=1.5
+
+
+.end

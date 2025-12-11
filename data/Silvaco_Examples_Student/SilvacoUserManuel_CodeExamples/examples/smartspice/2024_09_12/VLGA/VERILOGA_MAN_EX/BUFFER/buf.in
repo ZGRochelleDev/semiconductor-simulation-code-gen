@@ -1,0 +1,21 @@
+* Buffer
+
+.verilog "buff.va"
+
+
+* Input Waveform
+vin in 0 pulse(0 5 1u 1n 1n 1u 2u)
+
+* Buffer
+YVLG_buf in  out buffer
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 10n 5u
+
+* Plot Wavwforms
+.iplot v(in) v(out)
+
+.end

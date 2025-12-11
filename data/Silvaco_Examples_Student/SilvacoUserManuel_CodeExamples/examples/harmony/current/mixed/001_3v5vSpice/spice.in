@@ -1,0 +1,20 @@
+* 3-volt  5-volt discipline test
+
+.subckt f3 in3v out3v 
+.ic v(in3v)=3 
+;;vlg discipline in3v=elec3volt out3v=elec3volt
+R in3v out3v  1e3
+C out3v gnd 1e-11
+.ends
+
+.subckt f5 in5v out5v
+;;vlg discipline in5v=elec5volt out5v=elec5volt
+R in5v out5v  4e3
+C out5v gnd 1e-11
+.ends
+
+.options nomod nodeck
+
+.tran 1n 10u
+
+.end

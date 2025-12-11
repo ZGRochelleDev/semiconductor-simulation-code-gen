@@ -1,0 +1,329 @@
+# (c) Silvaco Inc., 2024
+
+# Thermal Optimization using Flip Chip structure
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D Giga
+
+# Example Name
+set name=GaN_Power_ex05
+
+################################################################
+# flip Chip structure
+################################################################
+
+GO victoryd simflags="-P 4 -80"
+
+#### variable setting ####
+SET vstart = 0
+SET vstop = 15
+SET vinc = 0.5
+
+#### STRUCTURE SPECIFICATION ####
+MESH width=100 ^diag.flip
+
+X.MESH location=0 spacing=0.2
+X.MESH location=0.5 spacing=0.2
+X.MESH location=1.0 spacing=0.1
+X.MESH location=3 spacing=0.25
+X.MESH location=4 spacing=0.25
+X.MESH location=6 spacing=0.1
+X.MESH location=9 spacing=0.75
+
+Y.MESH location=-20 spacing=3
+Y.MESH location=-5 spacing=1
+Y.MESH location=0.2 spacing=0.2
+Y.MESH location=0.5 spacing=0.01
+Y.MESH location=0.5267 spacing=0.0025
+Y.MESH location=0.75 spacing=0.1
+Y.MESH location=1.0 spacing=0.05
+Y.MESH location=2.0 spacing=0.25
+Y.MESH location=3.0 spacing=3
+Y.MESH location=20 spacing=3
+
+REGION number=1 x.min=0.5 x.max=8.5 y.max=0.5267         material=AlGaN x.composition=0.25 
+REGION number=2 x.min=0.0 x.max=9.0 y.min=-5 y.max=0.5   material=nitride insulator
+REGION number=3 x.min=0.5 x.max=8.5 y.min=0.5267 y.max=1 material=GaN  donors=1e15 substrate    
+REGION number=4 x.min=0.0 x.max=9.0 y.min=1.0 y.max=2.0  material=GaN 
+REGION number=5 x.min=0.0 x.max=9.0 y.min=2.0 y.max=20.0 material=sapphire insulator
+REGION number=6 x.min=0.0 x.max=9.0 y.min=-20 y.max=-5   material=AlN
+
+ELECTRODE number=1 name=source x.min=0 x.max=1 y.min=-5 y.max=1 
+ELECTRODE number=2 name=drain x.min=6 x.max=9 y.min=-5 y.max=1 
+ELECTRODE number=3 name=gate x.min=3 x.max=4 y.min=0.2 y.max=0.5
+ELECTRODE number=4 substrate
+
+#### MATERIAL/PHYSICAL MODELS ####
+CONTACT name=gate workfunction=5.1
+CONTACT name=source workfunction=4.31
+CONTACT name=drain workfunction=4.31
+
+MODELS k.p print srh
+MODELS lat.temp 
+MOBILITY FMCT.N Gansat.N
+MODELS polarization calc.strain polar.scale=0.75
+MODELS region=1 pch.elec
+INTERFACE neutralize x.min=3 x.max=4 y.min=0.48 y.max=0.52
+THERMCONTACT number=1 y.min=-20 y.max=-20 ext.temp=300  alpha=5000 
+
+#### NUMERICAL METHODS ####
+OUTPUT con.band val.band charge  polar.charge band.par e.mobility
+
+METHOD newton trap maxtraps=25  
+
+#### SOLUTION SOLVING ####
+#
+# ID-VG curve simulation
+#
+SOLVE init
+SAVE outfile = $'name'_VD_Init_Flip.str
+
+# bias drain to 5v
+SOLVE previous
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=1
+SOLVE vstep=1 name=drain vfinal=5
+
+# bias gate to -10v
+SOLVE name=gate vfinal=-10 vstep=-0.5
+
+# save the curve from vg=-10v to vg=1v
+LOG outfile = $'name'_VD_Vth_Flip.log
+SOLVE name=gate vfinal=1 vstep=0.25
+LOG off
+
+#
+# ID-VD family curves simulation
+#
+SOLVE init
+
+# bias gate to -3v then save the curve of ID-VD
+SOLVE vgate=-3
+LOG outfile = $'name'_VD_Vg3_Flip.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to -2v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=-2
+LOG outfile = $'name'_VD_Vg2_Flip.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to -1v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=-1
+LOG outfile = $'name'_VD_Vg1_Flip.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to 0v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=0
+LOG outfile = $'name'_VD_Vg0_Flip.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# save the final solution structure
+SAVE outfile = $'name'_VD_Flip.str
+
+#
+# AC simulation
+# 
+LOG outfile = $'name'_VD_AC_Flip.log master gains s.param inport=gate outport=drain
+
+SOLVE ac freq=10 fstep=10 mult.f nfstep=7
+SOLVE ac freq=1e9
+SOLVE ac freq=2e9 fstep=2e9 nfstep=3
+SOLVE ac freq=1e10 fstep=5e9 nfstep=8
+LOG off
+
+#
+# Transient simualtion (Gate lag)
+#
+# bias drain to 5v
+SOLVE init
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=1
+SOLVE vstep=1 name=drain vfinal=5
+
+# bias gate to -10v
+SOLVE name=gate vfinal=-10 vstep=-0.5
+
+# transient simulation to 1e-4 and save the results
+LOG outfile = $'name'_VD_Tran_Flip.log
+SOLVE Vgate=0 ramptime=1e-8 dt=5e-10 tstop=1e-8
+SOLVE dt=1e-9 tstop=1e-7
+SOLVE dt=1e-8 tstop=1e-6
+SOLVE dt=1e-7 tstop=1e-5
+SOLVE dt=1e-6 tstop=1e-4
+
+
+################################################################
+# Normal  structure
+################################################################
+GO victoryd simflags="-P 4 -80"
+
+SET vstart = 0
+SET vstop = 15
+SET vinc = .5
+
+#### STRUCTURE SPECIFICATION ####
+MESH width=100 ^diag.flip
+
+X.MESH location=0   spacing=0.2
+X.MESH location=0.5 spacing=0.2
+X.MESH location=1.0 spacing=0.1
+X.MESH location=3   spacing=0.25
+X.MESH location=4   spacing=0.25
+X.MESH location=6   spacing=0.1
+X.MESH location=9   spacing=0.75
+
+Y.MESH location=-5     spacing=1
+Y.MESH location=0.2    spacing=0.2
+Y.MESH location=0.5    spacing=0.01
+Y.MESH location=0.5267 spacing=0.0025
+Y.MESH location=0.75   spacing=0.1
+Y.MESH location=1.0    spacing=0.05
+Y.MESH location=2.0    spacing=0.25
+Y.MESH location=3.0    spacing=3
+Y.MESH location=20     spacing=3
+
+REGION number=1 x.min=0.5 x.max=8.5 y.max=0.5267         material=AlGaN   x.composition=0.25 
+REGION number=2 x.min=0.0 x.max=9.0 y.min=-5 y.max=0.5   material=nitride insulator
+REGION number=3 x.min=0.5 x.max=8.5 y.min=0.5267 y.max=1 material=GaN     donors=1e15 substrate    
+REGION number=4 x.min=0.0 x.max=9.0 y.min=1.0 y.max=2.0  material=GaN
+REGION number=5 x.min=0.0 x.max=9.0 y.min=2.0 y.max=20.0 material=sapphire insulator
+
+ELECTRODE number=1 name=source x.min=0 x.max=1 y.min=-5 y.max=1 
+ELECTRODE number=2 name=drain x.min=6 x.max=9 y.min=-5 y.max=1 
+ELECTRODE number=3 name=gate x.min=3 x.max=4 y.min=0.2 y.max=0.5
+ELECTRODE number=4 substrate
+
+#### MATERIAL/PHYSICAL MODELS ####
+CONTACT name=gate   workfunction=5.1
+CONTACT name=source workfunction=4.31
+CONTACT name=drain  workfunction=4.31
+
+MODELS k.p print srh
+MODELS lat.temp 
+MOBILITY FMCT.N Gansat.N
+MODELS polarization calc.strain polar.scale=0.75
+MODELS region=1 pch.elec
+INTERFACE neutralize x.min=3 x.max=4 y.min=0.48 y.max=0.52
+THERMCONTACT number=1 y.min=20 y.max=20 ext.temp=300  alpha=5000 
+
+#### NUMERICAL METHODS ####
+OUTPUT con.band val.band charge  polar.charge band.par e.mobility
+
+METHOD newton trap maxtraps=25  
+
+#### SOLUTION SOLVING ####
+#
+# ID-VG curve simulation
+#
+SOLVE init
+SAVE outfile = $'name'_VD_Init_Norm.str 
+
+# bias drain to 5v
+SOLVE previous
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=1
+SOLVE vstep=1 name=drain vfinal=5
+
+# bias gate to -10v
+SOLVE name=gate vfinal=-10 vstep=-0.5
+
+# save the curve from vg=-10v to vg=1v
+LOG outfile = $'name'_VD_Vth_Norm.log
+SOLVE name=gate vfinal=1 vstep=0.25
+LOG off
+
+#
+# ID-VD family curves simulation
+#
+SOLVE init
+
+# bias gate to -3v then save the curve of ID-VD
+SOLVE vgate=-3
+LOG outfile = $'name'_VD_Vg3_Norm.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to -2v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=-2
+LOG outfile = $'name'_VD_Vg2_Norm.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to -1v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=-1
+LOG outfile = $'name'_VD_Vg1_Norm.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# bias gate to 0v then save the curve of ID-VD
+SOLVE init
+SOLVE vgate=0
+LOG outfile = $'name'_VD_Vg0_Norm.log
+SOLVE name=drain vdrain=$vstart vfinal=$vstop vstep=$vinc
+LOG off
+
+# save the final solution structure
+SAVE outfile = $'name'_VD_Norm.str 
+
+#
+# AC simulation
+# 
+LOG outfile = $'name'_VD_AC_Norm.log master gains s.param inport=gate outport=drain
+
+SOLVE ac freq=10 fstep=10 mult.f nfstep=7
+SOLVE ac freq=1e9
+SOLVE ac freq=2e9 fstep=2e9 nfstep=3
+SOLVE ac freq=1e10 fstep=5e9 nfstep=8
+LOG off
+
+#
+# Transient simualtion (Gate lag)
+#
+# bias drain to 5v
+SOLVE init
+SOLVE vdrain=0.01
+SOLVE vdrain=0.1
+SOLVE vdrain=1
+SOLVE vstep=1 name=drain vfinal=5
+
+# bias gate to -10v
+SOLVE name=gate vfinal=-10 vstep=-0.5
+
+# transient simulation to 1e-4 and save the results
+LOG outfile = $'name'_VD_Tran_Norm.log
+SOLVE Vgate=0 ramptime=1e-8 dt=5e-10 tstop=1e-8
+SOLVE dt=1e-9 tstop=1e-7
+SOLVE dt=1e-8 tstop=1e-6
+SOLVE dt=1e-7 tstop=1e-5
+SOLVE dt=1e-6 tstop=1e-4
+
+#### DISPLAY THE FINAL RESULT ####
+victoryvisual \
+$'name'_VD_Init_Flip.str $'name'_VD_Init_Norm.str \
+$'name'_VD_Vth_Flip.log+$'name'_VD_Vth_Norm.log \
+$'name'_VD_Vg3_Flip.log+$'name'_VD_Vg0_Flip.log+\
+$'name'_VD_Vg3_Norm.log+$'name'_VD_Vg0_Norm.log
+
+victoryvisual \
+$'name'_VD_AC_Flip.log:$'name'_VD_AC.set+\
+$'name'_VD_AC_Norm.log:$'name'_VD_AC.set \
+$'name'_VD_Tran_Flip.log:$'name'_VD_Tran.set+\
+$'name'_VD_Tran_Norm.log:$'name'_VD_Tran.set \
+$'name'_VD_Norm.str:$'name'_VD_Heat.set \
+$'name'_VD_Flip.str:$'name'_VD_Heat.set
+
+QUIT

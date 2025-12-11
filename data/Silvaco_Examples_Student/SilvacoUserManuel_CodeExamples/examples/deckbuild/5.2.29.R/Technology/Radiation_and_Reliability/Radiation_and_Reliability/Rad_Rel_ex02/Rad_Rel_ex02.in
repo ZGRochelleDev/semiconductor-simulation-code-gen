@@ -1,0 +1,113 @@
+# (c) Silvaco Inc., 2024
+
+# Single Event Burnout (SEB) in a High Voltage PiN Diode
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Giga
+#   -2D Single Event Effects
+
+# Example Name
+SET name=“Rad_Rel_ex02”
+
+GO internal
+
+SET LET=4
+
+LOOP STEPS=4
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4 -80"
+
+MESH cylindrical
+
+X.MESH location=0     spacing=0.02
+X.MESH location=0.02  spacing=0.02
+X.MESH location=0.07  spacing=0.03
+X.MESH location=5     spacing=2
+
+Y.MESH location=-25   spacing=5
+Y.MESH location=-20   spacing=5
+Y.MESH location=0     spacing=0.1
+Y.MESH location=200   spacing=50
+Y.MESH location=400   spacing=0.1
+Y.MESH location=420   spacing=5
+Y.MESH location=425   spacing=5
+
+REGION number=1 silicon
+
+ELECTRODE name=cathode y.min=-25 y.max=-20
+ELECTRODE name=anode   y.min=420 y.max=425
+
+DOPING n.type conc=3.1e13 uniform
+DOPING n.type conc=3e19 gaussian y.min=-25 y.max=0   charac=0.1
+DOPING p.type conc=1e18 gaussian y.min=400 y.max=425 charac=0.1
+
+SET density=0.01035*$LET
+
+MATERIAL material=silicon hc.std hc.a=1.6 hc.b=0 hc.c=0 hc.d=0 \
+         tcon.const tc.const=1.49
+MODELS consrh conmob fldmob lat.temp auger fermi
+IMPACT selb
+
+THERMCONTACT number=1 elec.num=2 temperat=300
+
+SINGLEEVENTUPSET entrypoint="0,-20,0" exitpoint="0,420,0" \
+                 b.density=$density pcunits radius=0.02 t0=5e-12 tc=2e-13 
+METHOD max.temp=1000000 maxtraps=100 dt.min=1e-50 dt.max=10000 tol.time=1e6 \
+       climit=1e-6
+
+OUTPUT band.param con.band val.band photogen
+PROBE lat.temp name="Temp_metallurgic" X=0 Y=400 Z=0
+PROBE lat.temp name="Temp_N_dope_step" X=0 Y=2   Z=0
+
+SOLVE init
+SOLVE previous
+SOLVE vcathode=0.01
+LOG outfile=$'name'_0.log
+SOLVE vcathode=0.1
+SOLVE vcathode=1 vstep=1 vfinal=10 name=cathode
+SOLVE vstep=5 vfinal=50 name=cathode
+SOLVE vstep=10 vfinal=100 name=cathode
+SOLVE vstep=20 vfinal=200 name=cathode
+SOLVE vstep=50 vfinal=3500 name=cathode
+LOG off
+
+SOLVE tstop=1e-12 dt=1e-13 prev
+
+LOG outfile=$'name'_$'LET'_3500V.log
+
+SOLVE tstop=5e-12 dt=1e-13 prev
+SAVE outfile=$'name'_1.str
+
+SOLVE tstop=25e-12 prev
+SOLVE tstop=205e-12 prev
+SOLVE tstop=305e-12 prev
+SOLVE tstop=405e-12 prev
+SOLVE tstop=505e-12 prev
+SOLVE tstop=1005e-12 prev
+SOLVE tstop=2005e-12 prev
+SOLVE tstop=5005e-12 prev
+SOLVE tstop=1    prev t.comp=1600.
+SOLVE tstop=3600 prev t.comp=1600.
+
+SET LET=2*$LET
+
+L.END
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+victoryvisual \
+$'name'_4_3500V.log:$'name'_log1.set+\
+$'name'_8_3500V.log:$'name'_log1.set+\
+$'name'_16_3500V.log:$'name'_log1.set+\
+$'name'_32_3500V.log:$'name'_log1.set \
+$'name'_4_3500V.log:$'name'_log2.set+\
+$'name'_8_3500V.log:$'name'_log2.set+\
+$'name'_16_3500V.log:$'name'_log2.set+\
+$'name'_32_3500V.log:$'name'_log2.set \
+$'name'_1.str:$'name'.set 
+
+QUIT

@@ -1,0 +1,159 @@
+# (c) Silvaco Inc., 2024
+
+# 3D MESH and Device Simulation of Impact of bending on a TFT device 
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“TFT_ex17”
+
+#### STRUCTURE SPECIFICATION ####
+GO victorymesh simflags="-P 2"
+
+# create layered device
+LAYERS point="-2.5,-2.5,5" cuboid.width=5 num.edges=30 \
+       axis.deltas="0.5, 0.05, 0.15, 0.05, 0.2" axis.num.edges="20, 5, 10, 5, 5" \
+       layer.offset=0 layer.deltas="1, 3, 1" layer.num.edges="5, 15, 5" \
+       materials="(sio2, aluminum, sio2, igzo, aluminum), \
+                  (sio2, aluminum, sio2, igzo, gas), \
+                  (sio2, aluminum, sio2, igzo, aluminum)" \
+       out="planar"
+         
+# assign electrodes
+TAG point="2,0,5.85" value="to_source"
+TAG point="-2,0,5.85" value="to_drain"
+TAG point="0,0,5.525" value="to_gate" 
+
+ELECTRODE region="to_source" name="source"
+ELECTRODE region="to_drain" name="drain"
+ELECTRODE region="to_gate" name="gate"
+SAVE out="$'name'_VM_0"
+
+# bend devices
+BEND in="planar" origin="0,0,10.95" polar axes="x" out="compressive_parallel"
+SAVE out="$'name'_VM_1"
+
+BEND in="planar" polar axes="x" out="tensile_parallel"
+SAVE out="$'name'_VM_2"
+
+BEND in="planar" polar axes="y" out="tensile_perpend"
+SAVE out="$'name'_VM_3"
+
+BEND in="planar" sin axes="x,y" amplitudes="1,1" out="multi_wave"
+SAVE out="$'name'_VM_4"
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_VM_0.str 
+
+REGION num=4 modify material=igzo name=channel donor=2e16
+
+INTERFACE qf=3e10 s.i  
+
+CONTACT name=gate workf=4.53
+
+MATERIAL material=Si3N4 permit=7
+MATERIAL material=nitride permit=7
+MATERIAL material=oxide permit=3.9
+
+MATERIAL material=igzo nc300=5e18 nv300=4.5e21 eg300=3.0 affinity=4.16 mun=10 mup=0.1 taun0=1e-8 taup0=1e-8
+
+DEFECT nta=1e20 wta=0.03 ntd=5e20 wtd=0.08 nga=2e16 wga=0.12 ega=0.1 ngd=2e16 wgd=0.12 egd=2.7 cont tfile=$'name'.dat
+
+MODELS temp=300 print srh
+
+METHOD pam.bicgst
+
+OUTPUT con.band val.band u.trap
+
+SOLVE init
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_0.log no.trap
+SOLVE vgate=-1 vstep=0.25 vfinal=10 name=gate
+LOG off
+SAVE outfile=$'name'_VD_0.str
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_VM_1.str 
+
+REGION num=4 modify material=igzo name=channel donor=2e16
+
+INTERFACE qf=3e10 s.i  
+
+CONTACT name=gate workf=4.53
+
+MATERIAL material=Si3N4 permit=7
+MATERIAL material=nitride permit=7
+MATERIAL material=oxide permit=3.9
+
+MATERIAL material=IGZO nc300=5e18 nv300=4.5e21 eg300=3.0 affinity=4.16 mun=10 mup=0.1 taun0=1e-8 taup0=1e-8
+
+DEFECT nta=1e20 wta=0.03 ntd=5e20 wtd=0.08 nga=2e16 wga=0.12 ega=0.1 ngd=2e16 wgd=0.12 egd=2.7 cont
+
+MODELS temp=300 print srh
+
+METHOD pam.bicgst
+
+OUTPUT con.band val.band u.trap
+
+SOLVE init
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_1.log no.trap
+SOLVE vgate=-1 vstep=0.25 vfinal=10 name=gate
+LOG off
+SAVE outfile=$'name'_VD_1.str
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_VM_2.str 
+
+REGION num=4 modify material=igzo name=channel donor=2e16
+
+INTERFACE qf=3e10 s.i  
+
+CONTACT name=gate workf=4.53
+
+MATERIAL material=Si3N4 permit=7
+MATERIAL material=nitride permit=7
+MATERIAL material=oxide permit=3.9
+
+MATERIAL material=IGZO nc300=5e18 nv300=4.5e21 eg300=3.0 affinity=4.16 mun=10 mup=0.1 taun0=1e-8 taup0=1e-8
+
+DEFECT nta=1e20 wta=0.03 ntd=5e20 wtd=0.08 nga=2e16 wga=0.12 ega=0.1 ngd=2e16 wgd=0.12 egd=2.7 cont
+
+MODELS temp=300 print srh
+
+METHOD pam.bicgst
+
+OUTPUT con.band val.band u.trap
+
+SOLVE init
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_2.log no.trap
+SOLVE vgate=-1 vstep=0.25 vfinal=10 name=gate
+LOG off
+
+SAVE outfile=$'name'_VD_2.str
+
+victoryvisual \
+$'name'_VM_0.str:$'name'_VD_0.set \
+$'name'_VM_1.str:$'name'_VD_0.set \
+$'name'_VM_2.str:$'name'_VD_0.set \
+$'name'_VM_4.str:$'name'_VD_0.set
+
+QUIT

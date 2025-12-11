@@ -1,0 +1,7 @@
+V1 = sin(0 5 0.001)
+D1 = denv(in,out)
+C1 = 1e-6
+R1 = 10k
+.TRAN 10 1e-6 1000
+.PRINT V(out)
+.END

@@ -1,0 +1,77 @@
+* Gateway 4.2407.0.A Spice Netlist Generator
+* Simulation timestamp: 22-Aug-2024 16:45:44
+* RunDir:               S:\sedatools\example\Examples\4.2404.0.R\4.2404.0.R\Analog\Analog_exlib\115_RF_Mixer_circuit\simulation
+* Workspace name:       S:\sedatools\example\Examples\4.2404.0.R\4.2404.0.R\Analog\lib.workspace
+* Simulation name:      S:\sedatools\example\Examples\4.2404.0.R\4.2404.0.R\Analog\Analog_exlib\115_RF_Mixer_circuit.schlr
+* Switchlist:           schematic symbol
+
+*
+* Search locations for include files
+*
+.option SEARCH = " +S:/sedatools/example/Examples/4.2404.0.R/4.2404.0.R/Analog/Analog_exlib +S:\sedatools\example\Examples\4.2404.0.R\4.2404.0.R\Analog"
+
+* Schematic name: 115_RF_Mixer_circuit
+C1 NET5 NET6 10n
+C2 NET2 GND 0.8p
+C3 NET5 GND 4.7p
+C4 rf NET9 10n
+Clo NET1 Lo 10n
+L2 out NET5 470n
+L3 NET9 NET8 3n
+Ldc NET7 NET6 10u
+Llo NET2 NET1 3n
+Q1 NET7 NET2 NET3 GND HBTn
+Q2 NET6 NET10 NET3 GND HBTn
+Q3 NET3 NET11 NET4 GND HBTn
+Q4 NET3 NET11 NET4 GND HBTn
+R1 NET10 NET2 60
+R2 NET4 GND re
+R3 NET7 NET6 'rc'
+R4 NET8 NET4 30
+Vdd NET7 GND DC 5
+Vdlo NET10 GND DC 3.37
+Vdrf NET11 GND DC 2.3
+
+* Global Nodes Declarations
+.GLOBAL GND
+
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE HOP_WF V(OUT)
+
+* Schematic Netlist rebuilt at runtime
+
+* Mixer circuit
+* ConvGain
+
+.include 'lib.model'
+
+.option accurate 
+.param vlo=316.2m
+.param  re=450 rc=1k
+.param kfn = 1.e-24 sh = 0
+
+Pif out  gnd
+Prf rf gnd 
+Vlo lo gnd mag1=vlo
+
+*-------- TF analysis ------------
+.HTF v(out,gnd)
++ LIN 51 1Meg 301Meg
++ FUND=1GHz
++ NHARM=12
++ NEWTON_ACCURACY=highest
++ OVERSAMPLE=2
++ SB=(-1, 1)
++ annotate=3 
++ waves
++ SWEEP re 200 500 30
+
+.let HTF Prf_Gain1h='db(tfh1_prf)'
+.let HTF Prf_Gain_1h='db(tfh_1_prf)'
+
+.save all(v)
+.END

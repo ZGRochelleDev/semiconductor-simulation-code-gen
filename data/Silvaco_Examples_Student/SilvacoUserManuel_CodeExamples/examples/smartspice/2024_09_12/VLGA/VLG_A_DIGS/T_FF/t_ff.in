@@ -1,0 +1,21 @@
+* T Flip Flop with triggered on the rising edge
+
+.verilog "t_ff.va"
+
+* Input Waveforms
+Vin                     t           0      PULSE(0 5 8u 5n 5n 8u 16u)
+
+* Instance T flip flop  
+YVLGt_ff                t           q            t_ff
+
+* Output Loading
+RLoad_q                 q           0       10K
+
+* Analysis
+.tran 1u 50u
+
+* Print Waveforms
+*.iplot v(q) v(t)
+.print  v(q) v(t)
+
+.end

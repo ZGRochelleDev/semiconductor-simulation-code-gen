@@ -1,0 +1,61 @@
+SRAM: PULSE DURATION 0.01n
+
+.option itl1=500 gmin=1e-15 dcgmin=1e-15 itl4=10
+.option nomod nodeck numdgt=5
+.option trtol=3.5 $lvltime=2
+*+ post probe
+
+
+vdd dd 0 dc 0 pulse 0 2 0 1n 1 1 1
+vss ss 0 dc 0
+
+.ic v(a)=2 v(b)=0
+
+mp1  a b  dd  dd  P1 w=3.6u l=1.2u
+mn1  a b  ss  ss  N1 w=1.8u l=1.2u
+mp2  b a  dd  dd  P1 w=3.6u l=1.2u
+mn2  b a  ss  ss  N1 w=1.8u l=1.2u
+
+.probe all
+.probe @mn1[iseu]  @mn2[iseu]
+.probe @mn1[cd]
+
+* lib
+.include nmospd.mod
+.include pmospd.mod
+
+*.measure qdep_tot integral @mn1[iseu] from=0 to=20n
+
+*.st list temp 25 35
+*.st vdd 0 1 1
+
+.tran 0.2n 20n 0 1n 
+
+.rad
++ SEE
++ device=mn1 annotate=1
++ taur=5p tauf=100p  start=10n
++ lf=5u let=1.5
+
+#COM
+.rad
++ SEE annotate=1
++ device=mp1 node=ng
++ taur=5p tauf=100p  start=15n
++ lf=5u let=1.5
+
+.rad
++ SEE annotate=1
++ device=mp2
++ taur=5p tauf=100p  start=15n
++ lf=5u let=1.5
+
+.rad
++ SEE annotate=1
++ device=mn2
++ taur=5p tauf=100p  start=15n
++ lf=5u let=1.5
+#ENDCOM
+
+
+.end

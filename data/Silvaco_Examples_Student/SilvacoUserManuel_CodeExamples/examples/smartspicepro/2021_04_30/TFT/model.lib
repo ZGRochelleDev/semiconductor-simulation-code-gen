@@ -1,0 +1,39 @@
+*
+
+.LIB TT
+
+.SUBCKT NTFT D G S  W='W' L='L'  
+M1 D G S  NTFT  W='W' L='L'
+Xcgs G S CAP_E
+xcgd G D CAP_E
+.ENDS NTFT 
+
+.SUBCKT CAP_E A B
+.PARAM C_MAX=1.78E-16 C_MIN=1.28E-16 CSLOPE=9 CV0=2.5 
+*C1 A B c=15p ; m=2
+C1 A B c='C_MAX*(1-(C_MAX-C_MIN)/(C_MAX*(1+PWR(CSLOPE,V(A,B)-CV0))))' ; m=2
+*C1 A B c='1.78E-16*(1-(1.78E-16-1.28E-16)/(1.78E-16*(1+PWR(9,V(A,B)-2.5))))' ; m=2
+*.save @c1[c]
+.ENDS CAP_E
+
+.MODEL NTFT NTFT (
++LEVEL    = 36             VERSION  = 2              TNOM     = 27
++TOX      = 1.2e-07        VTO      = 2.28667        VFB      = -0.1
++VON      = 0              DVT      = 0              VKINK    = 30
++VSI      = 2              VST      = 2              MU1 = 9.28343e-05
++MMU      = 1.9423         MU0      = 10             MK       = 1.3
++MUS      = 0.60309        RD       = 0              RS       = 0
++BT       = 1.3e-06        BLK      = 1.9e-06        DD = 9.78798e-08
++DELTA    = 4              DG       = 2.00102e-07    EB       = 0.68
++ETA      = 12.7958        I0       = 1.66041        I00      = 10
++ASAT     = 1.04233        AT       = 1e-08          DASAT    = 0
++LASAT    = 0              LKINK    = 1.9e-06        DVTO     = 0
++DMU1     = 0              CAPMOD   = 0              ETAC00   = 0
++MC       = 3              RDX      = 0              RSX      = 0
++ZEROC    = 0              ME       = 2.5            MSS      = 1.5
++THETA    = 0              ISUBMOD  = 0              LAMBDA   = 0.018325
++INTSDNOD = 0              EPS      = 11.7           EPSI     = 3.9
++SCALERPI = 0 LD=0  VOFFCV=-1.1
++ )
+
+.ENDL TT

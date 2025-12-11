@@ -1,0 +1,502 @@
+# (c) Silvaco Inc., 2024
+
+# A Normally-off GaN MISFET with High Vth uniformity
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name="GaN_Power_ex02"
+
+GO victorydevice simflags="-128 -P 4"
+
+# MIS_PNT: PNT MISFET with T_AlGaN=15nm 
+# (just etching to the target recess depth)
+#
+#### STRUCTURE SPECIFICATION ####
+MESH width=1000 ^diag.flip
+
+X.MESH location=-1    spacing=0.5
+X.MESH location=0     spacing=0.2
+X.MESH location=0.6   spacing=0.2
+X.MESH location=1     spacing=0.01
+X.MESH location=1.025 spacing=0.01
+X.MESH location=1.5   spacing=0.1
+X.MESH location=1.975 spacing=0.01
+X.MESH location=2     spacing=0.01
+X.MESH location=2.4   spacing=0.2
+X.MESH location=3     spacing=0.2
+X.MESH location=17    spacing=1
+X.MESH location=18    spacing=1
+
+Y.MESH location=-0.350  spacing=0.05
+Y.MESH location=-0.270  spacing=0.05
+Y.MESH location=-0.245  spacing=0.05
+Y.MESH location=-0.145  spacing=0.05
+Y.MESH location=-0.045  spacing=0.005
+Y.MESH location=-0.04   spacing=0.005
+Y.MESH location=-0.020  spacing=0.0002
+Y.MESH location=-0.0175 spacing=0.0005
+Y.MESH location=-0.015  spacing=0.001
+Y.MESH location=-0.0125 spacing=0.0005
+Y.MESH location=-0.01   spacing=0.0002
+Y.MESH location=-0.005  spacing=0.002
+Y.MESH location=0.0     spacing=0.0002
+Y.MESH location=0.0075  spacing=0.002
+Y.MESH location=0.015   spacing=0.001
+Y.MESH location=0.035   spacing=0.005
+Y.MESH location=0.5     spacing=0.1
+Y.MESH location=1       spacing=0.1
+
+REGION number=1 material=nitride y.maximum=-0.045
+REGION number=2 material=AlGaN  y.minimum=-0.045 y.maximum=-0.02 x.comp=0.25 
+REGION number=3 material=AlGaN  y.minimum=-0.02  y.maximum=-0.01 x.comp=0.07
+REGION number=4 material=AlGaN  y.minimum=-0.01  y.maximum=0.0   x.comp=0.15
+REGION number=5 material=GaN    y.minimum=0.0    y.maximum=0.015 substrate 
+REGION number=6 material=AlGaN  y.minimum=0.015  x.comp=0.07
+REGION number=7 material=Al2O3  y.maximum=-0.015 x.minimum=1.0 x.maximum=2.0
+REGION number=7 material=Al2O3  y.maximum=-0.245 x.minimum=0.6 x.maximum=2.4
+
+ELECTRODE number=1 name=source x.minimum=-1 x.maximum=0 \
+   y.maximum=-0.045
+ELECTRODE number=2 name=drain  x.minimum=17 x.maximum=18 \
+   y.maximum=-0.045
+ELECTRODE number=3 name=gate   x.minimum=1.025 x.maximum=1.975 \
+   y.minimum=-0.27 y.maximum=-0.04
+ELECTRODE number=3 name=gate   x.minimum=0.6 x.maximum=2.4 \
+   y.minimum=-0.35 y.maximum=-0.27
+
+INTERFACE s.s thermionic
+
+DOPING trap acceptor midgap concentration=1e18 sign=1e-15 sigp=1e-15 \
+   degeneracy.factor=1 uniform y.minimum=0.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print polarization calc.strain psp.scale=1 piezo.scale=1
+MODELS srh fermidirac ni.fermi bound.trap
+MOBILITY albrct.n bn.albrct=1e-3 cn.albrct=8.02e-2
+
+CONTACT name=source workfunction=4.01
+CONTACT name=gate   workfunction=5.5
+CONTACT name=drain  workfunction=4.01
+
+#### NUMERICAL METHODS ####
+METHOD newton weak=1
+OUTPUT con.band val.band band.par polar.charge qss
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_MIS_PNT_init.str
+
+# Id-Vg with Vd=10V
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.25
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+SOLVE vgate=-0.1 previous
+SOLVE vgate=-0.25 vstep=-0.25 vfinal=-1 name=gate previous 
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_MIS_PNT_Vth.log
+
+# Voltage ramp
+SOLVE vgate=-1 vstep=0.2 vfinal=4 name=gate previous
+LOG off
+
+
+GO victorydevice simflags="-128 -P 4"
+
+# SC_PNT_T15: PNT Schottky gate structure with T_AlGaN=15nm 
+# (just etching to the target recess depth)
+#
+#### STRUCTURE SPECIFICATION ####
+MESH width=1000 ^diag.flip
+
+X.MESH location=-1    spacing=0.5
+X.MESH location=0     spacing=0.2
+X.MESH location=0.6   spacing=0.2
+X.MESH location=1     spacing=0.01
+X.MESH location=1.025 spacing=0.01
+X.MESH location=1.5   spacing=0.1
+X.MESH location=1.975 spacing=0.01
+X.MESH location=2     spacing=0.01
+X.MESH location=2.4   spacing=0.2
+X.MESH location=3     spacing=0.2
+X.MESH location=17    spacing=1
+X.MESH location=18    spacing=1
+
+Y.MESH location=-0.350  spacing=0.05
+Y.MESH location=-0.270  spacing=0.05
+Y.MESH location=-0.245  spacing=0.05
+Y.MESH location=-0.145  spacing=0.05
+Y.MESH location=-0.045  spacing=0.005
+Y.MESH location=-0.04   spacing=0.005
+Y.MESH location=-0.020  spacing=0.0002
+Y.MESH location=-0.0175 spacing=0.0005
+Y.MESH location=-0.015  spacing=0.001
+Y.MESH location=-0.0125 spacing=0.0005
+Y.MESH location=-0.01   spacing=0.0002
+Y.MESH location=-0.005  spacing=0.002
+Y.MESH location=0.0     spacing=0.0002
+Y.MESH location=0.0075  spacing=0.002
+Y.MESH location=0.015   spacing=0.001
+Y.MESH location=0.035   spacing=0.005
+Y.MESH location=0.5     spacing=0.1
+Y.MESH location=1       spacing=0.1
+
+REGION number=1 material=nitride y.maximum=-0.045
+REGION number=2 material=AlGaN  y.minimum=-0.045 y.maximum=-0.02 x.comp=0.25 
+REGION number=3 material=AlGaN  y.minimum=-0.02  y.maximum=-0.01 x.comp=0.07
+REGION number=4 material=AlGaN  y.minimum=-0.01  y.maximum=0.0   x.comp=0.15
+REGION number=5 material=GaN    y.minimum=0.0    y.maximum=0.015 substrate 
+REGION number=6 material=AlGaN  y.minimum=0.015  x.comp=0.07
+
+ELECTRODE number=1 name=source x.minimum=-1 x.maximum=0 \
+   y.maximum=-0.045
+ELECTRODE number=2 name=drain  x.minimum=17 x.maximum=18 \
+   y.maximum=-0.045
+ELECTRODE number=3 name=gate   x.minimum=1.0 x.maximum=2.0 \
+   y.minimum=-0.27 y.maximum=-0.015
+ELECTRODE number=3 name=gate   x.minimum=0.6 x.maximum=2.4 \
+   y.minimum=-0.35 y.maximum=-0.245
+
+INTERFACE s.s thermionic
+
+DOPING trap acceptor midgap concentration=1e18 sign=1e-15 sigp=1e-15 \
+   degeneracy.factor=1 uniform y.minimum=0.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print polarization calc.strain psp.scale=1 piezo.scale=1
+MODELS srh fermidirac ni.fermi bound.trap
+MOBILITY albrct.n bn.albrct=1e-3 cn.albrct=8.02e-2
+
+CONTACT name=source workfunction=4.01
+CONTACT name=gate   workfunction=5.5
+CONTACT name=drain  workfunction=4.01
+
+#### NUMERICAL METHODS ####
+METHOD newton weak=1
+OUTPUT con.band val.band band.par polar.charge qss
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_SC_PNT_T15_init.str
+
+# Id-Vg with Vd=10V
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.25
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+SOLVE vgate=-0.1 previous
+SOLVE vgate=-0.25 vstep=-0.25 vfinal=-1 name=gate previous 
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_SC_PNT_T15_Vth.log
+
+# Voltage ramp
+SOLVE vgate=-1.0 vstep=0.2 vfinal=1.6 name=gate previous
+LOG off
+
+GO victorydevice simflags="-128 -P 4"
+
+# SC_CONV_T15: Conventional Schottky-gate structure with T_AlGaN=15nm
+# (just etching to the target recess depth)
+#
+#### STRUCTURE SPECIFICATION ####
+MESH width=1000 ^diag.flip
+
+X.MESH location=-1    spacing=0.5
+X.MESH location=0     spacing=0.2
+X.MESH location=0.6   spacing=0.2
+X.MESH location=1     spacing=0.01
+X.MESH location=1.025 spacing=0.01
+X.MESH location=1.5   spacing=0.1
+X.MESH location=1.975 spacing=0.01
+X.MESH location=2     spacing=0.01
+X.MESH location=2.4   spacing=0.2
+X.MESH location=3     spacing=0.2
+X.MESH location=17    spacing=1
+X.MESH location=18    spacing=1
+
+Y.MESH location=-0.350  spacing=0.05
+Y.MESH location=-0.270  spacing=0.05
+Y.MESH location=-0.245  spacing=0.05
+Y.MESH location=-0.145  spacing=0.05
+Y.MESH location=-0.045  spacing=0.005
+Y.MESH location=-0.015  spacing=0.001
+Y.MESH location=0.0     spacing=0.0002
+Y.MESH location=0.0075  spacing=0.002
+Y.MESH location=0.015   spacing=0.001
+Y.MESH location=0.035   spacing=0.005
+Y.MESH location=0.5     spacing=0.1
+Y.MESH location=1       spacing=0.1
+
+REGION number=1 material=nitride y.maximum=-0.045
+REGION number=2 material=AlGaN  y.minimum=-0.045  y.maximum=0.0   x.comp=0.15
+REGION number=3 material=GaN    y.minimum=0.0 substrate
+
+ELECTRODE number=1 name=source x.minimum=-1 x.maximum=0 \
+   y.maximum=-0.045
+ELECTRODE number=2 name=drain  x.minimum=17 x.maximum=18 \
+   y.maximum=-0.045
+ELECTRODE number=3 name=gate   x.minimum=1.0 x.maximum=2.0 \
+   y.minimum=-0.27 y.maximum=-0.015
+ELECTRODE number=3 name=gate   x.minimum=0.6 x.maximum=2.4 \
+   y.minimum=-0.35 y.maximum=-0.245
+
+INTERFACE s.s thermionic
+
+DOPING trap acceptor midgap concentration=1e18 sign=1e-15 sigp=1e-15 \
+   degeneracy.factor=1 uniform y.minimum=0.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print polarization calc.strain psp.scale=1 piezo.scale=1
+MODELS srh fermidirac ni.fermi bound.trap
+MOBILITY albrct.n bn.albrct=1e-3 cn.albrct=8.02e-2
+
+CONTACT name=source workfunction=4.09
+CONTACT name=gate   workfunction=5.5
+CONTACT name=drain  workfunction=4.09
+
+#### NUMERICAL METHODS ####
+METHOD newton weak=1
+OUTPUT con.band val.band band.par polar.charge qss
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_SC_CONV_T15_init.str
+
+# Id-Vg with Vd=10V
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.25
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+SOLVE vgate=-0.1 previous
+SOLVE vgate=-0.25 vstep=-0.25 vfinal=-2.5 name=gate previous
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_SC_CONV_T15_Vth.log
+
+# Voltage ramp
+SOLVE vgate=-2.4 vstep=0.2 vfinal=1.6 name=gate previous
+LOG off
+
+
+GO victorydevice simflags="-128 -P 4"
+
+# SC_PNT_T11: PNG Schottky gate structure with T_AlGaN=11nm 
+# (4nm deeper etching than the target recess depth)
+#
+#### STRUCTURE SPECIFICATION ####
+MESH width=1000 ^diag.flip
+
+X.MESH location=-1    spacing=0.5
+X.MESH location=0     spacing=0.2
+X.MESH location=0.6   spacing=0.2
+X.MESH location=1     spacing=0.01
+X.MESH location=1.025 spacing=0.01
+X.MESH location=1.5   spacing=0.1
+X.MESH location=1.975 spacing=0.01
+X.MESH location=2     spacing=0.01
+X.MESH location=2.4   spacing=0.2
+X.MESH location=3     spacing=0.2
+X.MESH location=17    spacing=1
+X.MESH location=18    spacing=1
+
+Y.MESH location=-0.350  spacing=0.05
+Y.MESH location=-0.270  spacing=0.05
+Y.MESH location=-0.245  spacing=0.05
+Y.MESH location=-0.145  spacing=0.05
+Y.MESH location=-0.045  spacing=0.005
+Y.MESH location=-0.04   spacing=0.005
+Y.MESH location=-0.020  spacing=0.0002
+Y.MESH location=-0.0175 spacing=0.0005
+Y.MESH location=-0.015  spacing=0.001
+Y.MESH location=-0.011  spacing=0.0005
+Y.MESH location=-0.01   spacing=0.0002
+Y.MESH location=-0.005  spacing=0.002
+Y.MESH location=0.0     spacing=0.0002
+Y.MESH location=0.0075  spacing=0.002
+Y.MESH location=0.015   spacing=0.001
+Y.MESH location=0.035   spacing=0.005
+Y.MESH location=0.5     spacing=0.1
+Y.MESH location=1       spacing=0.1
+
+REGION number=1 material=nitride y.maximum=-0.045
+REGION number=2 material=AlGaN  y.minimum=-0.045 y.maximum=-0.02 x.comp=0.25 
+REGION number=3 material=AlGaN  y.minimum=-0.02  y.maximum=-0.01 x.comp=0.07
+REGION number=4 material=AlGaN  y.minimum=-0.01  y.maximum=0.0   x.comp=0.15
+REGION number=5 material=GaN    y.minimum=0.0    y.maximum=0.015 substrate 
+REGION number=6 material=AlGaN  y.minimum=0.015  x.comp=0.07
+
+ELECTRODE number=1 name=source x.minimum=-1 x.maximum=0 \
+   y.maximum=-0.045
+ELECTRODE number=2 name=drain  x.minimum=17 x.maximum=18 \
+   y.maximum=-0.045
+ELECTRODE number=3 name=gate   x.minimum=1.0 x.maximum=2.0 \
+   y.minimum=-0.27 y.maximum=-0.011
+ELECTRODE number=3 name=gate   x.minimum=0.6 x.maximum=2.4 \
+   y.minimum=-0.35 y.maximum=-0.245
+
+INTERFACE s.s thermionic
+
+DOPING trap acceptor midgap concentration=1e18 sign=1e-15 sigp=1e-15 \
+   degeneracy.factor=1 uniform y.minimum=0.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print polarization calc.strain psp.scale=1 piezo.scale=1
+MODELS srh fermidirac ni.fermi bound.trap
+MOBILITY albrct.n bn.albrct=1e-3 cn.albrct=8.02e-2
+
+CONTACT name=source workfunction=4.01
+CONTACT name=gate   workfunction=5.5
+CONTACT name=drain  workfunction=4.01
+
+#### NUMERICAL METHODS ####
+METHOD newton weak=1
+OUTPUT con.band val.band band.par polar.charge qss
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_SC_PNT_T11_init.str
+
+# Id-Vg with Vd=10V
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.25
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+SOLVE vgate=-0.1 previous
+SOLVE vgate=-0.25 vstep=-0.25 vfinal=-1 name=gate previous 
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_SC_PNT_T11_Vth.log
+
+# Voltage ramp
+SOLVE vgate=-1.0 vstep=0.2 vfinal=1.6 name=gate previous
+LOG off
+
+
+GO victorydevice simflags="-128 -P 4"
+
+# SC_CONV_T11: Conventional Schottky-gate structure with T_AlGaN=11nm 
+# (4nm deeper etching than the target recess depth)
+#
+#### STRUCTURE SPECIFICATION ####
+MESH width=1000 ^diag.flip
+
+X.MESH location=-1    spacing=0.5
+X.MESH location=0     spacing=0.2
+X.MESH location=0.6   spacing=0.2
+X.MESH location=1     spacing=0.01
+X.MESH location=1.025 spacing=0.01
+X.MESH location=1.5   spacing=0.1
+X.MESH location=1.975 spacing=0.01
+X.MESH location=2     spacing=0.01
+X.MESH location=2.4   spacing=0.2
+X.MESH location=3     spacing=0.2
+X.MESH location=17    spacing=1
+X.MESH location=18    spacing=1
+
+Y.MESH location=-0.350  spacing=0.05
+Y.MESH location=-0.270  spacing=0.05
+Y.MESH location=-0.245  spacing=0.05
+Y.MESH location=-0.145  spacing=0.05
+Y.MESH location=-0.045  spacing=0.005
+Y.MESH location=-0.011  spacing=0.001
+Y.MESH location=0.0     spacing=0.0002
+Y.MESH location=0.0075  spacing=0.002
+Y.MESH location=0.015   spacing=0.001
+Y.MESH location=0.035   spacing=0.005
+Y.MESH location=0.5     spacing=0.1
+Y.MESH location=1       spacing=0.1
+
+REGION number=1 material=nitride y.maximum=-0.045
+REGION number=2 material=AlGaN  y.minimum=-0.045  y.maximum=0.0   x.comp=0.15
+REGION number=3 material=GaN    y.minimum=0.0 substrate
+
+ELECTRODE number=1 name=source x.minimum=-1 x.maximum=0 \
+   y.maximum=-0.045
+ELECTRODE number=2 name=drain  x.minimum=17 x.maximum=18 \
+   y.maximum=-0.045
+ELECTRODE number=3 name=gate   x.minimum=1.0 x.maximum=2.0 \
+   y.minimum=-0.27 y.maximum=-0.011
+ELECTRODE number=3 name=gate   x.minimum=0.6 x.maximum=2.4 \
+   y.minimum=-0.35 y.maximum=-0.245
+
+INTERFACE s.s thermionic
+
+DOPING trap acceptor midgap concentration=1e18 sign=1e-15 sigp=1e-15 \
+   degeneracy.factor=1 uniform y.minimum=0.5
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS print polarization calc.strain psp.scale=1 piezo.scale=1
+MODELS srh fermidirac ni.fermi bound.trap
+MOBILITY albrct.n bn.albrct=1e-3 cn.albrct=8.02e-2
+
+CONTACT name=source workfunction=4.09
+CONTACT name=gate   workfunction=5.5
+CONTACT name=drain  workfunction=4.09
+
+#### NUMERICAL METHODS ####
+METHOD newton weak=1
+OUTPUT con.band val.band band.par polar.charge qss
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_SC_CONV_T11_init.str
+
+# Id-Vg with Vd=10V
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.25
+SOLVE vdrain=0.5 vstep=0.5 vfinal=10 name=drain
+
+SOLVE vgate=-0.1 previous
+SOLVE vgate=-0.25 vstep=-0.25 vfinal=-2 name=gate previous
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_SC_CONV_T11_Vth.log
+
+# Voltage ramp
+SOLVE vgate=-2.0 vstep=0.2 vfinal=1.6 name=gate previous
+LOG off
+
+
+####### VISUALIZATION OF RESULTS #######
+# Extract Ec and Ev profile under the gate in MIS PNT structure.
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VD_MIS_PNT_init.str
+EXTRACT3D profile point.a="1.5,-0.05" point.b="1.5,0.1" regions="*" \
+  fields="Conduction Band Energy, Valence Band Energy" \
+  outfile="$'name'_EcEv_MIS_PNT.dat"
+
+# Plot the results in Victory Visual.
+victoryvisual \
+  '($'name'_VD_MIS_PNT_init.str $'name'_EcEv_MIS_PNT.dat)':$'name'_MIS_PNT.set
+
+victoryvisual \
+  $'name'_VD_SC_PNT_T15_init.str:$'name'_SC_PNT_T15_init.set  \
+  $'name'_VD_SC_PNT_T11_init.str:$'name'_SC_PNT_T11_init.set \
+  $'name'_VD_SC_CONV_T15_init.str:$'name'_SC_CONV_T15_init.set \
+  $'name'_VD_SC_CONV_T11_init.str:$'name'_SC_CONV_T11_init.set
+
+victoryvisual \
+  --overlay \
+  $'name'_VD_SC_PNT_T15_Vth.log:$'name'_Vth.set \
+  $'name'_VD_SC_PNT_T11_Vth.log:$'name'_Vth.set \
+  $'name'_VD_SC_CONV_T15_Vth.log:$'name'_Vth.set \
+  $'name'_VD_SC_CONV_T11_Vth.log:$'name'_Vth.set
+
+QUIT
+

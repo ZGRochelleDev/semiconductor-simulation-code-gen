@@ -1,0 +1,164 @@
+# (c) Silvaco Inc., 2024
+
+# Cylindrical Avalanche Photodiode
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+Set name=“Photodiode_ex11” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH cylindrical
+
+X.MESH location=0 spacing=1
+X.MESH location=5 spacing=.1
+X.MESH location=7.4 spacing=.1
+X.MESH location=10 spacing=1
+
+Y.MESH location=0 spacing=0.1
+Y.MESH location=1.0 spacing=0.01
+Y.MESH location=6.0 spacing=0.1
+
+REGION number=1 silicon donors=1e16
+#
+ELECTRODE number=1 top x.max=5 name=anode 
+ELECTRODE number=2 bottom name=cathode
+#
+DOPING gaussian junction=1 conc=1e19 p.type x.left=0 x.right=5 y.top=0 \
+ y.bottom=0 ratio.lateral=0.7 direction=y
+
+DOPING n.type conc=1e19 gaus peak=6 char=0.25
+
+#### MATERIAL/PHYSICAL MODELS ####
+MODELS fldmob bgn consrh auger analytic print
+IMPACT selb
+
+#### NUMERICAL METHODS ####
+METHOD newton autonr climit=1e-3 maxtraps=20
+
+#### SOLUTION SOLVING #### 
+#-----------------------------------------------------------------
+# Ramp to Breakdown with Impact Ionization - no illumination
+#-----------------------------------------------------------------
+SOLVE init
+SOLVE 
+
+SAVE outfile=$'name'_Init.str
+
+SOLVE vcathode=0.1 vfinal=1.0 vstep=0.1 name=cathode 
+
+LOG outf=$'name'_Dark.log
+
+SOLVE vfinal=70 vstep=1 name=cathode comp=1e-11 cname=cathode
+
+CONTACT name=cathode current
+
+SOLVE
+
+SOLVE imult istep=1.4142 ifinal=1e-8 name=cathode
+
+SAVE outfile=$'name'_DarkBV.str
+
+SOLVE imult istep=1.4142 ifinal=1e-2 name=cathode
+
+LOG off
+CONTACT name=cathode ^current
+
+
+
+#-----------------------------------------------------------------
+# Ramp to Breakdown with Impact Ionization and illumination
+#-----------------------------------------------------------------
+BEAM number=1 wavelength=0.7 angle=90 x.ori=0 y.ori=-1 
+
+set intens=1e-4
+
+SOLVE init
+
+SOLVE b1=$intens index.check
+
+SOLVE vcathode=0.1 vfinal=1.0 vstep=0.1 name=cathode b1=$intens
+
+LOG outf=$'name'_Light.log
+
+SOLVE vfinal=70 vstep=1 name=cathode comp=3e-9 cname=cathode b1=$intens
+
+CONTACT name=cathode current
+
+SOLVE b1=$intens
+
+SOLVE imult istep=1.4142 ifinal=1e-8 name=cathode b1=$intens
+
+SAVE outfile=$'name'_LightBV.str
+
+SOLVE imult istep=1.4142 ifinal=1e-2 name=cathode b1=$intens
+
+LOG off
+CONTACT name=cathode ^current
+
+#-----------------------------------------------------------------
+# Calculate Avalanche Probabilitites in Geiger Mode 
+#-----------------------------------------------------------------
+PROBE name=pe1 x=5.3 y=0.6 PE.AVALANCHE 
+PROBE name=ph1 x=5.3 y=0.6 PH.AVALANCHE 
+PROBE name=pp1 x=5.3 y=0.6 PP.AVALANCHE 
+
+MODELS selb geiger geiger.minfield=1.0e4
+
+SOLVE init
+SOLVE prev
+
+SOLVE vcathode=0.1 vfinal=1.0 vstep=0.1 name=cathode 
+
+LOG outf=$'name'_GeigerBV.log
+
+SOLVE vfinal=10.0 vstep=0.5 name=cathode
+
+SOLVE vfinal=30.0 vstep=1 name=cathode
+
+OUTPUT geiger
+
+SOLVE vfinal=40.0 vstep=5 name=cathode
+
+SAVE outf=$'name'_Geig_40V.str
+
+SOLVE vfinal=50.0 vstep=5 name=cathode
+
+SAVE outf=$'name'_Geig_50V.str
+
+SOLVE vfinal=60.0 vstep=5 name=cathode
+
+SAVE outf=$'name'_Geig_60V.str
+
+SOLVE vfinal=70 vstep=5 name=cathode
+
+SAVE outf=$'name'_Geig_70V.str
+
+GO victoryextract
+LOAD in="$'name'_Dark.log"
+CURVE name=dark x="Cathode Voltage" y="Cathode Current"
+EXTRACT.CURVE name="Vbr dark" expression=intercept(y=1e-6, curve.dark)
+LOAD in="$'name'_Light.log"
+CURVE name=light x="Cathode Voltage" y="Cathode Current"
+EXTRACT.CURVE name="Vbr light" expression=intercept(y=1e-6, curve.light)
+
+victoryvisual \ 
+$'name'_DarkBV.str:$'name'_NetDop.set \
+$'name'_Dark.log:$'name'_BV.set+\
+$'name'_Light.log:$'name'_BV.set \
+$'name'_DarkBV.str:$'name'_EField.set \
+$'name'_LightBV.str:$'name'_EField.set
+
+victoryvisual \
+$'name'_Geig_40V.str:$'name'_GeigProb.set \
+$'name'_Geig_50V.str:$'name'_GeigProb.set \
+$'name'_Geig_60V.str:$'name'_GeigProb.set \
+$'name'_Geig_70V.str:$'name'_GeigProb.set
+
+QUIT

@@ -1,0 +1,78 @@
+# (c) Silvaco Inc., 2024
+
+# Rounded trench (two step / polyline / profile / rbottom)
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+
+# Example Name
+Set name="VP_Etch_Dep_ex01" 
+
+####### PROCESS SIMULATION ####### 
+# Two step etch, geometric followed by conformal
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=2 depth=2 \
+resolution=0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+ETCH min material=silicon thickness=1.1 right.to.x=1.8
+ETCH conformal thickness=0.2 material=silicon right.to.x=1.8
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_TwoStep.str"
+
+####### PROCESS SIMULATION ####### 
+# ETCH DRY profile
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=2 depth=2 \
+resolution=0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+# relative coordinates (w.r.t. mask edge)
+ETCH dry right.to.x=1.6 thickness=1.3 profile="(0,0) (0.0,1.3), (0.4,1.3)" smooth.roundcorners smooth.distance=0.2
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_Profile.str"
+
+####### PROCESS SIMULATION ####### 
+# ETCH DRY polyline
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=2 depth=2 \
+resolution=0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+# Absolute coordinates
+ETCH polyline.xz ="(1.6,0) (1.6,1.3), (2.2,1.3)" smooth.roundcorners smooth.distance=0.2
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_Polyline.str"
+
+####### PROCESS SIMULATION ####### 
+# rbottom feature (round the trench bottom)
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1 to=2 depth=2 \
+resolution=0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+# fast and simple
+ETCH max right.to.x=1.6 thickness=1.3 rbottom=0.2
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name="$'name'_rBottom.str"
+
+victoryvisual \
+$'name'_TwoStep.str \
+$'name'_Profile.str \
+$'name'_Polyline.str \
+$'name'_rBottom.str
+
+QUIT

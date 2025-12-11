@@ -1,0 +1,67 @@
+source n2.var
+source n0c2.var
+GO victorydevice simflag="-P 4 -64"
+
+if cond = ($type = "NMOS") 
+set sign = 1 ##!!
+set wf = 4.2 ##!!
+if.end
+
+if cond = ($type = "PMOS") 
+set sign = -1 ##!!
+set wf = 5.1 ##!!
+if.end
+
+set Vdd = 5.0
+system sh variable.sh n26 Vdd $"Vdd"
+
+# Device Calibration Parameters: 
+
+#### structure SPECIFICATION ####
+mesh infile = n22_VM_con.str width = 1
+CONTACT name = gate workfunction = $wf 
+INTERFACE qf = 2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material = silicon taun0 = 1.0e-7*1e-2 taup0 = 1.0e-7*1e-2 
+MODELS fermi srh cvt fldmob print
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap = 10 
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility
+
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SOLVE previous
+
+SOLVE vdrain = 0.001*$sign
+SOLVE vdrain = 0.01*$sign
+SOLVE vstep = 0.01*$sign vfinal = 0.1*$sign name = drain 
+save outfile = n26_temp_lowD
+SOLVE vstep = $Vdd/10*$sign vfinal = $Vdd*$sign name = drain 
+save outfile = n26_temp_highD
+
+# Transfer Characteristics: IdVg_lin 
+load infile = n26_temp_lowD
+log outfile = n26_VD_IdVg_lin.log
+SOLVE vgate = 0.0
+SOLVE vgate = 0.001*$sign
+SOLVE vgate = 0.01*$sign
+SOLVE vstep = $Vdd/50*$sign vfinal = $Vdd*$sign name = gate 
+LOG off
+save outfile = n26_VD_IdVg_lin.str 
+
+# Transfer Characteristics: IdVg_sat 
+load infile = n26_temp_highD
+log outfile = n26_VD_IdVg_sat.log
+SOLVE vgate = 0.0
+SOLVE vgate = 0.001*$sign
+SOLVE vgate = 0.01*$sign
+SOLVE vstep = $Vdd/50*$sign vfinal = $Vdd*$sign name = gate 
+LOG off
+save outfile = n26_VD_IdVg_sat.str 
+
+
+## ---------------------------------- ##
+## -------- Device: extraction ------ ##
+## -----------------------------------##

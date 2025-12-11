@@ -1,0 +1,84 @@
+# (c) Silvaco Inc., 2024
+
+# Calculating Well Isolation and Source/Drain Capacitance
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex21” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.lay RuleFile=$'name'.lmp depth=1 material=silicon
+
+# Isolate the N-Well From the P-Substrate by Simulating Well Depletion
+DEPOSIT material=Nwell_Depletion thick=0.1 max
+ETCH material=Nwell_Depletion mask=NWELL
+DEPOSIT material=silicon thick=0.4 max
+
+ETCH material=silicon thick=0.45 max mask=AA reverse
+DEPOSIT material=oxide thick=0 max
+
+# Isolate Source Drain Diodes by simulating Diode Depletion Regions 
+ETCH material=silicon thick=0.2 max mask=N_SD reverse
+ETCH silicon thick=0.2 max mask=P_SD reverse
+
+DEPOSIT material=SD_Depletion thick=0.02 conformal
+ETCH material=SD_Depletion thick=0.02 max
+
+DEPOSIT material=silicon thick=0 max
+ELECTRODES mask=*CONT material=silicon
+
+DEPOSIT material=gate_ox thick=0.004 max
+ETCH material=gate_ox mask=GATES
+
+DEPOSIT material=oxide thick=0 max
+DEPOSIT material=polysilicon thick=0.1 max
+ETCH material=polysilicon mask=POLY
+
+ELECTRODES mask=*GATE material=polysilicon
+DEPOSIT material=spacer_ox thick=0.1 conformal 
+
+ETCH material=spacer_ox thickness=0.1 dry
+DEPOSIT material=oxide thick=0.3 max
+ETCH material=oxide thick=0.44 max mask=CONT reverse
+
+DEPOSIT material=aluminum thick=0.2 max
+ETCH material=aluminum thick=0.22 max mask=M1
+ELECTRODES mask=CONT material=aluminum
+
+DEPOSIT material=oxide thick=0.4 max
+ETCH material=oxide thick=0.44 max mask=VIA1 reverse
+
+DEPOSIT aluminum thick=0.3 max
+ETCH material=aluminum thick=0.33 max mask=M2
+
+DEPOSIT oxide thick=0.5 max
+DEPOSIT nitride thick=0.1 max
+
+SAVE name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'.lay" map="$'name'.lmp" structure="$'name'_VP_sv.str"
+
+MATERIAL silicon                     conductivity=100
+MATERIAL material("Nwell_Depletion") permittivity=11.8
+MATERIAL material("SD_Depletion")    permittivity=11.8
+MATERIAL material("gate_ox")         permittivity=0.01
+MATERIAL material("spacer_ox")       permittivity=3.9
+
+SAVE structure="$'name'.str"
+
+INTERCONNECT adapt=(0.05,0.05) domainboundarycondition=CYCLIC
+
+SAVE spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

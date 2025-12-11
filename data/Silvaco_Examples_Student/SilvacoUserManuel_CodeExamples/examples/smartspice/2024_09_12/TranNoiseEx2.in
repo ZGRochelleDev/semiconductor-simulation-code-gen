@@ -1,0 +1,36 @@
+Example 2: Inverter Transient Noise Analysis 
+
+.OPTIONS nomod DEFNRD=1 DEFNRS=1
+.TRAN 1n 50n NOISE
+.probe v(inp) v(out) k(out)
+
+.PARAM w2p=5.6u w2n=4.0u bulkv=0.0
+ 
+MP1 mid1  inp  vss pbulk    pmos w=5.6u  l=1.3u PS=33.45U AS=35.10P PD=33.45U AD=35.10P
+MN1 mid1  inp  gnd nbulk    nmos w=4.0u  l=0.8u PS=19.50U AS=17.10P PD=19.50U AD=17.10P 
+
+MP2 mid2  mid1 vss pbulk    pmos w='w2p' l=1.3u PS=33.45U AS=35.10P PD=33.45U AD=35.10P
+MN2 mid2  mid1 gnd nbulk    nmos w='w2n' l=0.8u PS=19.50U AS=17.10P PD=19.50U AD=17.10P 
+
+MP3  out  mid2 vss pbulk    pmos w=5.6u  l=1.3u PS=33.45U AS=35.10P PD=33.45U AD=35.10P  
+MN3  out  mid2 0   nbulk    nmos w=4.0u  l=0.8u PS=19.50U AS=17.10P PD=19.50U AD=17.10P 
+
+*     Parallel Transistors
+MP33  out mid2 vss pbulk    pmos w=5.6u  l=1.3u PS=33.45U AS=35.10P PD=33.45U AD=35.10P  
+MN33  out mid2 0   nbulk    nmos w=4.0u  l=0.8u PS=19.50U AS=17.10P PD=19.50U AD=17.10P 
+
+Cout out 0 1pF
+
+vs   vss 0   DC 5 
+vin  inp 0  pulse(0 5 0 1n 1n 10n 22n) 
+
+Vpbulk pbulk 0  DC 4.7  
+Vnbulk nbulk 0  DC 0.7  
+
+.MEASURE TRAN CorMAX MAX k(out)
+.MEASURE TRAN CorMIN MIN k(out)
+*================================================================================
+ 
+.model nmos  nmos level=49
+.model pmos  pmos level=49
+.END

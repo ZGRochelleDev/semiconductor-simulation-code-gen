@@ -1,0 +1,107 @@
+# (c) Silvaco Inc., 2024
+# SiC Extended Precision PiN Diode simulation
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example name
+SET name=SiC_Power_ex02
+
+####### DEVICE SIMULATION #######
+# Create PiN diode structure
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH 
+
+X.MESH location=0.00 spacing=0.005
+X.MESH location=0.01 spacing=0.005
+
+Y.MESH location=0   spacing=0.2
+Y.MESH location=2   spacing=0.001
+Y.MESH location=30  spacing=2.5
+Y.MESH location=120 spacing=2.5
+Y.MESH location=150 spacing=0.001
+Y.MESH location=152 spacing=0.25
+
+REGION number=1 material=4H-SiC
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+DOPING concentration=2e19 p.type uniform y.maximum=2
+DOPING concentration=8e14 n.type uniform y.minimum=2
+DOPING concentration=2e19 n.type uniform y.minimum=150
+
+SAVE outfile=$'name'_VD_str.str
+
+EXTRACT name="t0" clock.time
+
+# BV simulation with four kinds of extended precisions.
+LOOP steps=4
+ ASSIGN name="prec" n.value=(80, 128, 160, 256)
+ ASSIGN name="ni" c1="ni.min=1e6" c2="ni.min=1e-3" c3=" " c4=" "
+ ASSIGN name="time" c1="t1" c2="t2" c3="t3" c4="t4" 
+
+ ####### DEVICE SIMULATION #######
+ GO victorydevice simflags="-P 4 -$'prec'" 
+
+ #### STRUCTURE SPECIFICATION ####
+ MESH infile=$'name'_VD_str.str
+
+ #### MATERIAL/PHYSICAL MODELS ####  
+ MATERIAL material=4H-SiC taun0=1e-6 taup0=1e-6 $'ni'
+ MODELS print srh
+ IMPACT aniso sic4h0001 e.side
+
+ #### NUMERICAL METHODS ####
+ IF cond=($'prec'=80)
+  METHOD climit=1e-4 maxtraps=30 itlimit=30 weak=1 \
+    px.tol=1e-12 cx.tol=1e-12
+ ELSE
+  METHOD climit=1e-4 maxtraps=30 itlimit=30 \
+    weak=1 px.tol=1e-22 cx.tol=1e-22 pr.tol=1e-43 cr.tol=1e-35
+ IF.END
+
+ #### SOLUTION SOLVING ####
+ SOLVE init
+ SOLVE previous
+
+ LOG outfile=$'name'_VD_BV_$'prec'bit.log
+
+ SOLVE vanode=-0.1 previous
+ SOLVE vanode=-0.5 vstep=-0.5 vfinal=-10 name=anode
+ SOLVE vstep=-2.5 vfinal=-50 name=anode
+ SOLVE vstep=-10 vfinal=-200 name=anode
+ SOLVE vstep=-50 vfinal=-1000 name=anode
+ SOLVE vstep=-200 vfinal=-16200 name=anode
+ SOLVE vstep=-25 vfinal=-16400 name=anode
+ SOLVE vstep=-10 vfinal=-16450 name=anode
+ SOLVE vstep=-1 vfinal=-16455 name=anode
+
+ CONTACT name=anode current
+ METHOD weak=300 px.tol=1e-5 cx.tol=1e-5 pr.tol=1e-26 cr.tol=5e-18
+
+ SOLVE mult istep=1.3 ifinal=-1e-10 name=anode
+
+ LOG off
+
+ EXTRACT name="$'time'" clock.time
+
+L.END
+
+EXTRACT name="elapsed_time_80" $t1 - $t0
+EXTRACT name="elapsed_time_128" $t2 - $t1
+EXTRACT name="elapsed_time_160" $t3 - $t2
+EXTRACT name="elapsed_time_256" $t4 - $t3
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VD_BV_80bit.log+\
+$'name'_VD_BV_128bit.log+\
+$"name"_VD_BV_160bit.log+\
+$"name"_VD_BV_256bit.log
+
+QUIT

@@ -1,0 +1,44 @@
+# (c) Silvaco Inc., 2024
+
+# Si Wafer Orientation for Implantation
+
+# This example accompanies the Simulation Standard article:
+# "Setting up the Wafer Orientation: Applications to Ion Implantation"
+# Volume 34, Number 3, April 2024 available from Silvaco.com
+ 
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+SET name=VP_Implant_ex08
+
+############ PROCESS SIMULATION ###########################
+
+GO VictoryProcess simflags="-P 4"
+
+# Example 1: Channeling implantation in the [110] 
+# channel of silicon in a [100] wafer
+
+INIT material=silicon  depth=1.4 gasheight=0.5 resolution=0.01 sub.type=diamond \
+sub.ori=”100” sub.rot=45 
+
+IMPLANT phosphorus energy=120 dose=1e12 BCA n.ion=5e3 tilt=45 rotation=45
+
+SAVE name=$'name'_Ex1 conformalstr
+
+# Example 2: Channeling implantation in the [211] 
+# channel of silicon in a [100] wafer.
+
+INIT material=silicon  depth=1.4 gasheight=0.5 resolution=0.01 sub.type=diamond \
+sub.ori=”100” sub.rot=45 
+
+IMPLANT phosphorus energy=120 dose=1e12 BCA n.ion=5e3 tilt=35 rotation=0
+
+SAVE name=$'name'_Ex2 conformalstr
+
+victoryvisual \
+$'name'_Ex1_exVC.str+\
+$'name'_Ex2_exVC.str
+
+QUIT

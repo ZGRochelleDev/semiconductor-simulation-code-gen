@@ -1,0 +1,42 @@
+# (c) Silvaco Inc., 2024
+
+# ROTATE
+
+# In this example, the ROTATE command functionality is demonstrated.
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+
+# Example Name
+SET name = "VM_Solid_Model_ex05"
+
+#### STRUCTURE SPECIFICATION ####
+GO victorymesh simflags = "-P 4"
+
+# Create ellipsoid
+ELLIPSOID center = "0.5,0.5,0" radius.x = 0.5 radius.y = 1 radius.z = 0.25 \
+height = 1 num.edges = 10 out = "ellipsoid"
+
+SAVE out = "$'name'_ellipsoid"
+
+# First rotation will be 60 degrees around a vector point
+ROTATE angle = 60 point.a = "0,0,0" point.b = "1,1,1"
+
+SAVE out = "$'name'_60_rotate"
+
+# Second rotation will be 120 degrees around a vector point
+ROTATE angle = 120 point.a = "0,0,0" point.b = "1,1,1"
+
+SAVE out = "$'name'_120_rotate"
+
+# Third rotation will be 270 degrees around a vector point
+ROTATE angle = 270 point.a = "0,0,0" point.b = "1,1,1"
+
+SAVE out = "$'name'_270_rotate"
+
+# VictoryVisual is used to generate the plots
+victoryvisual $'name'_ellipsoid.str $'name'_60_rotate.str \
+ $'name'_120_rotate.str $'name'_270_rotate.str
+QUIT 

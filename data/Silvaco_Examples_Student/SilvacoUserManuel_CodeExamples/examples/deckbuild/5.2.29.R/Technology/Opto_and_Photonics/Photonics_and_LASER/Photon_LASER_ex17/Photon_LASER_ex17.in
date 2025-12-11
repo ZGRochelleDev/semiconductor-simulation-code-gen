@@ -1,0 +1,151 @@
+# (c) Silvaco Inc., 2024
+
+# VCSEL Simulation with Multiple Transverse Modes
+
+# Required Modules
+#  Atlas Device
+#   -Blaze
+#   -VCSEL
+
+# Example Name
+SET name=“Photon_LASER_ex17” 
+
+GO atlas simflags="-P 4"
+
+# VCSEL Example
+#
+# This device is based on:
+# Piprek, Joachim, "Modeling and optimization of 1.54um double-fused
+# VCSELs for cw operation above room temperature," SPIE Vol. 2693:
+# Physics and Simulation of Optoelectronic Devices IV, 1996.
+#
+# Define CYL on MESH statement for cylindrical symetry
+#
+OPTIONS verbose
+MESH cyl auto
+#
+# X Mesh lines (Note Y lines defined by REGION statements)
+#
+X.MESH location=0 spacing=0.5
+X.MESH location=6 spacing=0.5
+#
+# Define top regions going up from y=0
+#
+# spacers
+#
+REGION material=GaAs thick=0.01 sy=0.005 accept=4e19 top
+REGION material=GaAs thick=0.02 sy=0.01  accept=4e17 top
+#
+# top DBR
+#
+DBR half.cyc=60 thick1=0.1157 thick2=0.1273 n1=3 n2=3 mat1=GaAs mat2=AlGaAs x2.comp=0.67 na1=4e17 na2=4e17 top
+#
+# top contact regions
+#
+REGION material=GaAs thick=0.184 sy=0.02 accept=4e17 top
+REGION material=GaAs thick=0.02  sy=0.01 accept=2e19 top
+#
+# active REGIONs starting at y=0 down
+# (wells are defined later in by QWELL on the REGION statement)
+#
+REGION material=InP  thick=0.178 sy=0.04 accept=1e18 bottom
+REGION material=InP  thick=0.1 sy=0.05   accept=1e16 bottom
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InGaAsP  thick=0.0055 x.comp=0.24 y.comp=0.82 sy=0.001 bottom \
+ qwell well.nx=12 well.ny=99
+REGION material=InGaAsP thick=0.008 x.comp=0.52 y.comp=0.82 sy=0.001 bottom
+REGION material=InP  thick=0.258 sy=0.04 donor=5e18 bottom
+REGION material=GaAs thick=0.05 sy=0.025 donor=1e18 bottom
+#
+# bottom DBR
+#
+DBR half.cyc=56 thick1=0.1157 thick2=0.134 n1=3 n2=3 mat1=GaAs mat2=AlAs nd1=1e18 nd2=1e18 bottom
+#
+# bottom contact REGION
+#
+REGION material=GaAs thick=0.02 sy=0.005 donor=5e18 bottom
+#
+# optional air
+#
+#REGION material=air x.min=3 x.max=6 y.max=0
+#
+# electrodes
+#
+ELECTRODE num=1 name=anode top x.max=6
+ELECTRODE num=2 name=cathode bottom
+#
+# Define some material parameters
+#
+# Here we smooth out the DBRs for better electrical convergence
+#
+MATERIAL material=AlGaAs eg300=1.42 affin=4.07 nc300=4.35e17 nv300=8.16e18 permi=13.2
+MATERIAL material=AlAs eg300=1.42 affin=4.07 nc300=4.35e17 nv300=8.16e18 permi=13.2
+MATERIAL mater=InGaAsP  mun=1000 mup=500  copt=1e-15  epsinf=12.2500 alphaa=500.0 nc300=1e19 nv300=1e19
+MATERIAL mater=AlGaAs  epsinf=9.2700
+MATERIAL mater=GaAs    epsinf=11.2200   
+MATERIAL mater=AlAs    epsinf=8.3500    
+MATERIAL mater=InP     epsinf=9.9200 nc300=1e19 nv300=1e19
+#
+# Turn on some models
+#
+MODEL srh fermi li spont
+#
+# specify some outputs for the structures
+#
+OUTPUT band.param con.band val.band u.auger u.radiative u.srh
+#
+# get an initial solution
+#
+SOLVE init
+
+SOLVE
+#
+# set up the laser models
+##############################
+LX.M n=1   x=0
+LX.M n=100 x=6
+VCSEL vcsel.check vcsel.incidence=1 proj itmax=30 maxch=100.0 toler=0.010 photon.energy=0.8 einit=0.75  efinal=0.85 nmode=4 perturb
+#
+# turn on a log file to capture IV data
+#
+LOG outf= $'name'.log
+#
+# solve over a voltage ramp
+#
+SOLVE prev
+SOLVE vstep=0.05 name=anode vfinal=0.9
+SAVE outf= $'name'_0.str
+SOLVE vstep=0.05 name=anode vfinal=1.0
+SAVE outf= $'name'_1.str
+VCSEL ^proj tauss=0.01
+
+SOLVE vstep=0.05 name=anode vfinal=1.2
+SAVE outf= $'name'_2.str
+SOLVE vstep=0.05 name=anode vfinal=3.0
+SAVE outf= $'name'_3.str
+
+victoryvisual \
+$'name'.log:$'name'.set 
+
+victoryvisual \
+$'name'_3.str:$'name'_3_lightmode1.set \
+$'name'_3.str:$'name'_3_lightmode2.set \
+$'name'_3.str:$'name'_3_lightmode3.set \
+$'name'_3.str:$'name'_3_lightmode4.set
+
+QUIT

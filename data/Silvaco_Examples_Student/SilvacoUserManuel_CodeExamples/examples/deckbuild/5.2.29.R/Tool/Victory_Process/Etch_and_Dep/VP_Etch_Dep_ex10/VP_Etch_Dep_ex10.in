@@ -1,0 +1,90 @@
+# (c) Silvaco Inc., 2024
+
+# Introduction to geometric deposition models
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name="VP_Etch_Dep_ex10" 
+
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon orientation=100 from=0 to=3 depth=1 resolution=0.07 gasheight=3
+
+DEPOSIT material = polysilicon thick=0.3 max outside="1,2"
+
+# Save initial condition structure for later re-load
+save name=$'name'_Init_sv
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Init.str"
+
+# Max model: The value passed to the THICKNESS parameter is the distance of the 
+# horizontal plane from the highest point of the structure.
+
+# Max model:Thickness>0
+DEPOSIT nitride thick=0.2 max
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Max_Th_More_0.str"
+
+#Max model: Thickness=0
+# (useful to planarize surfaces) 
+LOAD name=$'name'_Init_sv
+DEPOSIT nitride thick=0 max
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Max_Th_Eq_0.str"
+
+#Max model: Thickness<0
+LOAD name=$'name'_Init_sv
+DEPOSIT nitride thick=-0.2 max
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Max_Th_Less_0.str"
+
+# Min model: The value passed to the THICKNESS parameter is the
+# distance of the horizontal plane from the lowest point of the structure.
+# Thickness can only be greater than 0.
+LOAD name=$'name'_Init_sv
+DEPOSIT nitride thick=0.2 min
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Min.str"
+
+# Conformal model: Material conformally deposited
+# on top of a non-planar surface
+LOAD name=$'name'_Init_sv
+
+DEPOSIT nitride thick=0.2 conformal
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Conf.str"
+
+# Directional model: Offset only in z-direction 
+# on top of a non-planar surface.
+LOAD name=$'name'_Init_sv
+
+DEPOSIT nitride thick=0.2 directional
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Dir.str"
+
+victoryvisual \
+$'name'_Max_Th_More_0.str \
+$'name'_Max_Th_Eq_0.str \
+$'name'_Max_Th_Less_0.str \
+$'name'_Min.str \
+$'name'_Conf.str \
+$'name'_Dir.str 
+
+QUIT

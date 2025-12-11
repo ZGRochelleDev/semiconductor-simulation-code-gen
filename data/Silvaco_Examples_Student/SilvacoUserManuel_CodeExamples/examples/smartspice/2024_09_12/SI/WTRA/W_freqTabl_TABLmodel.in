@@ -1,0 +1,71 @@
+* Simulation
+* 3 coupled lines l=0.0001
+* with frequency-dependent matrices
+
+*.options post
+.options nomod
+*.options acct=2
+.option dcgnode=1.e-15
+
+.param vdd=1.6
++	tcyc=1.0ns
++	trf=0.05ns
++	ts=1.0ns
++	tclkr=ts
++	tclkf='ts+tcyc/2'
+
+vclk clk 0 pulse (0 vdd 'ts-trf/2' trf trf 'tcyc/2-trf' tcyc) DC 0 AC 1
+
+R1 0 1 5
+R3 clk 3 5
+R4 0 5 5
+
+C2 2 0 0.5pf
+C4 4 0 0.5pf
+C6 6 0 0.5pf
+
+W1 n=3 1 3 5 0 2 4 6 0 
++  TABLEmodel=freqTabl
++  l=0.0001
++  prntab=1 
++  RLGCCHECK=0
+
+
+.MODEL freqTabl W MODELTYPE=TABLE
++  N=3
++ LMODEL=LfreqTabl
++ CMODEL=CfreqTabl
++ RMODEL=RfreqTabl
++ GMODEL=GfreqTabl 
+
+.MODEL LfreqTabl SP
++ SPACING=NONUNIFORM
++ MATRIX=NONSYMMETRIC VALTYPE=REAL
++ DATAFILE=freqL.par
+
+.MODEL CfreqTabl SP
++ SPACING=NONUNIFORM
++ MATRIX=NONSYMMETRIC VALTYPE=REAL
++ DATAFILE=freqC.par
+
+.MODEL RfreqTabl SP
++ SPACING=NONUNIFORM
++ MATRIX=NONSYMMETRIC VALTYPE=REAL
++ DATAFILE=freqR.par
+
+.MODEL GfreqTabl SP
++ SPACING=NONUNIFORM
++ MATRIX=NONSYMMETRIC VALTYPE=REAL
++ DATAFILE=freqG.par
+
+*.AC LIN 1001 1 10gHz
+.tran 0.05ps 3.9ns
+
+.MEASURE TRAN v1 MAX v(1) FROM=2n TO=3.5n 
+.MEASURE TRAN v2 MAX v(2) FROM=2n TO=3.5n 
+.MEASURE TRAN v3 MAX v(3) FROM=2n TO=3.5n 
+.MEASURE TRAN v4 MAX v(4) FROM=2n TO=3.5n 
+.MEASURE TRAN v5 MAX v(5) FROM=2n TO=3.5n 
+.MEASURE TRAN v6 MAX v(6) FROM=2n TO=3.5n 
+
+.end

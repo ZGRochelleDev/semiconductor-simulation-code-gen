@@ -1,0 +1,65 @@
+# (c) Silvaco Inc., 2024
+
+# Ion Milling Patterning of Nanostructure 
+
+# Required Modules
+#  Victory Process
+#   -3D Physical Etch & Deposit 
+
+# Example Name
+Set name="VP_Etch_Dep_ex05" 
+
+GO victoryprocess simflags="-P 4"
+
+# Initial conditions
+INIT material=chromium depth=0.02 gasHeight=0.045 \
+ from="-0.015, -0.002" to="0.015, 0.002" \
+ resolution="0.002, 0.002, 0.002" flow.dim=3d
+
+# Create two masks and join them together
+SPECIFYMASKPOLY maskname=HARD P1="-0.05, -0.1" P2="-0.05, 0.1" P3="-0.005, 0.1" P4="-0.005, -0.1"
+SPECIFYMASKPOLY maskname=HARD add P1="0.05, -0.1" P2="0.05, 0.1" P3="0.005, 0.1" P4="0.005, -0.1"
+
+DEPOSIT conformal thickness=0.02 material=diamond
+
+ETCH DRY thickness=0.0205 material=diamond mask="HARD" 
+
+EXPORT structure="$'name'_tmp.str"
+
+MATERIAL material="alloy" inherit.ionmill="chromium" \
+ionmill.parameter="massDensity" ionmill.parameterValue="5.752"
+
+IONMILL beamAngle=5.0 beamdivergence=5 rotation=on time=5 min \
+ ion=Ar energy=250 currentdensity=1.5 redepmaterial=alloy \
+ secefficiency=0.8 secLimit=0.15 reflectX=0 reflectY=2 \
+ solver="LAX_FRIEDRICH" autoRef maxCFL=0.25
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Final.str"
+EXPORT 2D ycenter structure="$'name'_Final_2D.str"
+
+# Analyse the 2D cut
+# Extract trench depth and slope 
+go victoryextract
+LOAD in="$'name'_Final_2D.str"
+EXTRACT.THICKNESS name="b" regions="chromium" nth=1 x.val=0.0
+EXTRACT.THICKNESS name="thick" regions="chromium" nth=1 x.val=-0.0148
+EXTRACT.VDOE name="d" expression=($"thick" - $"b")
+EXTRACT.THICKNESS name="x09" regions="chromium" nth=1 z.val=0.9*$d
+EXTRACT.THICKNESS name="x01" regions="chromium" nth=1 z.val=0.1*$d
+EXTRACT.VDOE name="slope" expression=0.8*$"d"/($"x09" - $"x01")
+EXTRACT.VDOE name="angle" expression=atan($"slope")*180.0/3.1415926
+
+# Comparison of Ion Milling rates for materials in the structure 
+# use system command to rename material ID number to physical material
+system cp ratetable_Cr_ID295.dat $'name'_Cr.dat
+system cp ratetable_C_ID100.dat $'name'_Diam.dat
+system cp ratetable_Cr_ID279.dat $'name'_alloy.dat
+
+victoryvisual \
+$'name'_Final.str \
+$'name'_Final_2D.str \
+$'name'_Cr.dat:$'name'_rate.set+$'name'_Diam.dat:$'name'_rate.set+$'name'_alloy.dat:$'name'_rate.set
+
+QUIT

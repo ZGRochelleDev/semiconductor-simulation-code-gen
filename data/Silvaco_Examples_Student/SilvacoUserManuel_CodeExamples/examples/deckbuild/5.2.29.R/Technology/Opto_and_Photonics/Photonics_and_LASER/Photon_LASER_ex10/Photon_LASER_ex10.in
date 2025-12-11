@@ -1,0 +1,97 @@
+# (c) Silvaco Inc., 2024
+
+# Stripe Laser using Effective Index Solver 
+
+# Required Modules
+#  Atlas 
+#   -Blaze
+#   -Quantum
+#   -Laser
+#   -LED
+
+# Example Name
+SET name=“Photon_LASER_ex10” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 4"
+MESH width=300
+
+X.MESH l=0.0   s=0.1
+X.MESH l=1.0   s=0.1
+X.MESH l=2.0   s=0.1
+X.MESH l=3.0   s=0.1
+
+Y.MESH l=0   s=0.1
+Y.MESH l=2   s=0.05
+Y.MESH l=2.3   s=0.05
+Y.MESH l=4.3   s=0.1
+
+REGION num=1 material=AlGaAs x.comp=0.3 \ 
+       x.min=0  x.max=3 y.min=0 y.max=2
+
+
+REGION num=2 material=GaAs \
+       x.min=0  x.max=3 y.min=2 y.max=2.3  led
+
+       
+REGION num=3 material=AlGaAs x.comp=0.5 \
+       x.min=0  x.max=3.0 y.min=2.3 y.max=4.3     
+
+
+ELECTRODE       num=1  name=anode       top
+ELECTRODE       num=2  name=cathode     bottom
+
+#
+DOPING reg=1 p.type uniform conc=1.e18
+DOPING reg=3 n.type uniform conc=1.e18
+
+#
+# User-defined anisotropic diELECTRODEtric constant can be specified
+#   
+
+MATERIAL reg=1         epsim.iso=0
+MATERIAL reg=2         epsim.iso=0
+MATERIAL reg=3         epsim.iso=0
+
+MODELS fldmob srh optr auger fermi consrh  
+MODEL spontaneous zb.three
+
+OUTPUT con.band val.band u.rad u.srh u.aug  las.loss las.refr flowlines hx.opt hy.opt ex.opt ey.opt hz.opt ez.opt
+
+METHOD itlimit=100 schur helm1d=LR
+
+#
+# Effective index SOLVEr,launched by  HELM.GEOM=15DY, combines 1D solutions in in X and Y directions.
+
+LASER  s.helm  helm.geom=15dy helm.te ^helm.tm helm.sym.helm.asy nmodes=10  effmodes=2 prt.eval   \
+photon.energy=1.425 reflect index.model=0 gainmod=5 itmax=10 fcarrier absorption 
+ 
+SOLVE init 
+
+LOG outf= $'name'_IV.log
+
+SOLVE vstep=0.1 vfinal=1 name=anode
+
+LASER start
+
+SOLVE vstep=0.1 vfinal=2 name=anode
+SAVE outf= $'name'_v2.str spectrum= $'name'_spec_v2.log emin=1.41 emax=1.45
+
+SOLVE vstep=0.1 vfinal=3 name=anode
+SAVE outf= $'name'_v3.str spectrum= $'name'_spec_v3.log emin=1.41 emax=1.45
+
+SOLVE vstep=0.1 vfinal=4 name=anode
+SAVE outf= $'name'_v4.str spectrum= $'name'_spec_v4.log  emin=1.41 emax=1.45
+
+SOLVE vstep=0.1 vfinal=5 name=anode
+SAVE outf= $'name'_v5.str spectrum= $'name'_spec_v5.log  emin=1.41 emax=1.45
+
+victoryvisual \
+$'name'_spec_v2.log:$'name'_spec_v2.set \
+$'name'_spec_v3.log:$'name'_spec_v3.set \
+$'name'_v3.str:$'name'_v3.set \
+$'name'_IV.log:$'name'_IV.set
+
+LOG off
+
+QUIT

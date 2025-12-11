@@ -1,0 +1,64 @@
+* Gateway 4.2404.0.A Spice Netlist Generator
+* Simulation timestamp: 04-Apr-2024 15:07:53
+* RunDir:               E:\Gateway_NEW_demo\analog\032_OpAmp_circuits
+* Workspace name:       E:\Gateway_NEW_demo\analog\032_OpAmp_circuits\amplifier.workspace
+* Simulation name:      E:\Gateway_NEW_demo\analog\032_OpAmp_circuits\CIRCUIT1.schlr
+* Switchlist:           schematic symbol
+
+*
+* Search locations for include files
+*
+.option SEARCH = " +E:/Gateway_NEW_demo/analog/032_OpAmp_circuits +E:/Gateway_NEW_demo/libraries/spicelib +E:\Gateway_NEW_demo\analog\032_OpAmp_circuits"
+
+* Schematic name: CIRCUIT1
+C2 NET12 NET16 4p
+I3 GND NET15 DC 23.464u
+I4 NET10 GND DC 46.928u
+M8 VOUT1 NET12 NET13 NET13 PMOS L=2u W=200u
+M9 VOUT1 NET15 GND GND NMOS L=2u W=96u
+M10 NET15 NET15 GND GND NMOS L=2u W=100u
+M11 NET12 PLUS NET10 GND NMOS L=2u W=100u
+M12 NET12 NET11 NET13 NET13 PMOS L=2u W=200u
+M13 NET11 NET11 NET13 NET13 PMOS L=2u W=200u
+M14 NET11 MINUS NET10 GND NMOS L=2u W=100u
+R2 VOUT1 NET16 8K
+V1 MINUS PLUS SIN(0 0.9205m 1MEG ) AC 200u
+V2 NET13 GND DC 4.5
+C3 VOUT1 GND 10p
+R1 VOUT1 GND 10meg
+
+* Global Nodes Declarations
+.GLOBAL GND
+
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE AC V(MINUS) V(PLUS)
+.SAVE DC V(MINUS) V(PLUS)
+.SAVE TRAN V(MINUS) V(PLUS)
+
+*
+* Marching waveforms
+*
+.OPTION RAWPTS=150
+.IPLOT AC  V(VOUT1)
+.IPLOT DC  V(VOUT1)
+.IPLOT TRAN  V(VOUT1)
+
+* Schematic Netlist rebuilt at runtime
+
+.model NMOS NMOS (LEVEL=11)
+.model PMOS PMOS (LEVEL=11)
+
+*.op
+.tran 0.01 5m
+.ac dec 10 1 1.0g
+
+.save V(V1) V(VOUT1)
+
+*.iPLOT AC V(VOUT1) V(MINUS) V(PLUS)
+*.iPLOT AC VDB(VOUT1) VP(VOUT1)
+
+.END

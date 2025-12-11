@@ -1,0 +1,140 @@
+# (c) Silvaco Inc., 2024
+
+# Magnetic Switching using an External Magnetic Field
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -3D Simulator
+#   -3D MRAM
+
+# Example Name
+Set name=“MRAM_ex04”
+
+# Define the thicknesses of the single layer in the SOT STT MRAM structure
+Set h1 = 0.0e-3
+Set s1 = 4.0e-3
+
+Set h2 = $h1+$s1
+Set s2 = 0.5e-3
+
+Set h3 = $h2+$s2
+Set s3 = 0.7e-3
+
+Set h4 = $h3+$s3
+Set s4 = 1.0e-3
+
+Set h5 = $h4+$s4
+Set s5 = 1.0e-3
+
+Set h6 = $h5+$s5
+Set s6 = 50.0e-3
+
+# Define the axes for the base of the cylinder
+Set a = 20.0
+Set b = 20.0
+Set r = 1.0e-3
+
+
+####### STRUCTURE CREATION #######
+GO victorymesh
+
+# Create the heavy metal layer
+CUBOID from = "-50e-3,-25e-3,$h1" to = "+50e-3,+25e-3,$h2" material="contact1" out="base"
+
+# Create the MTJ pillar
+LAYERS point="0,0,$h2" \
+       angle=360.0 num.edges=30 \
+       layer.offset=0 layer.deltas="$r" layer.num.edges="4" \
+       axis.deltas="$s2,$s3,$s4,$s5,$s6" axis.num.edges="2, 2, 2, 2, 2" \
+       materials="(conductor2, conductor3, barrier4, conductor5, contact6)" \
+       out="pillar"
+
+SCALE factors="$a,$b,1"
+
+# Join the heavy metal layer and the MTJ pillar
+JOIN in.a=base in.b=pillar out=tmp separate
+
+# Create a delaunay mesh
+REMESH delaunay constrained
+
+# Refine the mesh
+REFINE regions="material:contact1" max.size=0.0015 constrained
+REFINE regions="material:conductor2,material:barrier3,material:conductor4" max.size=0.001 constrained
+REFINE regions="material:contact6" interface.regions="material:conductor5" other.interface.regions="material:contact6" max.interface.size=0.001 max.interface.distance=0.04 max.interface.distance.size=0.0125 grading="linear" constrained
+
+MATERIAL regions="material:contact1"   value="contact"
+MATERIAL regions="material:conductor2" value="conductor"
+MATERIAL regions="material:conductor3" value="conductor"
+MATERIAL regions="material:barrier4"   value="barrier"
+MATERIAL regions="material:conductor5" value="conductor"
+MATERIAL regions="material:contact6"   value="contact"
+
+SAVE out=$'name'_VM.str ascii
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-mram"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM.str \
+     fem.bem enable.sot enable.sot.bcs enable.int.soc axis.orientation=z-axis \
+     d.x=40e-9 d.y=40e-9 cross.section.type=ellipse
+
+ELECTRODE num=1 z=57.2e-9
+ELECTRODE num=2 x=-50.0e-9
+ELECTRODE num=3 x=+50.0e-9
+INTERFACE sot region1=1 region2=3 
+
+# Specify the parameters for the LLG equation
+LLGE anisotropy.axis="(0,0,1)" external.field=(0.080,0,0)
+LLGE region=3 gilbert.damping=0.02 saturation.magnetization=0.81e6 \
+     exchange.constant=2.0e-11 anisotropy.energy=0.545e6 free.layer
+LLGE region=4 gilbert.damping=0.02 saturation.magnetization=0.81e6 \
+     exchange.constant=2.0e-11 anisotropy.energy=0.545e6 free.layer
+LLGE region=5 gilbert.damping=0.02 saturation.magnetization=0.81e6 \
+     exchange.constant=2.0e-11 anisotropy.energy=0.545e6
+
+SOT spin.hall.angle=0.19 spin.hall.layer=1 \
+    spin.independent.potential=0.42645 rashba.potential=0.08 exchange.potential=0.20055 \
+    fermi.wave.vector=16.0e9 relaxation.time.nm=1.12579e-15 relaxation.time.fm=6.00881e-15 \
+    spin.mixing.conductance.r=2.0e15 spin.mixing.conductance.i=0.7e15 \
+    eff.layer.thickness=0.5e-9
+
+# Specify the parameters for the SDD equation
+SDDE r.p=1.4e+4 r.ap=4.2e+4 bdc.scurr
+SDDE region=1 D=0.0011 cond=7e6 lambda.sf=1.4e-9
+SDDE region=3 D=0.001  cond=4e6 lambda.sf=1.0e-8 lambda.j=0.8e-9 lambda.phi=0.4e-9 beta.d=0.7 beta.c=0.52
+SDDE region=4 D=0.001  cond=4e6 lambda.sf=1.0e-8 lambda.j=0.8e-9 lambda.phi=0.4e-9 beta.d=0.7 beta.c=0.52
+SDDE region=2 D=2e-8            lambda.sf=0.0    k=1.0
+SDDE region=5 D=0.001  cond=4e6 lambda.sf=1.0e-8 lambda.j=0.8e-9 lambda.phi=0.4e-9 beta.d=0.7 beta.c=0.52
+SDDE region=6 D=0.0011 cond=7e6 lambda.sf=1.4e-9
+SDDE region1=2 region2=4 Peta=0.2 alpha=1.0
+SDDE region1=2 region2=5 Peta=0.2 alpha=1.0
+
+# Define the initial magnetic orientations of the layers
+LOAD init.mag="(0,0,+1);(0,0,+1);(0,0,-1)"
+
+# Define the logged quantities and the log-file
+PROBE magnetization.free.layer
+PROBE spin.accumulation.free.layer
+LOG outfile=$'name'.log
+
+OUTPUT magnetization spin.accumulation potential
+SAVE outfile=$'name'_VD.str save.time.step=1000
+
+# Perform a transient simulation
+METHOD time.integration=backward.euler
+SOLVE tstep=1e-13 num.it=10000 contact2.bias=0.10 contact3.bias=0.0 contact1.floating
+
+victoryvisual \
+$'name'.log:$'name'.set
+
+victoryvisual \
+$'name'_VD_1.str:$'name'_Dev_1.set \
+$'name'_VD_9001.str:$'name'_Dev_1.set \
+$'name'_VD_2001.str:$'name'_Dev_2.set \
+$'name'_VD_2001.str:$'name'_Dev_3.set
+

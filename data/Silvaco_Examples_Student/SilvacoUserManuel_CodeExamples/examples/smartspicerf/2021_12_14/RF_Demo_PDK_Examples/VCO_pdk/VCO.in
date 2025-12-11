@@ -1,0 +1,56 @@
+* D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\VCO\VCO
+* Gateway 2.12.7.R Spice Netlist Generator
+* Workspace name:       D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\VCO\VCO.workspace
+* Simulation name:      D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\VCO\VCO.schlr
+* Simulation timestamp: 06-May-2010 11:34:00
+
+* Schematic name: VCO
+I1 NET6 vcom PWL(0 0 100p 5e20 200p 0 )
+I2 NET6 NET3 DC 1m
+M1 NET3 NET3 GND GND mn W=8U L=1u AS=3.0064P AD=2.96P PS=8.9116U PD=8.74U M=100
+M2 NET2 NET3 GND GND mn W=8U L=1u AS=3.0064P AD=2.96P PS=8.9116U PD=8.74U M=1K
+V1 NET6 GND DC 2
+V2 NET4 GND DC 0.5
+XC1 NET4 vcop varactor L=40u W=0.58u N=5 M=2
+XC2 NET4 vcom varactor L=40u W=0.58u N=5 M=2
+XL1 NET6 vcom ind WIDTH=10u RAD=60u SPACE=2u NR=2.5 M=1
+XL2 NET6 vcop ind WIDTH=10u RAD=60u SPACE=2u NR=2.5 M=1
+XM1 vcom vcop NET2 NET2 rfnmos3v LR=350N WR=5U NR=50 M=2
+XM2 vcop vcom NET2 NET2 rfnmos3v LR=350N WR=5U NR=50 M=2
+
+* Global Nodes Declarations
+.GLOBAL GND VDD
+
+* End of the netlist
+* Schematic Netlist rebuilt at runtime
+
+* VCO control file
+**********************
+.inc ../libraries/models/sbcd_rf.lib
+.OP
+
+*****Simulation Control******
+.hnoise V(vcop)
++ DEC 10 1K 100Meg
++ Fund=2.5e9
++ nharm=10
++ annotate=4
+***********************
++ FAXIS=OUT
++ FTYPE=REL
++ RELHARM=1
++ qload=1
+*********************
++ method=shooting
++ tstab=10n
++ ese=0.1
++ saveinit
++ waves
+
+.OPTIONS format savemeasures NOMOD=1 NODECK=1 NOPAGE=1  
++ rawpts=500  numdgt=8 accurate seed=101
+
+.TEMP 27
+
+
+.END

@@ -1,0 +1,465 @@
+* /home/tft/c3x320x256_top
+* Gateway 3.4.1.R Spice Netlist Generator
+* Simulation timestamp: 05-Jul-2016 13:19:28
+* Workspace name:       /tft/tft.workspace
+* Simulation name:      /tft/c3x320x256_top.schlr
+
+* Schematic name: c3x320x256_top
+Vdatap datap GND PWL(0n data_l "begin+30n" data_l "begin+30n+20n" data_h
++  "begin+30n+ltime" data_h "begin+30n+ltime+20n" data_l "begin+30n+ltime*2" data_l
++  "begin+30n+ltime*2+20n" data_h "begin+30n+ltime*3" data_h
++ "begin+30n+ltime*3+20n" data_l R="begin+30n+ltime+20n")
+X1 datap datam scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64_vscan hn3=0
+X5 datam datap scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++  scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64_vscan
++ hn3=1
+X9 datap datam scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64_vscan hn3=2
+X13 datam datap scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64_vscan hn3=3
+X16 datap datam scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X12 datam datap scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X8 datap datam scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X4 datam datap scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X15 datam datap scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X11 datap datam scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X7 datam datap scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X3 datap datam scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+X14 datap datam scan<192> scan<193> scan<194> scan<195> scan<196> scan<197>
++  scan<198> scan<199> scan<200> scan<201> scan<202> scan<203> scan<204> scan<205>
++  scan<206> scan<207> scan<208> scan<209> scan<210> scan<211> scan<212> scan<213>
++  scan<214> scan<215> scan<216> scan<217> scan<218> scan<219> scan<220> scan<221>
++  scan<222> scan<223> scan<224> scan<225> scan<226> scan<227> scan<228> scan<229>
++  scan<230> scan<231> scan<232> scan<233> scan<234> scan<235> scan<236> scan<237>
++  scan<238> scan<239> scan<240> scan<241> scan<242> scan<243> scan<244> scan<245>
++  scan<246> scan<247> scan<248> scan<249> scan<250> scan<251> scan<252> scan<253>
++ scan<254> scan<255> vcom c3x80x64
+X10 datam datap scan<128> scan<129> scan<130> scan<131> scan<132> scan<133>
++  scan<134> scan<135> scan<136> scan<137> scan<138> scan<139> scan<140> scan<141>
++  scan<142> scan<143> scan<144> scan<145> scan<146> scan<147> scan<148> scan<149>
++  scan<150> scan<151> scan<152> scan<153> scan<154> scan<155> scan<156> scan<157>
++  scan<158> scan<159> scan<160> scan<161> scan<162> scan<163> scan<164> scan<165>
++  scan<166> scan<167> scan<168> scan<169> scan<170> scan<171> scan<172> scan<173>
++  scan<174> scan<175> scan<176> scan<177> scan<178> scan<179> scan<180> scan<181>
++  scan<182> scan<183> scan<184> scan<185> scan<186> scan<187> scan<188> scan<189>
++ scan<190> scan<191> vcom c3x80x64
+X6 datap datam scan<64> scan<65> scan<66> scan<67> scan<68> scan<69> scan<70>
++  scan<71> scan<72> scan<73> scan<74> scan<75> scan<76> scan<77> scan<78> scan<79>
++  scan<80> scan<81> scan<82> scan<83> scan<84> scan<85> scan<86> scan<87> scan<88>
++  scan<89> scan<90> scan<91> scan<92> scan<93> scan<94> scan<95> scan<96> scan<97>
++  scan<98> scan<99> scan<100> scan<101> scan<102> scan<103> scan<104> scan<105>
++  scan<106> scan<107> scan<108> scan<109> scan<110> scan<111> scan<112> scan<113>
++  scan<114> scan<115> scan<116> scan<117> scan<118> scan<119> scan<120> scan<121>
++ scan<122> scan<123> scan<124> scan<125> scan<126> scan<127> vcom c3x80x64
+X2 datam datap scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> scan<16>
++  scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23> scan<24> scan<25>
++  scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32> scan<33> scan<34>
++  scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41> scan<42> scan<43>
++  scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50> scan<51> scan<52>
++  scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61>
++ scan<62> scan<63> vcom c3x80x64
+Vcom vcom GND DC 2
+.param ltime = 4.07u
+.param scan_r = 1k
+.param data_h = 12
+.param data_l = -10
+.param data_r = 1k
+.param begin = 2u
+Vdatam datam GND PWL(0n data_h "begin+30n" data_h "begin+30n+20n" data_l
++  "begin+30n+ltime" data_l "begin+30n+ltime+20n" data_h "begin+30n+ltime*2" data_h
++  "begin+30n+ltime*2+20n" data_l "begin+30n+ltime*3" data_l
++ "begin+30n+ltime*3+20n" data_h R="begin+30n+ltime+20n")
+
+* Schematic name: c3_rgbx1
+.SUBCKT c3_rgbx1 DATA_B DATA_G DATA_R SCAN vcom
+XB1 DATA_B SCAN vcom tft
+XG1 DATA_G SCAN vcom tft
+XR1 DATA_R SCAN vcom tft
+.ENDS c3_rgbx1
+
+* Schematic name: c3x20x16
+.SUBCKT c3x20x16 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5>
++  scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14>
++ scan<15> vcom
+X13 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X9 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X5 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X15 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X16 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X14 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X10 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X12 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X11 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X7 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X6 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X8 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+.ENDS c3x20x16
+
+* Schematic name: c3x20x16_vscan
+.SUBCKT c3x20x16_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4>
++  scan<5> scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13>
++ scan<14> scan<15> vcom
+X13 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4_vscan hn1=3 hn2=0
++ hn3=0 hn4=0 hn5=0
+X15 data2 data1 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X16 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X14 data1 data2 scan<12> scan<13> scan<14> scan<15> vcom c3x5x4
+X9 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4_vscan hn1=2 hn2=0
++ hn3=0 hn4=0 hn5=0
+X10 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X12 data2 data1 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X11 data1 data2 scan<8> scan<9> scan<10> scan<11> vcom c3x5x4
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4_vscan hn1=0 hn2=0
++ hn3=0 hn4=0 hn5=0
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> vcom c3x5x4
+X5 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4_vscan hn1=1 hn2=0
++ hn3=0 hn4=0 hn5=0
+X7 data2 data1 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X6 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+X8 data1 data2 scan<4> scan<5> scan<6> scan<7> vcom c3x5x4
+.ENDS c3x20x16_vscan
+
+* Schematic name: c3x5x4
+.SUBCKT c3x5x4 data1 data2 scan<0> scan<1> scan<2> scan<3> vcom
+X1 data1 data2 data1 scan<0> vcom c3_rgbx1
+X2 data2 data1 data2 scan<0> vcom c3_rgbx1
+X3 data1 data2 data1 scan<0> vcom c3_rgbx1
+X4 data2 data1 data2 scan<0> vcom c3_rgbx1
+X5 data1 data2 data1 scan<0> vcom c3_rgbx1
+X6 data2 data1 data2 scan<1> vcom c3_rgbx1
+X7 data1 data2 data1 scan<1> vcom c3_rgbx1
+X8 data2 data1 data2 scan<1> vcom c3_rgbx1
+X9 data1 data2 data1 scan<1> vcom c3_rgbx1
+X10 data2 data1 data2 scan<1> vcom c3_rgbx1
+X11 data1 data2 data1 scan<2> vcom c3_rgbx1
+X12 data2 data1 data2 scan<2> vcom c3_rgbx1
+X13 data1 data2 data1 scan<2> vcom c3_rgbx1
+X14 data2 data1 data2 scan<2> vcom c3_rgbx1
+X15 data1 data2 data1 scan<2> vcom c3_rgbx1
+X16 data2 data1 data2 scan<3> vcom c3_rgbx1
+X17 data1 data2 data1 scan<3> vcom c3_rgbx1
+X18 data1 data2 data1 scan<3> vcom c3_rgbx1
+X19 data1 data2 data1 scan<3> vcom c3_rgbx1
+X20 data2 data1 data2 scan<3> vcom c3_rgbx1
+.ENDS c3x5x4
+
+* Schematic name: c3x5x4_vscan
+.SUBCKT c3x5x4_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> vcom
+Vscan0 scan<0> GND PWL(0 -25 "begin-0.2u+htd0" -25 "begin-0.2u+0.05u+htd0" 30
++  "begin-0.2u+0.05u+ltime+htd0" 30 "begin-0.2u+0.05u+ltime+0.05u+htd0" -25 16.7M
++ -25 )
+Vscan1 scan<1> GND PWL(0 -25 "begin-0.2u+htd1" -25 "begin-0.2u+0.05u+htd1" 30
++  "begin-0.2u+0.05u+ltime+htd1" 30 "begin-0.2u+0.05u+ltime+0.05u+htd1" -25 16.7M
++ -25 )
+Vscan2 scan<2> GND PWL(0 -25 "begin-0.2u+htd2" -25 "begin-0.2u+0.05u+htd2" 30
++  "begin-0.2u+0.05u+ltime+htd2" 30 "begin-0.2u+0.05u+ltime+0.05u+htd2" -25 16.7M
++ -25 )
+Vscan3 scan<3> GND PWL(0 -25 "begin-0.2u+htd3" -25 "begin-0.2u+0.05u+htd3" 30
++  "begin-0.2u+0.05u+ltime+htd3" 30 "begin-0.2u+0.05u+ltime+0.05u+htd3" -25 16.7M
++ -25 )
+X1 data1 data2 data1 scan<0> vcom c3_rgbx1
+X2 data2 data1 data2 scan<0> vcom c3_rgbx1
+X3 data1 data2 data1 scan<0> vcom c3_rgbx1
+X4 data2 data1 data2 scan<0> vcom c3_rgbx1
+X5 data1 data2 data1 scan<0> vcom c3_rgbx1
+X6 data2 data1 data2 scan<1> vcom c3_rgbx1
+X7 data1 data2 data1 scan<1> vcom c3_rgbx1
+X8 data2 data1 data2 scan<1> vcom c3_rgbx1
+X9 data1 data2 data1 scan<1> vcom c3_rgbx1
+X10 data2 data1 data2 scan<1> vcom c3_rgbx1
+X11 data1 data2 data1 scan<2> vcom c3_rgbx1
+X12 data2 data1 data2 scan<2> vcom c3_rgbx1
+X13 data1 data2 data1 scan<2> vcom c3_rgbx1
+X14 data2 data1 data2 scan<2> vcom c3_rgbx1
+X15 data1 data2 data1 scan<2> vcom c3_rgbx1
+X16 data2 data1 data2 scan<3> vcom c3_rgbx1
+X17 data1 data2 data1 scan<3> vcom c3_rgbx1
+X18 data1 data2 data1 scan<3> vcom c3_rgbx1
+X19 data1 data2 data1 scan<3> vcom c3_rgbx1
+X20 data2 data1 data2 scan<3> vcom c3_rgbx1
+.param htd0 = "(hlevel+0)*ltime"
+.param hn4 = 0
+.param hn1 = 0
+.param hn2 = 0
+.param hn5 = 0
+.param hn3 = 0
+.param htd3 = "(hlevel+3)*ltime"
+.param htd2 = "(hlevel+2)*ltime"
+.param htd1 = "(hlevel+1)*ltime"
+.param hlevel = "(pow(4,5)*hn5+pow(4,4)*hn4+pow(4,3)*hn3+pow(4,2)*hn2+4*hn1)"
+.ENDS c3x5x4_vscan
+
+* Schematic name: c3x80x64
+.SUBCKT c3x80x64 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5>
++  scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14>
++  scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22> scan<23>
++  scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31> scan<32>
++  scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40> scan<41>
++  scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49> scan<50>
++  scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58> scan<59>
++ scan<60> scan<61> scan<62> scan<63> vcom
+X13 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X9 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X5 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X6 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X7 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X8 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X10 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X11 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X12 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X14 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X15 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X16 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+.ENDS c3x80x64
+
+* Schematic name: c3x80x64_vscan
+.SUBCKT c3x80x64_vscan data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4>
++  scan<5> scan<6> scan<7> scan<8> scan<9> scan<10> scan<11> scan<12> scan<13>
++  scan<14> scan<15> scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++  scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38> scan<39> scan<40>
++  scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47> scan<48> scan<49>
++  scan<50> scan<51> scan<52> scan<53> scan<54> scan<55> scan<56> scan<57> scan<58>
++ scan<59> scan<60> scan<61> scan<62> scan<63> vcom
+X9 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16_vscan hn2=2
+X13 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16_vscan hn2=3
+x1 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16_vscan hn2=0
+X5 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16_vscan hn2=1
+X16 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X15 data2 data1 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X14 data1 data2 scan<48> scan<49> scan<50> scan<51> scan<52> scan<53> scan<54>
++  scan<55> scan<56> scan<57> scan<58> scan<59> scan<60> scan<61> scan<62> scan<63>
++ vcom c3x20x16
+X12 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X11 data1 data2 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X10 data2 data1 scan<32> scan<33> scan<34> scan<35> scan<36> scan<37> scan<38>
++  scan<39> scan<40> scan<41> scan<42> scan<43> scan<44> scan<45> scan<46> scan<47>
++ vcom c3x20x16
+X8 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X7 data2 data1 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X6 data1 data2 scan<16> scan<17> scan<18> scan<19> scan<20> scan<21> scan<22>
++  scan<23> scan<24> scan<25> scan<26> scan<27> scan<28> scan<29> scan<30> scan<31>
++ vcom c3x20x16
+X4 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X3 data1 data2 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+X2 data2 data1 scan<0> scan<1> scan<2> scan<3> scan<4> scan<5> scan<6> scan<7>
++  scan<8> scan<9> scan<10> scan<11> scan<12> scan<13> scan<14> scan<15> vcom
++ c3x20x16
+.ENDS c3x80x64_vscan
+
+* Schematic name: tft
+.SUBCKT tft drain gate vcom
+CLC pixel vcom 150f
+Rdrain Y_T drain data_R
+Cst pixel vcom 0.2p
+Rgate X_L gate scan_R
+X1 Y_T X_L pixel NTFT W=5 L=5
+.ENDS tft
+
+* Global Nodes Declarations
+.GLOBAL GND vcom
+
+* End of the netlist
+* Schematic Netlist rebuilt at runtime
+
+.options
++ post=12
++ probe
++ nomod
++ nodeck
++ acct=2
+*
++ scale=1u
++ reltol=3e-4
++ abstol=1e-10
+*
+*+ cap_mna_formula=1
+*+ cflflag
+*
++ subckt_merge_mode=1
+*
+
+.options
+*+ fss_partition_merge_mode=0
+*+ fss_pwr_resmax=100
+*+ fss_pwr_resmax=40
+*+ fss_pwr_resmax=1
+*+ fss_pwr_resmax=0
+*
+*+ fss_min_res=0.01
+*
++ fss_activity_threshold=1.0e-2
++ fss_time_unit=1.0e-10
+*
+
+.lib 'model.lib' TT
+
+*.tran 0.1u 16.7m
+*.tran 0.1u 300u
+.tran 0.1u 50u
+
+.probe
++ v(x1.x1.x1.x1.*)
+*+ v(x1.x1.*)
+*+ v(*.pixel)
+*+ v(100)
+*+ v(*)
+*+ i(*.vscan0)
+*+ i(*.vscan1)
+*+ i(*.m1)
+
+.end

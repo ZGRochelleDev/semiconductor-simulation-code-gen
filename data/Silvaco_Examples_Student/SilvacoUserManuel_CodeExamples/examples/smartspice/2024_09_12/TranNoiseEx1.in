@@ -1,0 +1,26 @@
+Example 1: Transient Noise Analysis
+.options nomod accurate
+
+.param Vdrain = 1v
+Vdd vdd 0 dc Vdrain
+Vinput vin 0 PULSE(0 5 200n 10n 10n 1000n 1500n) 
+
+.param nchwidth=2.6U
+MU vdd vin vss 0 NENH L=.28U W=nchwidth
++ as='nchwidth*0.49u'   ad='nchwidth*0.49u' 
++ ps='nchwidth*2+0.98u' pd='nchwidth*2+0.98u'
++ nrd='0.15u/nchwidth'  nrs='0.15u/nchwidth'
+Cload vss 0 C=1p 
+
+.tran .1n 1500n NOISE SWEEP Vdrain LIST 2 1v 5v
+.probe k(vss)
+
+.MEASURE TRAN CORMAX MAX K(vss) FROM=800n TO=1200n
+.MEASURE TRAN CORMIN MIN K(vss) FROM=800n TO=1200n
+.MEASURE TRAN CORAVG AVG K(vss) FROM=800n TO=1200n
+
+.model nenh NMOS
++ VERSION=3.1
++ Level = 49
++ Tnom = 27
+.end

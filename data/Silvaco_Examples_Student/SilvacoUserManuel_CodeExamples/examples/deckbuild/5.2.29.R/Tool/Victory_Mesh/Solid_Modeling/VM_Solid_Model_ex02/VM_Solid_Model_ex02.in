@@ -1,0 +1,55 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Shape Generation
+
+# In this example, the syntax for creating 4 simple, arbitrary 3D shapes is demonstrated
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+
+# Example name
+SET name = "VM_Solid_Model_ex02"
+
+#### STRUCTURE SPECIFICATION ####
+GO victorymesh simflags="-P 4"
+
+# Create 3D truncated elliptic cone with 10 edges to sample the top and bottom circumference
+CONE point.a = "0.5,0.5,0" point.b = "0.5,0.5,1" radius.x.a = 0.5 \
+radius.y.a = 0.5 radius.x.b = 1 radius.y.b = 2 num.edges = 10 \
+material = "oxide" out = "cone"
+
+REMESH delaunay out = "cone"
+
+SAVE out = "$'name'_cone"
+
+# Create a 3D cylinder using 10 edges to sample the top and bottom circumference 
+CYLINDER point.a = "0.5,0.5,0" point.b = "0.5,0.5,1" radius = "0.5" \
+num.edges = "10" material = "oxide" out = "cylinder"
+
+REMESH delaunay out = "cylinder"
+
+SAVE out = "$'name'_cylinder"
+
+# Create a paraboloid with peak at center using 32 edges
+PARABOLOID center = "0,0,0" radius.x = 2 radius.y = 1 height = "3" \
+num.edges = 32 out = "paraboloid"
+
+REMESH delaunay out = "paraboloid"
+
+SAVE out = "$'name'_paraboloid"
+
+# Create a 3D sphere with 10 edges sampling the circumference
+SPHERE center = "0,0,0" radius = 0.5 num.edges = 10 out = "sphere"
+
+REMESH delaunay out = "sphere"
+
+SAVE out = "$'name'_sphere"
+
+# VictoryVisual is used to generate the plots of the 4 shapes
+victoryvisual $'name'_cone.str $'name'_cylinder.str \
+$'name'_paraboloid.str $'name'_sphere.str
+
+
+QUIT

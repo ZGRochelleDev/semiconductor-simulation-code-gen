@@ -1,0 +1,56 @@
+# (c) Silvaco Inc., 2024
+
+# SiC Wafer Orientation for Implantation
+
+# This example accompanies the Simulation Standard article:
+# "Setting up the Wafer Orientation: Applications to Ion Implantation"
+# Volume 34, Number 3, April 2024 available from Silvaco.com
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+SET name=VP_Implant_ex07
+
+############ PROCESS SIMULATION ###########################
+
+GO VictoryProcess simflags="-P 4"
+
+# Example 1: Channeling implantation in the [0001] direction on a
+# SiC-4H wafer with a miscut of 4° towards the [11-20] direction.
+
+INIT material=sic-4h depth=1.4 gasheight=0.5 resolution=0.01 sub.type=hexagonal \
+ sub.ori="0001" sub.rot=0 sub.miscut.theta=4 sub.miscut.phi=90
+
+IMPLANT phosphorus energy=120 dose=1e12 BCA n.ion=5e3 tilt=4 rotation=90
+
+SAVE name=$'name'_Ex1 conformalstr
+
+# Example 2: Channeling implantation in the [0001] direction on a
+# SiC-4H wafer with a miscut of 4° towards the [1-100] direction.
+# Note same result as Ex1 as wafer changes compensated by implant rotation
+
+INIT material=sic-4h depth=1.4 gasheight=0.5 resolution=0.01 sub.type=hexagonal \
+sub.ori="0001" sub.rot=90 sub.miscut.theta=4 sub.miscut.phi=0
+
+IMPLANT phosphorus energy=120 dose=1e12 BCA n.ion=5e3 tilt=4 rotation=0
+
+SAVE name=$'name'_Ex2 conformalstr
+
+# Example 3: Channeling implantation in the [11-23] direction on
+# a SiC-4H wafer with a miscut of 8° towards the [11-20] direction
+
+INIT material=sic-4h depth=1.4 gasheight=0.5 resolution=0.01 sub.type=hexagonal \
+sub.ori="0001" sub.rot=0 sub.miscut.theta=8 sub.miscut.phi=90
+
+IMPLANT phosphorus energy=120 dose=1e12 BCA n.ion=5e3 tilt=25 rotation=90
+
+SAVE name=$'name'_Ex3 conformalstr
+
+victoryvisual \
+$'name'_Ex1_exVC.str:$'name'_Dop.set+\
+$'name'_Ex2_exVC.str:$'name'_Dop.set+\
+$'name'_Ex3_exVC.str:$'name'_Dop.set
+
+QUIT

@@ -1,0 +1,51 @@
+.TITLE Harmony project "adc_sar"
+
+
+* Module "BiElec"
+.verilog "SilvacoVLG\adc_sar_temp0.v"
+
+* Module "compar"
+.verilog "SilvacoVLG\adc_sar_temp1.v"
+
+* Module "dac"
+.verilog "SilvacoVLG\adc_sar_temp2.v"
+
+* Module "sha"
+.verilog "SilvacoVLG\adc_sar_temp3.v"
+
+
+
+* TOPLEVEL1.Xcompar.BiElecOnPort1
+*	    6   TOPLEVEL1.compout <--> TOPLEVEL1.Xcompar.BiElecOnPort1.aP
+YVLGTOPLEVEL1.xXcompar.xBiElecOnPort1 6 BiElec 
+
+* TOPLEVEL1.Xcompar
+*	    6   TOPLEVEL1.compout <--> TOPLEVEL1.Xcompar.compout
+*	    7   TOPLEVEL1.vdac    <--> TOPLEVEL1.Xcompar.inminus
+*	    8   TOPLEVEL1.shaout  <--> TOPLEVEL1.Xcompar.inplus
+YVLGTOPLEVEL1.xXcompar 6 7 8 compar 
+
+* TOPLEVEL1.Xdac
+*	    7   TOPLEVEL1.vdac <--> TOPLEVEL1.Xdac.vdac
+YVLGTOPLEVEL1.xXdac 7 dac 
+
+* TOPLEVEL1.Xsar.BiElecOnPort1
+*	CLK <--> TOPLEVEL1.Xsar.BiElecOnPort1.aP
+YVLGTOPLEVEL1.xXsar.xBiElecOnPort1 CLK BiElec 
+
+* TOPLEVEL1.Xsar.BiElecOnPort3
+*	RESETN <--> TOPLEVEL1.Xsar.BiElecOnPort3.aP
+YVLGTOPLEVEL1.xXsar.xBiElecOnPort3 RESETN BiElec 
+
+* TOPLEVEL1.Xsha.BiElecOnPort2
+*	EOC <--> TOPLEVEL1.Xsha.BiElecOnPort2.aP
+YVLGTOPLEVEL1.xXsha.xBiElecOnPort2 EOC BiElec 
+
+* TOPLEVEL1.Xsha
+*	AIN              <--> TOPLEVEL1.Xsha.ain
+*	EOC              <--> TOPLEVEL1.Xsha.sample
+*	    8   TOPLEVEL1.shaout <--> TOPLEVEL1.Xsha.shaout
+YVLGTOPLEVEL1.xXsha AIN EOC 8 sha 
+
+
+.INCLUDE "main.in"

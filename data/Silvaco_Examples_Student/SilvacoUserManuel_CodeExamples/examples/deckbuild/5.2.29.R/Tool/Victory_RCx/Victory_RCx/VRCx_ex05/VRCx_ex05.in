@@ -1,0 +1,47 @@
+# (c) Silvaco Inc., 2024
+
+# Resistance of Metal Fork
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex05” 
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 2"
+
+## Process Description ##
+
+INIT layout=$'name'.lay material=silicon depth=1
+
+DEPOSIT material=oxide thickness=0.5 max
+
+DEPOSIT material=aluminum thickness=0.58 max
+
+ETCH material=aluminum mask=M1
+
+ELECTRODES mask=M1 material=aluminum
+
+DEPOSIT material=oxide thickness=0.5 max
+
+ELECTRODES substrate
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION #######
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv.str"
+
+MATERIAL aluminum conductivity=1e6
+
+INTERCONNECT adapt=(0.04, 0.04)
+
+SAVE spice="$'name'.net" layout="$'name'_1.lay"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

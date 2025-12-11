@@ -1,0 +1,247 @@
+# (c) Silvaco Inc., 2023
+#
+# Cross-talk in AMOLED pixel.
+#
+# Required Modules:
+# Victory Process:
+#  - 3D Structure Editor
+# Victory Mesh:
+#  - 3D Meshing
+#  - 3D Solid Modeling
+# Victory Device:
+#  - 3D Simulator
+#  - 3D Organic
+
+# Example name
+SET name=LED_OLED_ex12
+
+###### VARIABLES ######
+# Acceptor concentration in HIL
+SET acc_hil=low #1e16 /cm3
+#SET acc_hil=high #1e18 /cm3
+
+# Prefix for file names in Victory Device
+SET pref=$'name'_$'acc_hil'
+
+###### PROCESS SIMULATION ######
+# Make a half of a structure model including three OLED separated by PDL.
+# Structure model id completed by Victory Mesh, 
+#  meshing, mirroring, changing materials, electrode definition. 
+GO victoryprocess simflags="-P 4" 
+
+# Define Glass substrate
+INIT material=sio2 from="0,0" to="8,4" depth=0.1 gasheight=3 \
+ separate.layer flow.dim=3d
+
+# Make masks for Anodes and EMLs.
+SPECIFYMASKPOLY mask=anode1 rect lb="0,0" rt="2,2"
+SPECIFYMASKPOLY mask=anode2 rect lb="6,0" rt="8,4"
+SPECIFYMASKPOLY newmask=anode mask1=anode1 or mask2=anode2
+SPECIFYMASKPOLY mask=eml1 rect lb="0,0" rt="3,3"
+SPECIFYMASKPOLY mask=eml2 rect lb="5,0" rt="8,4"
+SPECIFYMASKPOLY newmask=eml mask1=eml1 or mask2=eml2
+
+# Make Anode electrodes
+ETCH material=sio2 thickness=0.05 max mask=anode reverse
+DEPOSIT material=aluminum thickness=0 max
+
+# Make PDL
+DEPOSIT material=sio2 thickness=1 max
+ETCH material=sio2 thickness=1 max mask=anode reverse angle=45
+
+# Layer HIL\HTL\EML\ETL\Cathode
+# The depositions are split into multiple parts to make meshes along layers. 
+LOOP steps=4
+DEPOSIT material=hil thickness=0.005 conformal
+L.END
+
+LOOP steps=8
+DEPOSIT material=htl thickness=0.005 conformal
+L.END
+
+LOOP steps=4
+DEPOSIT material=eml thickness=0.005 conformal
+L.END
+
+ETCH material=eml thickness=0.02 max mask=eml
+
+LOOP steps=4
+DEPOSIT material=etl thickness=0.005 conformal
+L.END
+
+DEPOSIT material=ito thick=0.05 conformal
+
+# Save simlation status
+SAVE name=$'name'_VP_sv
+
+###### STRUCTURE REMESHING and COMPLETING ######
+# Remesh as structure half.
+# Series operations complete full structure.
+GO victorymesh simflags="-P 4"
+
+# Load Victory PROCESS results
+LOAD in=$'name'_VP_sv separate
+
+# Define mesh lines
+LINE x location=0 spacing=0.3
+LINE x location=2 spacing=0.3
+LINE x location=2.7 spacing=0.3
+LINE x location=3.0 spacing=0.1
+LINE x location=3.3 spacing=0.3
+LINE x location=4 spacing=0.3
+LINE x location=4.7 spacing=0.3
+LINE x location=5.0 spacing=0.1
+LINE x location=5.3 spacing=0.3
+LINE x location=6 spacing=0.3
+LINE x location=8 spacing=0.3
+LINE y location=0 spacing=0.3
+LINE y location=2 spacing=0.3
+LINE y location=2.7 spacing=0.3
+LINE y location=3.0 spacing=0.1
+LINE y location=3.3 spacing=0.3
+LINE y location=4 spacing=0.3
+LINE z location=0.1 spacing=0.05
+LINE z location=0.05 spacing=0.05
+LINE z location=0 spacing=0.02
+LINE z location=-0.02 spacing=0.02
+LINE z location=-0.06 spacing=0.02
+LINE z location=-0.08 spacing=0.02
+LINE z location=-0.1 spacing=0.02
+LINE z location=-0.5 spacing=0.1
+LINE z location=-1 spacing=0.02
+LINE z location=-1.02 spacing=0.02
+LINE z location=-1.06 spacing=0.02
+LINE z location=-1.08 spacing=0.02
+LINE z location=-1.1 spacing=0.02
+LINE z location=-1.15 spacing=0.05
+
+# Remeghing
+REMESH conformal
+
+# Mirroring for full structure
+MIRROR axes="+y"
+
+# Merge separated layers to each material
+MERGE
+
+# Change lower-left eml to eml1
+TAG point="0.5,0.5,-0.07" value=eml1
+MATERIAL regions="user:eml1" value=eml1
+
+# Change upper-left eml to eml2
+TAG point="0.5,7.5,-0.07" value=eml2
+MATERIAL regions="user:eml2" value=eml2
+
+# Change right eml to eml3
+TAG point="7.5,4,-0.07" value=eml3
+MATERIAL regions="user:eml3" value=eml3
+
+# Define Cathode electrode
+ELECTRODE regions="ito" name=cathode
+
+# Define Anode1 electrode
+TAG point="1,1,0.025" value=anode1
+ELECTRODE regions="user:anode1" name=anode1
+
+# Define Anode2 electrode
+TAG point="1,7,0.025" value=anode2
+ELECTRODE regions="user:anode2" name=anode2
+
+# Define Anode3 electrode
+TAG point="7,4,0.025" value=anode3
+ELECTRODE regions="user:anode3" name=anode3
+
+# Save complete structure model
+SAVE out=$'name'_VM_sv
+
+###### DEVICE SIMULATION ######
+# eml1/anode1, eml2/anode2 and eml3/anode3 belong in OLED1, OLED2 and OLED3, 
+#  respectively.
+# Assume OLED1 is ON and OLED2 and OLED3 are OFF, and calculate 
+#  cross-tall current.
+GO victorydevice simflags="-80 -P 4"
+
+# Load structure file
+MESH infile=$'name'_VM_sv.str
+
+# Heterojunction models
+INTERFACE s.s thermionic tunnel autohomo balance.therm=1
+
+# Add acceptors to HIL and donors to ETL
+DOPING material=hil p.type concentration=1e16 uniform
+IF cond=($'acc_hil'=high) 
+DOPING material=hil p.type concentration=1e18 uniform replace
+IF.END
+DOPING material=etl n.type concentration=1e18 uniform
+
+# Define user-material types and material parameters
+# EML1, EML2, EML3 have the same parameters for simplification.
+MATERIAL material=hil user.default=organic user.group=semiconductor
+MATERIAL material=htl user.default=organic user.group=semiconductor
+MATERIAL material=eml1 user.default=organic user.group=semiconductor
+MATERIAL material=eml2 user.default=organic user.group=semiconductor
+MATERIAL material=eml3 user.default=organic user.group=semiconductor
+MATERIAL material=etl user.default=organic user.group=semiconductor
+
+MATERIAL material=hil affinity=2.3 eg300=3.3 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+MATERIAL material=htl affinity=2.5 eg300=3.3 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+MATERIAL material=eml1 affinity=3.0 eg300=3.0 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+MATERIAL material=eml2 affinity=3.0 eg300=3.0 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+MATERIAL material=eml3 affinity=3.0 eg300=3.0 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+MATERIAL material=etl affinity=3.2 eg300=3.3 permittivity=3.5 \
+ nc300=1e21 nv300=1e21
+
+MOBILITY material=hil mun0=1e-7 mup0=1e-4
+MOBILITY material=htl mun0=1e-7 mup0=1e-5
+MOBILITY material=eml1 mun0=1e-6 mup0=1e-6
+MOBILITY material=eml2 mun0=1e-6 mup0=1e-6
+MOBILITY material=eml3 mun0=1e-6 mup0=1e-6
+MOBILITY material=etl mun0=1e-5 mup0=1e-7
+
+# Contact settings
+# TFTs are conected to anodes, actually.
+# Approximate ON TFT as no-resistance and OFF TFTs as high-resistances.
+CONTACT name=anode1 workfunction=5.6 surf.rec 
+CONTACT name=anode2 workfunction=5.6 surf.rec resist=1e20 ohms
+CONTACT name=anode3 workfunction=5.6 surf.rec resist=1e20 ohms
+CONTACT name=cathode workfunction=3.4 surf.rec
+
+# Physical models
+MODELS langevin fermidirac ust print
+
+# Add quantities for structure file(*.str)
+OUTPUT u.langevin con.band val.band e.mobility h.mobility conductivity
+
+# Numerical method
+METHOD climit=1e-12 weak=1 pas
+
+# Probe quantities save to logfile(*.log)
+# These are in order to get integrated recombination rate in each EML
+PROBE name=langevin_eml1 langevin material=eml1 integrated
+PROBE name=langevin_eml2 langevin material=eml2 integrated
+PROBE name=langevin_eml3 langevin material=eml3 integrated
+
+# Initial solution
+SOLVE initial
+SOLVE previous
+SAVE outfile=$'pref'_VD_Initial.str
+
+# Anode voltage sweep
+# The same (external) voltage is applied to all anodes,
+#  but internal voltages can be different.
+LOG outfile=$'pref'_VD_AnodeSweep.log
+SOLVE vstep=0.1 vfinal=5 name=(anode1,anode2,anode3)
+LOG off
+SAVE outfile=$'pref'_VD_Final.str
+
+###### VISUALIZATION ######
+victoryvisual $'name'_VM_sv.str:$'name'_set_Structure.set \
+ $'pref'_VD_AnodeSweep.log:$'name'_set_AnodeIntVoltage.set \
+ $'pref'_VD_AnodeSweep.log:$'name'_set_Langevin.set
+
+QUIT

@@ -1,0 +1,127 @@
+# (c) Silvaco Inc., 2024
+
+# Ridge Multiple Quantum Well Laser 
+
+# Required Modules
+#  Atlas
+#   -Blaze
+#   -Laser
+#   -Quantum
+
+# Example Name
+SET name=“Photon_LASER_ex07” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 2"
+
+MESH width=300
+
+X.MESH l=-3.0   s=0.5
+X.MESH l=-0.5  s=0.1
+X.MESH l=0.5   s=0.1
+X.MESH l=3.0   s=0.5
+
+Y.MESH l=1.0   s=0.1
+Y.MESH l=1.9   s=0.01
+Y.MESH l=2.02   s=0.0005
+Y.MESH l=2.03   s=0.0005
+Y.MESH l=2.04   s=0.0005
+Y.MESH l=2.05   s=0.0005
+Y.MESH l=2.06   s=0.0005
+Y.MESH l=2.07   s=0.0005
+Y.MESH l=3   s=0.1
+Y.MESH l=5.0   s=0.5
+
+REGION num=1 material=SiO2
+
+REGION num=2 material=AlGaAs x.comp=0.3 \ 
+       x.min=-0.5 x.max=0.5 y.min=1.0 y.max=1.9
+
+REGION num=2 material=AlGaAs \
+       x.min=-3 x.max=3.0 y.min=1.9  y.max=2.02
+
+REGION num=3 material=GaAs name=well \
+       x.min=-3  x.max=3.0 y.min=2.02 y.max=2.03  
+
+REGION num=4 material=AlGaAs x.comp=0.5 \
+       x.min=-3  x.max=3.0 y.min=2.03 y.max=2.04
+       
+REGION num=5 material=GaAs name=well \
+       x.min=-3  x.max=3.0 y.min=2.04 y.max=2.05  
+
+REGION num=6 material=AlGaAs x.comp=0.5 \
+       x.min=-3  x.max=3.0 y.min=2.05 y.max=2.06       
+
+REGION num=7 material=GaAs  name=well \
+       x.min=-3  x.max=3.0 y.min=2.06 y.max=2.07  
+
+REGION num=8 material=AlGaAs x.comp=0.5 \
+       x.min=-3  x.max=3.0 y.min=2.07 y.max=3 
+              
+REGION num=9 material=AlGaAs x.comp=0.5 \
+       x.min=-3  x.max=3.0 y.min=3 y.max=5     
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+DOPING     uniform reg=2  p.type conc=1.e18
+DOPING     uniform reg=8 n.type conc=1.e18
+DOPING     uniform reg=9 n.type conc=1.e18
+
+#
+# user defined dielectric constant
+# for anisotropic case, use EPS.XX, EPS.YY,EPS.ZZ, EPSIM.XX, EPSIM.YY, EPSIM.ZZ 
+#
+MATERIAL reg=1     eps.iso=1    epsim.iso=0 
+MATERIAL reg=2     eps.iso=10   epsim.iso=0 
+MATERIAL reg=3     eps.iso=12   epsim.iso=0 
+MATERIAL reg=4     eps.iso=10   epsim.iso=0 
+MATERIAL reg=5     eps.iso=12   epsim.iso=0 
+MATERIAL reg=6     eps.iso=10   epsim.iso=0 
+MATERIAL reg=7     eps.iso=12   epsim.iso=0 
+MATERIAL reg=8     eps.iso=10   epsim.iso=0 
+MATERIAL reg=9     eps.iso=1    epsim.iso=0 
+#
+
+MATERIAL material=AlGaAs  taun0=2.e-9  taup0=2.e-9  copt=1.5e-10 mun=2400.0 mup=800.0  align=0.6 
+MATERIAL material=GaAs    taun0=10.e-9 taup0=10.e-9 copt=1.5e-10 mun=4600.0 mup=2500.0 
+
+MODELS   fermi  srh optr auger
+MODELS name=well qwell   zb.three spontaneous   gainmod=5
+
+OUTPUT con.band val.band u.rad u.srh u.aug  flowlines las.loss las.refr
+
+METHOD itlimit=100 
+
+LASER  v.helm   absorption fcarrier  nmodes=5 cavity_length=300 \
+toler=1.0e-2 itmax=60 maxch=10 photon.energy=1.46  gainmod=5
+
+SOLVE init 
+SAVE outf= $'name'_init.str  spectrum= $'name'_spec_init.log 
+
+LOG outf= $'name'_IV.log
+
+SOLVE prev
+
+SOLVE v1=0.01
+SOLVE v1=0.05
+SOLVE v1=0.1
+
+SOLVE   vstep=0.1  vfinal=1.0 name=anode  
+SOLVE   vstep=0.05  vfinal=1.5 name=anode  
+SAVE outf= $'name'_15.str  spectrum= $'name'_spec_15.log 
+
+SOLVE  vstep=0.05 vfinal=2 name=anode  
+SAVE outf= $'name'_2.str spectrum= $'name'_spec_2.log 
+
+SOLVE  vstep=0.1 vfinal=3 name=anode  
+SAVE outf= $'name'_3.str spectrum= $'name'_spec_3.log 
+
+LOG off
+
+QUIT
+
+
+
+
+

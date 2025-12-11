@@ -1,0 +1,65 @@
+# (c) Silvaco Inc., 2024
+
+# Loading/importing layout files - GDS, .lay, map file, cell-file
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+SET name="VP_Masking_ex01"
+
+####### PROCESS SIMULATION ####### 
+
+#creating and saving mask using specifymaskpoly
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0,0 to=1,1 depth=2 gasheight=0.5 resolution=0.1 meshdepth=2 
+
+SPECIFYMASKPOLY mask="circle" circle npoints=36 center=0.5,0.5 radius=0.2
+SPECIFYMASKPOLY mask="rectangle" rect lb="0.2,0.1" rt="0.4,0.2"
+SPECIFYMASKPOLY mask="polygon" p="0,0" p="0.1,0.1" p="0.1,0.2" p="0.05,0.2" p="0,0.2"
+
+SPECIFYMASKPOLY newmask="OR_mask" or mask1="circle" mask2="rectangle" 
+SPECIFYMASKPOLY newmask="OR_mask2" or mask1="OR_mask" mask2="polygon"
+
+# EXPORT for visualization only 
+EXPORT name=$"name"_lay 
+
+#saving a .lay file as .gds file
+SAVE name=$"name"_gds layout.to.gds=$"name"_gds2.gds
+
+####### PROCESS SIMULATION ####### 
+
+#loading layout file in VP
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0,0 to=0.5,1 depth=1 gasheight=0.5 resolution=0.01 meshdepth=2 layout="$"name"_lay.lay" 
+
+#Using mask within a process statement
+DEPOSIT oxide thick=0.1 max mask="OR_mask2" 
+
+# EXPORT for visualization only 
+EXPORT name=$"name"_load_Lay
+
+####### PROCESS SIMULATION ####### 
+
+#Loading GDS file in Victory Process
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0,0 to=1,1 depth=1 gasheight=0.5 resolution=0.01 meshdepth=2 layout="$"name"_gds2.gds" mapfile=$"name"_mapfile.map cell="CELL"
+
+#Using GDS layer as mask within a process statement
+DEPOSIT oxide thick=0.1 max mask="OR_mask2" 
+
+# EXPORT for visualization only 
+EXPORT name=$"name"_dep_gds
+
+# Visualizing results
+victoryvisual \
+$"name"_lay.lay \
+$"name"_gds2.gds \
+$"name"_load_Lay.str \
+$"name"_dep_gds.str
+
+QUIT

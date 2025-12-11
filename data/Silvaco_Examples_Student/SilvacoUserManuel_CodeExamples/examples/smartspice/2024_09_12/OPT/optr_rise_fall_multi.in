@@ -1,0 +1,86 @@
+Example: Address Buffer 
+* Optimization of rise and fall delays
+*********************************************************
+
+***** Buffer Circuit
+vin  inp  0  DC 1.5  PULSE( 0.4 2.6 0 5N 5N 15N )  
+vcc  vss  0  DC vccdc
+m1  2    inp   vss   vss   pch   W=5.067U   L=1.6U
+m2  2    inp   0     0     nch   W=34.82U   L=2.0U 
+m3  3    2     vss   vss   pch   W= 50u     L=1.1U
+m4  3    2     0     0     nch   W=70.U     L=1.0U 
+m5  4    3     vss   vss   pch   W=320.U    L=1.1U
+m6  4    3     0     0     nch   W=440.U    L=1.1U 
+m7  out  4     vss   vss   pch   W=parm7w   L=1.1U
+m8  out  4     0     0     nch   W=parm8w   L=1.1U 
+m9  0  out     0     0     nch   W=380U     L=1.2U 
+COUT  out  0  700p
+
+***** Models
+.model  pch  PMOS ( level=3 tox=.02e-6 phi=0.576 gamma=0 vto=0 alpha=0 kappa=0 is=0)
+.model  nch  NMOS ( level=3 tox=.02e-6 phi=0.576 gamma=0 vto=0 alpha=0 kappa=0 is=0)
+
+.TRAN 0.2NS 40NS CALLV SAVEV
+
+.PARAM  parm7w=500u parm8w=500u vccdc=4.5 
+
+.MEASURE TRAN del_R DELAY  v(inp) RISE=1 VAL=1.5 TARG=v(out) RISE=1  VAL= 'vccdc/2'
+.MEASURE TRAN del_F DELAY  v(inp) FALL=1 VAL=1.5 TARG=v(out) FALL=1 VAL='vccdc/2'  
+
+********* 1st Optimization at 4.5 volts Supply ***********************
+
+.MODIF  TEMP= 75  vccdc=4.5
++     OPTIMIZE  parm7w=opt(10u 3000u 500U)
++               parm8w=opt(10u 3000u 500U)
++               m3(w)=opt(10u 300u 50U)
++               m4(w)=opt(10u 300u 70U)
++               m5(w)=opt(100u 1000u 320U)
++               m6(w)=opt(50u 1000u 440U)
++      TARGETS      del_f=3ns  del_r=3ns
++      OPTIONS    AVG=0.001 MEASOFF=0  
+
+***** Interactive plot
+.OPTIONS iplot_one nomod
+
+.control
+  run batchprint
+.endc
+.iplot v(out)
+
+********* 2nd Optimization at 4.0 volts Supply ***********************
+.ALTER
+.MODIF  TEMP= 75  vccdc=4.0
++     OPTIMIZE  parm7w=opt(10u 3000u 500U)
++               parm8w=opt(10u 3000u 500U)
++               m3(w)=opt(10u 300u 50U)
++               m4(w)=opt(10u 300u 70U)
++               m5(w)=opt(100u 1000u 320U)
++               m6(w)=opt(50u 1000u 440U)
++      TARGETS      del_f=3ns  del_r=3ns
++      OPTIONS    AVG=0.001 MEASOFF=0  
+
+********* 3rd Optimization at 3.0 volts Supply ***********************
+.ALTER
+.MODIF  TEMP= 75  vccdc=3.0
++     OPTIMIZE  parm7w=opt(10u 3000u 500U)
++               parm8w=opt(10u 3000u 500U)
++               m3(w)=opt(10u 300u 50U)
++               m4(w)=opt(10u 300u 70U)
++               m5(w)=opt(100u 1000u 320U)
++               m6(w)=opt(50u 1000u 440U)
++      TARGETS      del_f=3ns  del_r=3ns
++      OPTIONS    AVG=0.001 MEASOFF=0
+  
+********* 4th Optimization at 2.5 volts Supply ***********************
+.ALTER
+.MODIF  TEMP= 75  vccdc=2.5
++     OPTIMIZE  parm7w=opt(10u 3000u 500U)
++               parm8w=opt(10u 3000u 500U)
++               m3(w)=opt(10u 300u 50U)
++               m4(w)=opt(10u 300u 70U)
++               m5(w)=opt(100u 1000u 320U)
++               m6(w)=opt(50u 1000u 440U)
++      TARGETS      del_f=3ns  del_r=3ns
++      OPTIONS    AVG=0.001 MEASOFF=0  
+
+.END

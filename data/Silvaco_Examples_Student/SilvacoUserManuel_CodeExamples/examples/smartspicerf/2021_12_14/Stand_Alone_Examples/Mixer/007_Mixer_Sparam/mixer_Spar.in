@@ -1,0 +1,21 @@
+* S-param
+.include HBT_ne600p.inc
+
+.param prf=-30_dBm
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf gnd  MTS1 (prf 0 9)
+Vlo lo gnd  MTS1 (vlo 0 10)
+
+*-------- S-parameter Measurement --------
+.HNET Prf Pif
++ start=-25MegHz stop=30MegHz step=1MegHz
++ FTYPE=REL	
++ FUND=100MegHz nharm=30
++ PORTHARM=(-9,1)
++ FAXIS=OUT
++ annotate=3 
++ waves
+
+.END

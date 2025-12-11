@@ -1,0 +1,117 @@
+# (c) Silvaco Inc., 2024
+
+# 3D MESH and Device Simulation of Grain Boundary Generation
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+SET name=“TFT_ex18” 
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# create layered device with separated regions
+LAYERS point="0,0,-0.4" cuboid.width=1 num.edges=1 \
+       axis.deltas="0.1, 0.1, 0.1, 0.1, 0.1" \
+       layer.offset=0 layer.deltas="1, 1, 1" \
+       materials="(aluminum, silicon, sio2, sio2, glass), \
+                  (gas, silicon, sio2, aluminum, glass), \
+                  (aluminum, silicon, sio2, sio2, glass)" \
+       separate out="tft"
+
+# create grains in central silicon region
+TAG point="1.5,0.5,-0.25" value="to_grain"
+GRAIN regions="to_grain" size=0.0625 delta=0.01 sigma=0.005 out="tft_grains"
+MERGE
+
+# create device mesh
+REMESH delaunay out="tft_delaunay"
+REFINE max.size=0.1
+REFINE max.interface.size=0.0125
+
+# assign electrodes
+TAG point="0.5,0.5,-0.35" value="to_drain"
+TAG point="2.5,0.5,-0.35" value="to_source"
+TAG point="1.5,0.5,-0.05" value="to_gate"
+
+ELECTRODE regions="to_drain" name="drain"
+ELECTRODE regions="to_source" name="source"
+ELECTRODE regions="to_gate" name="gate"
+
+SAVE out="$'name'_VM"
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_VM.str 
+
+DOPING material=silicon uniform conc=2.0e16 p.type
+DOPING material=polysilicon uniform conc=2.0e15 p.type
+
+DOPING material=silicon uniform conc=1.0e18 p.type x.min=0 x.max=1.0 y.min=0 y.max=1.0 z.min=-0.3 z.max=-0.28
+DOPING material=silicon uniform conc=1.0e18 p.type x.min=2.0 x.max=3.0 y.min=0 y.max=1.0 z.min=-0.3 z.max=-0.28
+
+MATERIAL material=silicon mun=300 mup=30 taun0=1e-8 taup0=1e-8
+MATERIAL material=polysilicon mun=30 mup=3 taun0=1e-10 taup0=1e-10
+MATERIAL region=4 eg300=8.95
+
+# DOS TFT ex01 and ex03
+DEFECTS material=silicon nta=1.12e21 ntd=4.e20 wta=0.025 wtd=0.05 \
+  nga=5.e17 ngd=1.5e18 ega=0.4 egd=0.4 wga=0.1 wgd=0.1 \
+  sigtae=1.e-16 sigtah=1.e-14 sigtde=1.e-14 sigtdh=1.e-16  \ 
+  siggae=1.e-16 siggah=1.e-14 siggde=1.e-14 siggdh=1.e-16  
+
+DEFECTS material=polysilicon nta=1.e21 ntd=1.e21 wta=0.033 wtd=0.049 \
+  nga=1.5e15 ngd=1.5e15 ega=0.62 egd=0.78 wga=0.15 wgd=0.15 \
+  sigtae=1.e-17 sigtah=1.e-15 sigtde=1.e-15 sigtdh=1.e-17  \ 
+  siggae=2.e-16 siggah=2.e-15 siggde=2.e-15 siggdh=2.e-16 
+
+CONTACT name=gate alum
+MODELS srh temp=300 print 
+
+METHOD pas itlimit=100 climit=1e-4
+METHOD itlimit=100 climit=1e-4 
+
+SOLVE init
+SOLVE prev
+
+SAVE outf=$'name'_VD_0.str
+SOLVE vdrain=-0.1
+
+SOLVE vstep=-1.0 vfinal=-5.1 name=drain prev
+SAVE outf=$'name'_VD_1.str
+
+# forward
+LOG outf=$'name'_VD_2.log
+
+SOLVE vgate=0.0 vstep=-1.0 vfinal=-15.0 name=gate prev
+SAVE outf=$'name'_VD_2.str
+
+LOG off
+
+MODELS bbt.kl bb.b=9.0e6 bb.gamma=2.2 e.field.derivs
+METHOD dvmax=0.05 itlimit=100 cr.tol=1e-11 pr.tol=1e-24 climit=1e-4
+
+LOAD infile=$'name'_VD_1.str
+
+# reverse
+LOG outf=$'name'_VD_3.log
+
+SOLVE vgate=0.0 vstep=0.5 vfinal=10 name=gate prev
+SAVE outf=$'name'_VD_3.str
+
+LOG off
+
+victoryvisual \
+$'name'_VM.str:$'name'_VM.set \
+$'name'_VD_0.str:$'name'_VD_0.set \
+$'name'_VD_2.log:$'name'_VD_1.set+\
+$'name'_VD_3.log:$'name'_VD_1.set
+
+QUIT
+

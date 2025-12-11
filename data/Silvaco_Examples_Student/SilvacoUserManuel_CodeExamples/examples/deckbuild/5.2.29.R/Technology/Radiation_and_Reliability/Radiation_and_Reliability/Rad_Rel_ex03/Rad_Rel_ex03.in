@@ -1,0 +1,226 @@
+# (c) Silvaco Inc., 2024
+
+# Single Event gate Rupture (SEGR) in a Power MOSFET
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#   Victory Device
+#   -2D Simulator
+#   -2D Single Event Effects
+
+# Example Name
+SET name=“Rad_Rel_ex03”
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Create the Power MOSFET using VictoryProcess
+
+INIT silicon c.phosphor=1.0e20 orientation=100 resolution="0.2,0.2" from=0 to=8 depth=8.5 gasheight=3 meshdepth=3
+
+LINE x location=0   spacing=0.02
+LINE x location=1.3 spacing=0.5
+LINE x location=2.5 spacing=0.1
+LINE x location=3.5 spacing=0.1
+LINE x location=4.5 spacing=0.5
+LINE x location=5.5 spacing=0.1
+LINE x location=6   spacing=0.1
+LINE x location=8   spacing=0.5
+
+LINE z location=0   spacing=0.01
+LINE z location=1.5 spacing=0.2
+LINE z location=7.5 spacing=0.2
+LINE z location=8.5 spacing=0.3
+
+ETCH material=silicon thickness=7.5 dry
+
+LOOP steps=10
+DEPOSIT material=silicon thickness=0.3 c.phos=5e15 max
+DIFFUSE time=0.3 temp=1000
+L.END
+
+LOOP steps=10
+DEPOSIT material=silicon thickness=0.3 c.phos=2e15 max
+DIFFUSE time=0.3 temp=1000
+L.END
+
+LOOP steps=15
+DEPOSIT material=silicon thickness=0.1 c.phos=1e16 max
+DIFFUSE time=0.1 temp=1000
+L.END
+
+# Gate Formation
+DEPOSIT oxide thick=0.05 max
+DEPOSIT polysilicon thick=0.6 max 
+DEPOSIT photoresist thick=1 max
+ETCH material=photoresist right.to=3.5 thick=1.1 dry
+ETCH material=polysilicon thickness=0.8 dry
+
+# P-Body Formation
+IMPLANT boron dose=1e13 energy=180 tilt=30 rotation=180 bca n.ion=200000
+IMPLANT boron dose=1e13 energy=300 tilt=0 rotation=0 bca n.ion=200000
+ETCH photoresist dry
+
+# P-Plus Body Contact Formation
+DEPOSIT photoresist thick=1 max
+ETCH photoresist right.to=5.5 thick=1.1 dry
+IMPLANT boron dose=5e14 energy=30 tilt=45 rotation=0 bca n.ion=200000
+ETCH photoresist dry
+
+# N-Plus Source Contact Formation
+DEPOSIT photoresist thick=1 max
+ETCH photoresist left.to=6 thick=2 dry
+IMPLANT arsenic dose=5e14 energy=120 tilt=7 rotation=27 bca n.ion=200000
+IMPLANT arsenic dose=5e14 energy=120 tilt=7 rotation=207 bca n.ion=200000
+ETCH photoresist dry
+
+# Deposit Passivation and Anneal
+DEPOSIT nitride thickness=1 conformal
+
+DIFFUSE time=30 temp=1050 
+ETCH nitride right.to=5.5 thick=1.1 dry
+ETCH oxide right.to=5.5 thick=0.1 dry
+
+# Make Source Contact
+DEPOSIT aluminum thick=0.5 conformal
+ELECTRODE name=source x=6
+ELECTRODE name=gate x=2.5 z=-0.4
+
+ELECTRODE name=drain substrate
+
+SAVE name=$"name"_vp_0
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$"name"_vp_0
+
+REMESH conformal
+REFINE max.obtuseness=1
+
+SAVE out=$"name"_0.str
+
+REMESH delaunay
+REFINE max.size=0.2
+REFINE max.size=0.2 regions="material:aluminum"
+REFINE max.size=0.1 regions="material:si3n4"
+REFINE max.size=0.015 regions="material:sio2"
+REFINE max.size=0.07 regions="material:polysilicon"
+REFINE interface.regions="material:silicon" other.interface.regions="material:sio2" \
+       max.interface.size=0.015
+REFINE impurity="net" max.impurity.gradient=2 \
+ min.impurity.size="0.05"
+
+SAVE out=$"name"_1.str
+
+# Single Event Upset Simulation
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_1.str cylindrical
+
+## Define Single Event Parameters
+SET let=37.2
+SET density=$let*0.011
+
+# Self-Consistent Fowler-Nordheim Gate Current
+MODELS consrh cvt auger fn.cur nearflg
+
+# Define Gate Contact
+CONTACT name=gate n.poly
+
+# Define Single Event Strike
+SINGLEEVENTUPSET entrypoint="0,0,0" exitpoint="0,8.5,0" radialgauss \
+      b.density=$density pcunits radius=0.07 t0=1e-14 tc=1e-15
+
+# Probe Strike Field
+PROBE name=Strike_Field field dir=270 x=0.02 y=-0.02
+
+METHOD climit=1e-4 seu.integrate
+
+# Set Up DC Bias Condition
+SOLVE init
+SOLVE previous
+SOLVE vgate=-0.1
+SOLVE vgate=-0.4 vstep=-0.5 vfinal=-13.9 name=gate
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5 vstep=0.5 vfinal=30 name=drain
+
+# Start SEU Transient Simulation
+LOG outfile=$"name"_0.log 
+SOLVE tfinal=8e-15 dt=1e-16
+
+# Reduce Time Step Near SEU Strike for Better Resolution
+SOLVE tfinal=1e-14 dt=1e-17
+SAVE outfile=$"name"_2.str
+SOLVE tfinal=5e-12 dt=1e-17
+
+SAVE outfile=$"name"_3.str
+SOLVE tfinal=50e-12 dt=1e-15
+SAVE outfile=$"name"_4.str
+SOLVE tfinal=150e-12 dt=1e-14
+SAVE outfile=$"name"_5.str
+SOLVE tfinal=1e-9 dt=1e-12
+LOG off
+
+# DC Breakdown Simulation
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_1.str cylindrical
+
+MODELS consrh cvt
+IMPACT selb
+CONTACT name=gate n.poly
+METHOD climit=1e-4 maxtraps=6
+
+SOLVE init
+SOLVE previous
+LOG outfile=$"name"_1.log
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5
+SOLVE vdrain=1 vstep=1 vfinal=110 name=drain previous
+
+# Change to current boundary conditions and continue the breakdown simulation
+CONTACT name=drain current
+SOLVE istep=1.2 ifinal=5e-3 imult name=drain previous
+
+SAVE outfile=$"name"_6.str
+LOG off
+
+
+# Unsaturated Threshold Voltage Simulation
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$"name"_1.str cylindrical
+
+MODELS consrh cvt
+CONTACT name=gate n.poly
+METHOD climit=1e-4
+
+SOLVE init
+SOLVE previous
+SOLVE vdrain=0.1
+LOG outfile=$"name"_2.log
+SOLVE vgate=0.1 vstep=0.1 vfinal=10 name=gate
+
+victoryvisual \
+$"name"_0.log:$"name"_0.set  \
+$"name"_0.log:$"name"_0_ID.set \ 
+$"name"_1.log \
+$"name"_2.log
+
+victoryvisual \
+$"name"_2.str:$"name"_H.set \
+$"name"_3.str:$"name"_H.set \
+$"name"_4.str:$"name"_H.set \
+$"name"_5.str:$"name"_H.set
+
+QUIT

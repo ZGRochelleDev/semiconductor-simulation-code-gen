@@ -1,0 +1,88 @@
+* ACPR HBT Power Amplifier driven by a digitally modulated source
+
+*.option ingold=1 format=0
+
+.param kfn = 1.e-24 sh = 1.0
+.include "../Models/HBT1.mod"
+
+* Source parameters
+.param symbrate = 24.3k $ Ts=41.15226u
+.param symbper = '1.0/symbrate'
+.param freq1   = 850MegHz
+
+* Simulation parameters
+.param seqlen  = 257
+.param numpts  = 16
+.param envstop = 'seqlen*symbper'
+.param envstep = 'symbper/numpts'
+
+*** DIGITALLY MODULATED SOURCE ***
+Vin in  0
++ modtype  = pi4dqpsk
++ lpf      = srrc
++ tsymb    = symbper
++ data     = prbs9
++ carfreq  = freq1
++ carmag   = 0.01
+
+Rin in  0  50
+
+*** POWER AMPLIFIER ***
+Vdc Vcc 0 DC 5.0
+
+Q1 c b e c HBTn
+
+R1 Vcc b 22k
+R2 0   b 10k
+R3 0   e 100
+R4 Vcc c 2k
+R5 out 0 1k
+C1 out c 1p
+C2 in b 1u
+C3 e   0 1n
+
+.tran 10n 100m
+.probe all(v)
+
+#COM
+* Analysis
+.ENV
++    tstop    = envstop
++    tstep    = envstep
++    tstart   = symbper
++    fund     = freq1
++    nharm    = 3
+* +    annotate = 3
+
+* Outputs
+
+* for Constellation plots: Ts=41.15226u Offset=61.72839u
+.probe env_mod vr(in).h(1) vi(in).h(1) vr(out).h(1) vi(out).h(1)
+
+.let env_mod EnvPowerIn  = 'vm(in).h(1)*vm(in).h(1)'
+.let env_mod EnvPowerOut = 'vm(out).h(1)*vm(out).h(1)'
+
+.let env_mod PhaseDiff = 'vp(out).h(1)-vp(in).h(1)'
+.let env_mod PowerGain_in_dBc ='10*log10(EnvPowerOut/EnvPowerIn)'
+
+.measure env_mod MeanPowerGain AVG PowerGain_in_dBc
+.measure env_mod Peak MAX vm(out).h(1)
+.measure env_mod Average RMS vm(out).h(1)
+.measure env_mod PowerAverage RMS EnvPowerOut
+.measure env_mod Mini MIN vm(out).h(1)
+.measure env_mod CF_in_dBc EXPR val='db(Peak/Average)'
+.measure env_mod PAPR_in_dBc EXPR val='10*log10(Peak*Peak/PowerAverage)'
+.measure env_mod Max2Min_in_dBc EXPR val='20*log10(Peak/Mini)'
+.measure env_mod evm_rms EVM v(out).h(1) v(in).h(1) PER=symbper GAIN=-1
+
+
+* ACPR measurement
+.param startFFT = 'symbper+envstep'
+.measure env_mod acpr_out ACPR v(out).h(1) mainBW=32.8kHz spacing=30kHz window=kaiser alfa=6 from=startFFT
+#ENDCOM
+
+* Complex FFT for full-spectrum input/output modulation spectra
+.fft start=startFFT format=cunorm np=4096 window=kaiser alfa=6
++ v(in).h(1) v(out).h(1)
+
+.end

@@ -1,0 +1,179 @@
+# (c) Silvaco Inc., 2024
+
+# LDMOS Breakdown using Ionization Integrals 
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Silicon_Power_ex04” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 resolution=0.05,0.05 \
+ from=0 to=8 depth=10 gasheight=2 \
+ material=silicon dopants="boron" dopingvalues="1e15"
+
+LINE x location=0 spacing=0.1 
+LINE x location=1 spacing=0.02
+LINE x location=1.5 spacing=0.02
+LINE x location=2.5 spacing=0.1
+LINE x location=4.5 spacing=0.1
+LINE x location=5.5 spacing=0.02
+LINE x location=7 spacing=0.02
+LINE x location=8 spacing=0.1
+
+LINE z location=0.00 spacing=0.01
+LINE z location=0.8 spacing=0.05
+LINE z location=1.6    spacing=0.1
+LINE z location=10.0 spacing=2.0
+
+# Sacrificial oxide
+DIFFUSE time=30 temperature=1000 dryo2
+STRIP material=oxide 
+
+# Grow and extract gate oxide thickness
+DIFFUSE time=50 temperature=1000 dryo2 press=1.00 hcl=3
+
+SAVE name=temp
+EXPORT structure=$'name'_ox.str
+
+go victoryextract
+load in=$'name'_ox.str
+EXTRACT.THICKNESS name="gateox" regions="SiO2" nth=1 
+
+go victoryp simflags="-P 4"
+LOAD name=temp
+
+# vt adjust implant 
+IMPLANT boron dose=6e11 energy=20  
+
+DEPOSIT max material=polysilicon thick=0.35 between.x="1,5"
+
+IMPLANT phosphorus dose=2e12 energy=100  
+
+IMPLANT phosphorus dose=3.0e15 energy=100 outside.x="2,7" 
+
+DIFFUSE time=30 temperature=1000
+
+# Contact holes
+ETCH material=oxide outside.x="0.5,7.5"
+
+DEPOSIT conformal material=aluminum thick=0.1 outside.x="0.6,7.4"
+
+# Electrode naming
+ELECTRODE name=source x=0.3 z=0
+ELECTRODE name=gate x=2 z=-0.2
+ELECTRODE name=drain x=7.7 z=0
+ELECTRODE name=substrate substrate
+
+# Save simulation status and generate conformal (based off LINE statements)
+# mesh (conformalstr) for electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+####### DEVICE SIMULATION ####### 
+# Breakdown simulation using impact ionisation
+GO victoryd simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VP_sv_exVC.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh print 
+
+# Impact ionisation - critical for breakdown simulations
+IMPACT selb
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+# Ramp the drain
+LOG outf=$'name'_VD_IMPACT_BV.log
+
+SOLVE vstep=0.05 vfinal=0.2 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=0.2 vfinal=2 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=2 vfinal=40.0 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=0.5 vfinal=44.0 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+
+# Change to current boundary for final ramp into breakdown
+# always required if snapback present
+CONTACT name=drain current
+
+SOLVE prev
+
+SOLVE ifinal=1e-12 istep=1.1 imult name=drain previous \
+ ionizint iname=drain deltav=0.01 ion.stop ion.crit=1 
+ 
+OUTPUT e.lines iname=drain deltav=5.0 elec.integral e.crit=1.0
+
+# Save once compliance reached - at 1e-12A - breakdown
+SAVE outfile=$'name'_VD_IMPACT_BV.str
+
+LOG off
+
+####### DEVICE SIMULATION ####### 
+# Breakdown simulation using ionization integrals
+GO victoryd simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VP_sv_exVC.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh print 
+
+# Use ioization integrals for breakdown simulations
+IMPACT selb ionizint
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+# Ramp the drain
+LOG outf=$'name'_VD_IONIZ_BV.log
+
+SOLVE vstep=0.05 vfinal=0.2 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=0.2 vfinal=2 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=2 vfinal=40 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+SOLVE vstep=0.5 vfinal=45.0 name=drain ionizint iname=drain \
+ deltav=5.0 ion.stop ion.crit=1 e.crit=1.0
+
+LOG off
+
+OUTPUT e.lines iname=drain deltav=5.0 elec.integral e.crit=1.0
+
+SAVE outfile=$'name'_VD_IONIZ_BV.str
+
+victoryvisual \
+$'name'_VD_IMPACT_BV.log:$'name'_BV.set+$'name'_VD_IONIZ_BV.log:$'name'_BV.set \
+$'name'_VD_IMPACT_BV.str:$'name'_EFIELD_II.set \
+$'name'_VD_IONIZ_BV.str:$'name'_EFIELD_Ion.set
+
+QUIT

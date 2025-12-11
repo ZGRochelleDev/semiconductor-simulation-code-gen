@@ -1,0 +1,37 @@
+.TITLE Harmony project "3v5vSpice"
+
+
+
+
+* top.f3
+*	    1   top.clk  <--> top.f3.IN3V
+*	    2   top.out3 <--> top.f3.OUT3V
+Xtop.xf3 1 2 F3 
+
+* top.f5
+*	    3   top.clk5 <--> top.f5.IN5V
+*	    4   top.out5 <--> top.f5.OUT5V
+Xtop.xf5 3 4 F5 
+
+* top.f3.BiElec3VoltOnPort1
+*	    1   top.clk <--> top.f3.BiElec3VoltOnPort1.aP
+YADCtop.xf3.xBiElec3VoltOnPort1 1 BiElec3Volt_VDD_0 0 
+
+* top.f3.BiElec3VoltOnPort2
+*	    2   top.out3 <--> top.f3.BiElec3VoltOnPort2.aP
+YADCtop.xf3.xBiElec3VoltOnPort2 2 BiElec3Volt_VDD_0 0 
+
+* top.f5.BiElec5VoltOnPort1
+*	    3   top.clk5 <--> top.f5.BiElec5VoltOnPort1.aP
+YADCtop.xf5.xBiElec5VoltOnPort1 3 BiElec5Volt_VDD_2 0 
+
+* top.f5.BiElec5VoltOnPort2
+*	    4   top.out5 <--> top.f5.BiElec5VoltOnPort2.aP
+YADCtop.xf5.xBiElec5VoltOnPort2 4 BiElec5Volt_VDD_2 0 
+
+
+* Builtin A/D D/A converter sources
+VBiElec3Volt_VDD BiElec3Volt_VDD_0 0 DC 3
+VBiElec5Volt_VDD BiElec5Volt_VDD_2 0 DC 5
+
+.INCLUDE "spice.in"

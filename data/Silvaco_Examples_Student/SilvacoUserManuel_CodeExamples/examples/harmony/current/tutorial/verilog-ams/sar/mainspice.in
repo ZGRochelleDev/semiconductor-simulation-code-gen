@@ -1,0 +1,17 @@
+* TOP SPICE MODULE
+
+.include "model_subckt.sub"
+.include "comp.sspice"
+
+
+.lib 'models' devices
+.lib 'corners' nominal
+
+
+
+.TRAN 1u 2100u
+.options scale=1u POST=3
+.probe
+*.op
+
+.END

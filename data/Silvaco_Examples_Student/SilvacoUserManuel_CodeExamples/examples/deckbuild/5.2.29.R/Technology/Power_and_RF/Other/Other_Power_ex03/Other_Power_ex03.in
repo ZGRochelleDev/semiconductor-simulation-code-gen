@@ -1,0 +1,79 @@
+# (c) Silvaco Inc., 2024
+
+# Lattice Matched HEMT Breakdown Simulation 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Other_Power_ex03” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.0 spacing=0.025
+X.MESH location=0.75 spacing=0.025
+
+Y.MESH location=-0.02 spacing=0.01
+Y.MESH location=0.0 spacing=0.01
+Y.MESH location=0.03 spacing=0.001
+Y.MESH location=0.0425 spacing=0.01
+Y.MESH location=0.055 spacing=0.001
+Y.MESH location=0.2 spacing=0.05
+
+REGION number=1 material=GaAs y.min=0.03 y.max=0.055
+REGION number=2 material=AlGaAs y.max=0.03 x.composition=0.3 
+REGION number=3 material=AlGaAs y.min=0.055 x.composition=0.3
+REGION number=4 oxide y.min=-0.02 y.max=0 
+# 
+ELECTRODE number=1 name=source x.min=0.0 x.max=0.0 y.min=0.0 y.max=0.05
+ELECTRODE number=2 name=gate x.min=0.1 x.max=0.6 y.min=0.0 y.max=0.0
+ELECTRODE number=3 name=drain x.min=0.75 x.max=0.75 y.min=0.0 y.max=0.05
+# 
+DOPING uniform y.min=0 y.max=0.03 n.type conc=1.e18
+DOPING uniform y.min=0.03 n.type conc=1.e15
+DOPING uniform x.min=0.0 x.max=0.05 y.min=0.03 y.max=0.05 \
+ n.type conc=1.e18
+DOPING uniform x.min=0.70 x.max=0.75 y.min=0.03 y.max=0.05 \
+ n.type conc=1.e18
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE x.min=0 x.max=0.75 y.min=-0.01 y.max=0.005 qf=-1.e12
+
+MATERIAL taun0=1.e-9 taup0=1.e-9
+MATERIAL material=AlGaAs mun=2000 mup=350 nc300=5.7e17
+MATERIAL align=0.6
+
+MODEL fldmob srh 
+MODEL material=GaAs conmob 
+
+IMPACT selb an1=1.899e5 bn1=5.75e5 ap1=2.215e5 bp1=6.57e5 \
+an2=1.899e5 bn2=5.75e5 ap2=2.215e5 bp2=6.57e5 egran=1.e20 betan=1.82 betap=1.75
+
+CONTACT name=gate workfun=4.73 
+
+OUTPUT con.band val.band 
+
+#### SOLUTION SOLVING #### 
+SOLVE vgate=0
+SAVE outfile=$'name'.str
+
+LOG outf=$'name'.log
+
+SOLVE vdrain=0.025 vstep=0.025 vfinal=0.4 name=drain 
+
+SOLVE vdrain=0.50 vstep=0.25 name=drain vfinal=10 compliance=1.e-4 cname=drain
+
+CONTACT name=drain current
+
+SOLVE istep=1.2 imult ifinal=1.e-3 name=drain 
+
+victoryvisual \
+$'name'.log \
+$'name'.str:$'name'.set
+
+QUIT

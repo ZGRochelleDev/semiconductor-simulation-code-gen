@@ -1,0 +1,7 @@
+dc_divider
+V1 10 in 0 DC
+R1 1k in out
+R2 2k out 0
+.print
+.meas
+.end

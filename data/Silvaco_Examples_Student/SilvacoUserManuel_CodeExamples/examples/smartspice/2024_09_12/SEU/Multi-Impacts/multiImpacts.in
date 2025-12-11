@@ -1,0 +1,67 @@
+ 
+.option itl1=500 gmin=1e-15 dcgmin=1e-15 itl4=10
+.option nomod nodeck numdgt=5
+.option trtol=3.5 $lvltime=2
+*+ post probe
+
+.param vvdd=2
+
+vdd 	dd  0 dc 'vvdd'  
+vss 	ss  0 dc 0
+vdin 	din 0       PULSE 0 2 100p  500p 500p 10n 20n
+vck 	CK  0       PULSE 0 2 0     500p 500p 5n  10n 
+
+
+.ic v(a)=0 v(b)=2.5
+
+
+*mpa  a b  dd  dd  P1 w=3.6u l=1.2u
+*mna  a b  ss  ss  N1 w=1.8u l=1.2u
+
+    * Memory cell
+mpaCK  	a   	CKb  	aint  	dd  	P1 w=3.6u l=1.2u
+mpa 	aint 	b   	dd  	dd   	P1 w=3.6u l=1.2u
+mnaCK  	a   	CK  	aint    ss  	N1 w=1.8u l=1.2u
+mna  	aint 	b   	ss  	ss  	N1 w=1.8u l=1.2u
+mpb  	b   	a   	dd  	dd  	P1 w=3.6u l=1.2u
+mnb  	b   	a   	ss  	ss  	N1 w=1.8u l=1.2u
+    * Input transmission gate
+mptran	a   	CK  	din 	dd  	P1 w=3.6u l=1.2u
+mntran	a   	CKb 	din 	ss  	N1 w=1.8u l=1.2u
+    * Clock inverter 
+mpckb	CKb 	CK  	dd  	dd  	P1 w=3.6u l=1.2u
+mnckb	CKb 	CK  	ss  	ss  	N1 w=1.8u l=1.2u
+
+.probe all
+.probe @mpb[iseu] @mna[iseu]
+.print @mpb[iseu] @mna[iseu]
+
+
+* lib
+.include model.nmos
+.include model.pmos
+
+*.measure qdep_tot integral @mn1[iseu] from=0 to=20n
+
+.tran 0.2n 20n 0 1n
+
+*.measure tran va_limit POINT v(a) arg0='12n+2.5n'
+*.measure tran va_cross CROSS v(a) val='vvdd/2' from=12n to='12n+1.5n'
+
+*#com
+.rad SEE=2
++ device  mpb  mna 
++ taur=   5p   6p
++ tauf=   100p 110p 
++ start=  12n 10n
++ lf=     1u 1u   
++ let=    2.0 4.0
++ annotate=2 
++ upset_node=a  
+*+ upset_error=0.2 ; no upset detectected !
+*+ upset_error=0.1 ; upset detectected !!!!!
++ upset_threshold='vvdd/3'
++ upset_deltatime=2.5n
+*#endcom
+
+.end

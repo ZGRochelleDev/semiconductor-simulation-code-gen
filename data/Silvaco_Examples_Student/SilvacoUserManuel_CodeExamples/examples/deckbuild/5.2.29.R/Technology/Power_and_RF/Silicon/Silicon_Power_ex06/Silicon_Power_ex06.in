@@ -1,0 +1,189 @@
+# (c) Silvaco Inc., 2024
+
+# Merged PiN Schottky Power Diode
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name="Silicon_Power_ex06"
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+### Initial Substrate
+INIT material=silicon from=0 to=10 depth=7 gasheigh=50 \
+  orientation=100 resolution=0.1 meshdepth=2 \
+  c.arsenic=1e19 flow.dim=2d
+
+### Mesh Construction
+LINE x location=0 spacing=1
+LINE x location=7 spacing=0.05
+LINE x location=10 spacing=1
+
+LINE z location=0 spacing=0.1
+LINE z location=4 spacing=0.4
+LINE z location=7 spacing=0.4
+
+### N-Epitaxy Layer 1
+EPITAXY material=silicon time=8 temperature=1000 thickness=8 \
+        divisions=15 dz=0.1 zdz=8 c.phosphorus=1e15 insertnewlines
+EPITAXY material=silicon time=8.4 temperature=1000 thickness=8.4 \
+        divisions=20 dz=0.05 zdz=0.4 c.phosphorus=1e15 insertnewlines
+
+DEPOSIT material=barrier thickness=2 max
+ETCH material=barrier thickness=2 right.to.x=7 dry
+
+# P+ IMPLANT
+IMPLANT boron dose=3e12 energy=200 tilt=45 rotation=180
+ETCH material=barrier
+
+### N-Epitaxy Layer 2
+EPITAXY material=silicon time=4 temperature=1000 thickness=4 \ 
+        divisions=10 dz=0.05 zdz=0.4 c.phosphor=1e15 insertnewlines
+EPITAXY material=silicon time=4 temperature=1000 thickness=4 \
+        divisions=10 dz=0.05 zdz=0.4 c.phosphor=1e15 insertnewlines
+
+DEPOSIT material=barrier thickness=2 max
+ETCH material=barrier thickness=2 right.to.x=7 dry
+
+# P+ IMPLANT
+IMPLANT boron dose=3e12 energy=200 tilt=45 rotation=180
+ETCH material=barrier
+
+### N-Epitaxy Layer 3
+EPITAXY material=silicon time=4 temperature=1000 thickness=4 \
+        divisions=10 dz=0.05 zdz=0.4 c.phosphor=1e15 insertnewlines
+EPITAXY material=silicon time=4 temperature=1000 thickness=4 \
+        divisions=10 dz=0.05 zdz=0.4 c.phosphor=1e15 insertnewlines
+
+DEPOSIT material=barrier thickness=2 max
+ETCH material=barrier thickness=2 right.to.x=7 dry
+
+# P+ IMPLANT
+IMPLANT boron dose=3e12 energy=200 tilt=45 rotation=180
+ETCH material=barrier
+
+### N-Epitaxy Layer 4
+EPITAXY material=silicon time=4 temperature=1000 thickness=4 \
+        divisions=10 dz=0.05 zdz=0.4 c.phosphor=1e15 insertnewlines
+EPITAXY material=silicon time=4 temperature=1000 thickness=3.6 \
+        divisions=20 dz=0.0005 zdz=0 c.phosphor=1e15 insertnewlines
+
+DEPOSIT material=oxide thickness=0.01 max
+METHOD dif.maxdt=1e4 dif.strictpositive
+DIFFUSE time=3000 temperature=1100
+
+DEPOSIT material=barrier thickness=0.5 max
+ETCH material=barrier thickness=0.5 right.to.x=7 dry
+
+# P+ IMPLANT and drive
+LINE z location=-39 spacing=0.1
+IMPLANT boron dose=1e14 energy=200 tilt=7 rotation=27 s.oxide=0.01
+ETCH material=barrier
+DIFFUSE time=60 temperature=1050
+ETCH material=oxide
+
+# Contact metal deposition
+DEPOSIT material=aluminum thickness=3 max
+
+# Assign electrods
+ELECTRODE name=anode x=5
+ELECTRODE name=cathode substrate
+
+# SAVE simulation status for REMESHing(conformalstr)
+# before electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+
+####### DEVICE SIMULATION #######
+# Forward I-V and Reverse Breakdown Voltage Characteristics
+GO victorydevice simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# width - Specifies the assumed length in the z-direction for a 2D device.
+MESH infile=$'name'_VP_sv_exVC.str width=5e6
+
+#### MATERIAL/PHYSICAL MODELS ####
+# consrh - Selects the SRH model with concentration-dependent lifetimes
+# conmob - Specifies a concentration-dependent mobility model
+# bgn - Specifies bandgap narrowing
+# fermi - Fermi–Dirac carrier statistics are used
+# ust - Turns on the Universal Schottky Tunneling model for
+#       all Schottky contacts with finite surface-recombination velocities
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS consrh conmob bgn fermidirac ust print
+# surf.rec - Specifies that this contact will use finite recombination 
+#            velocities for both electrons and holes.
+CONTACT name=anode workfunction=5.02 surf.rec
+
+# Impact ionisation - critical for breakdown simulations
+# Selects the model described by Selberherr
+IMPACT selberherr
+
+# Output extra data to structures files 
+# such as conduction/valance bands
+OUTPUT con.band val.band
+
+#### NUMERICAL METHODS ####
+# climit - Specifies a concentration normalization factor
+# maxtraps - Specifies the maximum number of times the bias-step
+#            will be reduced when the solution is diverging. 
+METHOD climit=1e-4 maxtraps=10
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+
+SAVE outfile=$'name'_VD_BV_init.str
+
+# BV Simulation
+LOG outfile=$'name'_VD_BV.log
+
+SOLVE vcathode=0.01 previous
+SOLVE vcathode=0.1
+SOLVE vcathode=1 vstep=1 vfinal=5 name=cathode
+SOLVE vstep=2.5 vfinal=20 name=cathode
+SOLVE vstep=5 vfinal=50 name=cathode
+
+# Save once vcathode=50V
+SAVE outfile=$'name'_VD_BV_50V.str
+
+# Current compliance is set below. This is useful at breakdown as the change
+# in voltage is nearly vertical so the next voltage step could have 
+# trouble converging, solving for current will converge better
+SOLVE vstep=10 vfinal=100 name=cathode
+SOLVE vstep=10 vfinal=200 name=cathode
+SOLVE vstep=10 vfinal=700 name=cathode compliance=2e-3 cname=cathode
+LOG off
+
+# Save once compliance reached - at 2e-3A - breakdown
+SAVE outfile=$'name'_VD_BV.str
+
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+SOLVE previous
+
+# Forward I-V Simulation
+LOG outfile=$'name'_VD_FWD_IV.log
+
+SOLVE vanode=0.01
+SOLVE vanode=0.05 vstep=0.05 vfinal=1 name=anode
+LOG off
+
+####### VISUALIZATION OF RESULTS #######
+# Plot the files
+victoryvisual \
+$'name'_VD_BV_init.str:$'name'_Struct.set \
+$'name'_VD_BV.log \
+$'name'_VD_BV.str:$'name'_BV_Efield.set \
+$'name'_VD_FWD_IV.log:$'name'_FWD_IV.set
+
+QUIT

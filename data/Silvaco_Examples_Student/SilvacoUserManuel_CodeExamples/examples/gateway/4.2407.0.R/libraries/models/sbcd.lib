@@ -1,0 +1,15 @@
+.lib TYP
+.lib './sbcd_TYP.lib' TYP
+.endl TYP
+
+.lib TYP_MOS
+.lib './sbcd_TYP.lib' TYP_MOS
+.endl TYP_MOS
+
+.lib FAST_MOS
+.lib './sbcd_FAST.lib' FAST_MOS
+.endl FAST_MOS
+
+.lib SLOW_MOS
+.lib './sbcd_SLOW.lib' SLOW_MOS
+.endl SLOW_MOS

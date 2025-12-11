@@ -1,0 +1,18 @@
+.PARAM res      = 4184.07
+.MODEL ntft NTFT (
++LEVEL    = 36             VERSION  = 2              TNOM     = 27             
++TOX      = 1e-07          VTO      = 2.36006        VFB      = -0.1           
++VON      = 0              DVT      = 0              VKINK    = 18.3367        
++VSI      = 2              VST      = 2              MU1      = 0.0100748      
++MMU      = 1.90003        MU0      = 10.0945        MK       = 8.22365        
++MUS      = 17.3898        RD       = res            RS       = res            
++BT       = 1.3e-06        BLK      = 0.000294721    DD       = 1.12294e-07    
++DELTA    = 3.99279        DG       = 1.09486e-07    EB       = 0.507969       
++ETA      = 10.6987        I0       = 9.82327        I00      = 84.9234        
++ASAT     = 1.03641        AT       = 1.64967e-10    DASAT    = 0              
++LASAT    = 0              LKINK    = 4.66355e-06    DVTO     = 0              
++DMU1     = 0              CAPMOD   = 0              ETAC00   = 0              
++MC       = 3              RDX      = 0              RSX      = 0              
++ZEROC    = 0              ME       = 2.5            MSS      = 1.5            
++VMAX     = 57247.9        THETA    = 0              ISUBMOD  = 0              
++LAMBDA   = 0.0427131      INTDSNOD = 0              SCALERPI = 0 )

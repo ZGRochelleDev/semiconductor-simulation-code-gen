@@ -1,0 +1,37 @@
+* SRAM: PULSE DURATION 0.01n
+
+*.option itl1=500 gmin=1e-15 dcgmin=1e-15 itl4=10 ;acct
+.option nomod brief=1 measraw=0
+
+vdd dd 0 dc 0 pulse 0 2 0 1n 1 1 1
+vss ss 0 dc 0
+ve  sub  0 dc 0
+
+.ic v(a)=2 v(b)=0
+
+mp1  a b  dd  sub  p1  w=10u l=0.15u  AS=15p AD=15p PS=13u PD=13u
+mn1  a b  ss  sub  n1  w=4u  l=0.15u  AS=6p AD=6p PS=7u PD=7u
+mp2  b a  dd  sub  p1  w=10u l=0.15u  AS=15p AD=15p PS=13u PD=13u
+mn2  b a  ss  sub  n1  w=4u  l=0.15u  AS=6p AD=6p PS=7u PD=7u
+
+.tran 0.2n 20n 0 1n 
+.rad SEE LF=5e-6 annotate
++ device=mn1 node=drain
++ taur=5p tauf=100p  start=10n ; Messenger only
++ iseu=4e-3  ; both Messenger & user-defined expr.
+
+.probe all
+.probe @mn1[vgs] @mn1[vth]
+
+.measure tran qdeptot integral @mp1[iseu] from=0 to=20n
+.measure tran tc_vg cross @mp1[vth] @mp1[vgs]
+.measure tran t2_vd cross @mp1[vdsat] @mp1[vds]
+.measure tran tva8n point v(a) arg0=8n
+.measure tran tva17nn point v(a) arg0=17n
+.measure tran tvb8n point v(b) arg0=8n
+.measure tran tvb17nn point v(b) arg0=17n 
+
+.include nmospd.mod
+.include pmospd.mod
+
+.end

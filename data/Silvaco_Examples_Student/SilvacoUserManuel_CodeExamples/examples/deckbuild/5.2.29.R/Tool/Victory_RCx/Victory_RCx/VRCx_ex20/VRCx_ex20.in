@@ -1,0 +1,96 @@
+# (c) Silvaco Inc., 2024
+
+# Simulating Micro-Loading Effects using Advanced Etching
+
+# Required Modules
+#  Victory Process
+#   -3D Physical Etch & Deposit
+#  Victory Mesh
+#   -2D Meshing
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex20” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT material=silicon depth=1 layout=$'name'.lay gasheight=5 \
+      resolution=0.05 meshdepth=1
+
+###########################
+# The process description #
+###########################
+
+DEPOSIT max material=PMD thickness=1.5
+DEPOSIT max material=nitride thickness=0.565
+ETCH dry material=nitride thickness=0.565 mask=metal reverse
+
+####################################
+# Describe Etch Machine Properties #
+####################################
+
+FLUX name=victoryrcx_flux \
+     pri_c_function="vonmises" \
+     pridep=theta \
+     pripar=40
+                        
+TOPOGRAPHY name=victoryrcxetchmodel flux=victoryrcx_flux reaction=fluxdependent
+
+ETCHDEPOPROPERTIES name=victoryrcx_rates \
+                   material=silicon rate=0.38 \
+                   material=PMD     rate=0.38
+
+#####################################################################
+# Put Wafer into Etch Machine Described Above and Run for 4 Minutes #
+#####################################################################
+
+ETCH model=victoryrcxetchmodel materialproperties=victoryrcx_rates time=4
+
+###################################
+# Fill Etched Holes with Aluminum #
+###################################
+
+DEPOSIT material=aluminum thickness=-0.565 max
+ELECTRODES mask=metal material=aluminum
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH delaunay
+REFINE max.size=0.25 regions="Si3N4" 
+REFINE max.size=0.5 regions="aluminum" 
+REFINE regions="aluminum,pmd" interface.regions="pmd" other.interface.regions="aluminum" grading="quadratic" max.interface.size=0.2 
+SAVE out=$'name'_3D.str
+
+############################################################
+# Now Extract Capacitance Network of the Three Metal Lines #
+############################################################
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_3D.str"
+
+MATERIAL silicon permittivity=11.8
+MATERIAL nitride permittivity=8 
+MATERIAL material("PMD") permittivity=4
+
+INTERCONNECT capacitance adaptc=0.01
+
+SAVE spice="$'name'.net"
+
+##############################################
+# Make a Cut Line to View a 2D Cross Section #
+##############################################
+
+CUT line=(1, 7, 6.75, 7)
+SAVE structure="$'name'_2D.str"
+
+victoryvisual $'name'_3D.str:$'name'_3D.set $'name'_2D.str
+
+QUIT

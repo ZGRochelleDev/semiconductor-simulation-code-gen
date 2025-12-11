@@ -1,0 +1,8 @@
+plaintext
+V1 = sin(0 5 200)
+D1 = denv(0 1 1000)
+C1 = 1e-6
+R1 = 1e3
+.t 10 1e-6 1e-6
+
+.end

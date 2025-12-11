@@ -1,0 +1,272 @@
+# (c) Silvaco Inc., 2024
+
+# Silicon Carbide (SiC) CoolMOS
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -3D Diffusion & Implantation
+#  Victory Mesh:
+#   -3D Meshing
+#  Victory Device:
+#   -3D Simulator
+
+# Example Name
+SET name=SiC_Power_ex08
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+INIT material=4h-SiC depth=2 from="0" to="5" at=0.5 gasheight=20 \
+  resolution=0.1 meshdepth=2 layout=$'name'.lay \
+  dopants=nitrogen dopingvalues=1e19
+
+LINE x location=0   spacing=0.2
+LINE x location=0.9 spacing=0.1
+LINE x location=1.5 spacing=0.05
+LINE x location=1.8 spacing=0.05
+LINE x location=2.5 spacing=0.1
+LINE x location=3.2 spacing=0.05
+LINE x location=3.5 spacing=0.05
+LINE x location=4   spacing=0.1
+LINE x location=5   spacing=0.2
+
+LINE y location=0   spacing=0.05
+LINE y location=5   spacing=0.05
+
+LINE z location=-12.4 spacing=0.1
+LINE z location=-12.2 spacing=0.05
+LINE z location=-6    spacing=0.1
+LINE z location=-3    spacing=0.5
+LINE z location=0     spacing=0.1
+LINE z location=2     spacing=0.5
+
+CARTESIAN mask=pColumn spacing=0.1
+CARTESIAN mask=nContac spacing=0.1
+
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/N/Trn" \
+  dif.parametervalue="1e-12"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/N/Seg" \
+  dif.parametervalue="1.0"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/Al/Trn" \
+  dif.parametervalue="1e-12"
+INTERFACE material1=4H-SiC material2=SiO2 dif.parameter="segregation/Al/Seg" \
+  dif.parametervalue="1.0"
+
+# n-drift Epitaxy
+EPITAXY material=SiC-4H thickness=3 time=18 minutes \
+  dopants=nitrogen dopingvalues=2.7e16 temperature=950
+
+# n-drift multiepitaxy with p-columns implants
+SET p_pillar=-0.15
+LOOP steps=14
+ # Epi is low n-type
+ EPITAXY material=SiC-4H thickness=0.5 time=3 minutes \
+   dopants=nitrogen dopingvalues=2.7e16 temperature=950
+ # These implants form the p+ columns
+ MASK mask=pColumn deltacd=$'p_pillar'
+ IMPLANT aluminum dose=0.9e12 energy=320 tilt=7 rotation=27 \
+   bca n.ion=200000 temperature=500
+ IMPLANT aluminum dose=0.9e12 energy=320 tilt=7 rotation=207 \
+   bca n.ion=200000 temperature=500
+ IMPLANT aluminum dose=4.5e11 energy=140 tilt=7 rotation=27 \
+   bca n.ion=100000 temperature=500
+ IMPLANT aluminum dose=4.5e11 energy=140 tilt=7 rotation=207 \
+   bca n.ion=100000 temperature=500
+ IMPLANT aluminum dose=2.25e11 energy=15 tilt=7 rotation=27 \
+   bca n.ion=50000 temperature=500
+ IMPLANT aluminum dose=2.25e11 energy=15 tilt=7 rotation=207 \
+   bca n.ion=50000 temperature=500
+ STRIP material=barrier
+L.END
+
+Diffuse temperature=700 time=10
+
+LOOP steps=5
+ ASSIGN name=cd print n.value=$'p_pillar'+0.03 delta=0.03
+
+ # Epi is low p type
+ EPITAXY material=SiC-4H thickness=0.5 time=3 minutes \
+   dopants=aluminium dopingvalues=1e15 temperature=700
+ # implants are the same p-dose and energies
+ MASK mask=pColumn deltacd=$'cd'
+ IMPLANT aluminum dose=4.5e11 energy=320 tilt=7 rotation=27 \
+   bca n.ion=400000 temperature=500
+ IMPLANT aluminum dose=4.5e11 energy=320 tilt=7 rotation=207 \
+   bca n.ion=400000 temperature=500
+ IMPLANT aluminum dose=2.25e11 energy=140 tilt=7 rotation=27 \
+   bca n.ion=200000 temperature=500
+ IMPLANT aluminum dose=2.25e11 energy=140 tilt=7 rotation=207 \
+   bca n.ion=200000 temperature=500
+ IMPLANT aluminum dose=1.125e11 energy=15 tilt=7 rotation=27 \
+   bca n.ion=100000 temperature=500
+ IMPLANT aluminum dose=1.125e11 energy=15 tilt=7 rotation=207 \
+   bca n.ion=100000 temperature=500
+ STRIP material=barrier
+L.END
+
+# Etch Trench
+MASK mask=Trench 
+ETCH material=4h-SiC dry thickness=3 angle=86
+ETCH material=4h-SiC wet thickness=0.5
+STRIP material=barrier
+DEPOSIT material=oxide thickness=1 min
+
+# Trench Oxidation
+DIFFUSE time=30 temperature=1250 dryo2 
+
+# p contact layer
+MASK mask=p_plus
+IMPLANT aluminum dose=5e13 energy=60 tilt=7 rotation=27 \
+  bca n.ion=2000000 temperature=500
+IMPLANT aluminum dose=5e13 energy=60 tilt=7 rotation=207 \
+  bca n.ion=2000000 temperature=500
+IMPLANT aluminum dose=5e13 energy=120 tilt=7 rotation=27 \
+  bca n.ion=2000000 temperature=500
+IMPLANT aluminum dose=5e13 energy=120 tilt=7 rotation=207 \
+  bca n.ion=2000000 temperature=500
+STRIP material=barrier
+
+# P plus Implant Activation RTA
+DIFFUSE time=20 temperature=1800
+
+# n contact layer
+MASK mask=nContac
+IMPLANT nitrogen dose=1e14 energy=40 tilt=7 rotation=207 \
+  bca n.ion=4000000 temperature=500
+IMPLANT nitrogen dose=1e14 energy=40 tilt=7 rotation=27 \
+  bca n.ion=4000000 temperature=500
+STRIP material=barrier
+
+# N plus Implant Activation RTA
+DIFFUSE time=10 temperature=1800
+
+# Deposit and Etch-back Polysilicon gate
+DEPOSIT material=polysilicon thickness=1 conformal \
+  dopants=phosphorus dopingvalues=1e19 
+
+# Etch Excess Poly
+ETCH thickness=1.05 dry
+
+# Isolation oxide Oxidation 
+DEPOSIT material=oxide thick=0.75 conformal
+ETCH material=oxide mask="T_OUTER" dry thickness=0.8 
+
+# Depo Alum
+DEPOSIT material=Aluminum min thickness=1
+
+# Electrodes
+ELECTRODE NAME=drain  substrate
+ELECTRODE NAME=gate   x=2.5 material=Polysilicon
+ELECTRODE NAME=source x=2.5 material=Aluminum
+
+SIMULATIONMODE FLOW.DIM=3D
+
+# Save for Victory Mesh
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+REMESH delaunay
+REFINE max.size=0.3 regions="*" 
+REFINE max.interface.size=0.02 grading="quadratic" 
+REFINE max.junction.size=0.05 grading="quadratic"
+
+SAVE out=$'name'_VM_del.str
+
+####### DEVICE SIMULATION #######
+# Id-Vg
+GO victorydevice simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS material=4H-SiC print consrh auger fermidirac ni.fermi 
+
+CONTACT name=gate n.polysilicon
+
+#### NUMERICAL METHODS ####
+METHOD pam.gmres norm.scaling.local \
+  px.tol=1e-10 cx.tol=1e-10 pr.tol=1e-20 cr.tol=1e-20
+OUTPUT band.temp band.param
+
+#### SOLUTION SOLVING ####
+# Vth Unsaturated with Vd=0.1V
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+SOLVE vdrain=0.1
+
+LOG outfile=$'name'_VD_Vth_Vd0p1V.log
+SOLVE vstep=0.25 vfinal=10 name=gate
+LOG off
+
+# Vt Saturated with Vd=10V
+LOAD infile=$'name'_VD_init.str
+SOLVE previous
+SOLVE vstep=0.5 vfinal=10 name=drain
+
+LOG outfile=$'name'_VD_Vth_Vd10V.log
+SOLVE vstep=0.25 vfinal=10 name=gate
+LOG off
+
+
+####### DEVICE SIMULATION #######
+# Breakdown
+GO victorydevice simflags="-160 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS material=4H-SiC print consrh auger fermidirac ni.fermi 
+
+CONTACT name=gate n.polysilicon
+
+IMPACT material=4H-SiC selberherr e.side
+
+#### NUMERICAL METHODS ####
+METHOD pam.gmres norm.scaling.local itlimit=30 dvmax=100 weak=1 \
+  px.tol=1.e-32 cx.tol=1.e-32 pr.tol=1.e-35 cr.tol=1.e-32
+OUTPUT band.temp band.param
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+SOLVE vdrain=0.1 previous
+SOLVE vdrain=0.5 previous
+SOLVE vdrain=1 vstep=1 vfinal=10 name=drain previous
+SOLVE vstep=2.5 vfinal=70 name=drain previous
+SOLVE vstep=10 vfinal=200 name=drain previous
+SOLVE vstep=25 vfinal=1600 name=drain 
+SOLVE vstep=5 vfinal=1800 name=drain compliance=1e-30 cname=drain
+SOLVE vstep=0.5 vfinal=1800 name=drain compliance=2e-29 cname=drain
+
+CONTACT name=drain current
+
+METHOD pam.gmres norm.scaling.local itlimit=30 dvmax=2.5 weak=1 \
+   px.tol=1e-10 cx.tol=1e-10 pr.tol=1e-24 cr.tol=1e-24
+
+SOLVE previous
+SOLVE mult istep=2 ifinal=1e-27 name=drain previous
+
+go victoryextract
+LOAD in="$'name'_VD_BV.log"
+CURVE name=idvd x="Drain Current" y="Drain Voltage"
+EXTRACT.CURVE name=BV expression="maxxy(curve.idvd)"
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual $'name'_VM_del.str:$'name'_struct.set \
+$'name'_VD_Vth_Vd0p1V.log \
+$'name'_VD_Vth_Vd10V.log \
+$'name'_VD_BV.log
+
+QUIT

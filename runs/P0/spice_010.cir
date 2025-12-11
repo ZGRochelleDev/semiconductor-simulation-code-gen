@@ -1,0 +1,17 @@
+Answer:
+**Given:**
+
+- The voltage source $V_{\text{CC}}$ is equal to $12 \mathrm{\,V}$;
+- The resistance of the resistor $R_c$ is equal to $4.7 \mathrm{k\Omega}$;
+- The resistance $R_e$ is equal to $R_e = 1 \mathrm{k\Omega}$. 
+- The resistors $R_b1$ and $R_b2$ are connected between the voltage source $V_{CC}$ and the base terminal, respectively.
+
+**Required:**
+
+We need to write a **SPICE netlist** that represents the given circuit.  
+**Introduction:**
+
+In this problem, we are required to write a **SPINCE netlist** that represents a given circuit. For this, we should first understand the basic structure of a **SPINCE file**, which includes the following:
+
+- A header section containing information about the simulation,
+- An input section defining

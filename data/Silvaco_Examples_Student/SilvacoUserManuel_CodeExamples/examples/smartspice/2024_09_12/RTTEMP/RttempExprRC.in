@@ -1,0 +1,47 @@
+*     EXAMPLE 1: Rttemp expression with simple RC 
+*                Output - vector "temp" should be consistent with 
+*                .let expression "currenttemp"
+
+VIN  1 0  DC 1  SIN(0 10 0.125K)
+R1   1 2  1K
+C1   2 0  100PF
+R2   1 2  2K
+
+
+* Params
+.par Tmp_TA=27
+.par Tmp_TR=50
+* Increased .par Tmp_TR=5000
+.PAR SIM_STEP=100n SIM_STOP=0.5m
+
+
+
+* Main
+*.rttemp thermal TA=27 TR=50 TD=150u TO=50u
+*+ ' I(R1)*(V(1)-V(2))  +  I(R2)*I(R2)*2e3  +  I(C1)*V(2) '
+
+*Simple rttemp expr equivalent:
+.rttemp 
++ ' (I(R1)*(V(1)-V(2))  +  I(R2)*I(R2)*2e3  +  I(C1)*V(2) )*Tmp_TR + Tmp_TA '
+
+.TRAN SIM_STEP SIM_STOP
+
+* Probes
+* Currents
+.PROBE TRAN i(R1) i(C1)
+
+* Powers
+*.PROBE TRAN @R1[power] @C1[power]
+
+
+* LET
+*.let Pr1='i(R1)*V(1,2)'
+*.let Pr11='i(R1)*(V(1)-V(2))'
+*.let Pc1='i(C1)*V(2)'
+*.let Pc11='i(C1)*V(2)'
+.let CurrentTemp='(I(R1)*(v(1,2))+I(R2)*I(R2)*2e3+I(C1)*v(2))*Tmp_TR + Tmp_TA'
+
+.options post=2 probe
+.OPTIONS ACCT=2 RELTOL=0.001 NOMOD nodeck
+
+.END

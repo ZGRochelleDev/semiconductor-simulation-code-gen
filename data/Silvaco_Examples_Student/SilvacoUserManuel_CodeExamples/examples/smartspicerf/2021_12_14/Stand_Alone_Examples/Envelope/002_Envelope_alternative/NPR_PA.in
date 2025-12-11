@@ -1,0 +1,65 @@
+* NPR simulation : HBT Power Amplifier driven by an NPR stimulus
+
+.param kfn = 1.e-24  sh = 1.0
+.include "./HBT1.mod"
+
+* NPR source parameters
+.param SrcMag       = 0.01
+.param CenterFreq   = 900MegHz
+.param ChannelWidth = 100kHz
+.param NotchWidth   = 5kHz
+.param NumCW        = 1000
+
+* Simulation parameters
+.param numpts       = 20
+.param envstop      = 'NumCW/ChannelWidth'
+.param envstep      = '1.0/(ChannelWidth*numpts)'
+
+* NPR source
+Vin in 0
++ modtype = NPR
++ carfreq = CenterFreq
++ carmag  = SrcMag
++ carnb   = NumCW
++ bw      = ChannelWidth
++ nw      = NotchWidth
+
+Rin in 0 50
+
+*** POWER AMPLIFIER ***
+Vdc Vcc 0 DC 5.0
+
+Q1 c b e c HBTn
+
+R1 Vcc b 22k
+R2 0   b 10k
+R3 0   e 100
+R4 Vcc c 2k
+R5 out 0 1k
+C1 out c 1p
+C2 in b 1u
+C3 e   0 1n
+
+* Analysis
+.ENV
++    tstop    = envstop
++    tstep    = envstep
++    fund     = CenterFreq
++    nharm    = 3
+*+    annotate = 3
+
+* Outputs
+
+.probe env_mod v(in).h(1) v(out).h(1)
+
+*** NPR via PIB measurements ***
+.measure pib_filled PIB v(out).h(1) fmin=20kHz fmax=24kHz window=kaiser alfa=6
+.measure pib_notch  PIB v(out).h(1) fmin=-2kHz fmax=2kHz  window=kaiser alfa=6
+.measure npr_via_pib EXPR VAL="10.*log10(pib_notch/pib_filled)"
+
+* Complex FFT for full-spectrum input/output modulation spectra
+.fft format=cunorm np=4096 window=kaiser alfa=6 fmax=60kHz
++ v(in).h(1) v(out).h(1)
+
+.end
+

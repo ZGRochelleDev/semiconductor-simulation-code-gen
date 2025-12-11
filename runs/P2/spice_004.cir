@@ -1,0 +1,6 @@
+*.rc_lowpass
+V1 in 1 AC 1
+R2 in out 1k 100n
+.ac dec -10 10 999999
+.print ac mag V(out)
+.end

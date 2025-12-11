@@ -1,0 +1,82 @@
+* Digitally modulated sources
+
+* Simulation parameters
+.param symbper = 1u
+.param seqlen  = 200
+.param envstop = 'seqlen*symbper'
+.param envstep = '0.1*symbper'
+.param freq1   = 1Ghz
+
+* Sources definition
+Voqpsk oqpsk 0 modtype=oqpsk
++ iasc=1.1 qasc=0.9 quad_err = -10.0
++ lpf=rc beta=0.3 tsymb=symbper data='bits.dat'
++ carfreq=freq1
+Roqpsk oqpsk 0 50
+
+Vpi4dqpsk pi4dqpsk 0 modtype=pi4dqpsk lpf=srrc
++ tsymb=symbper data=prbs9 carfreq=freq1
+Rpi4dqpsk pi4dqpsk 0 50
+
+Vmpsk mpsk 0 modtype=mpsk mary=8
++ amam2=0.5 amam3=0.4 ampm2=5 ampm3=8
++ tsymb=symbper data=prbs11
++ carfreq=freq1
+Rmpsk mpsk 0 50
+
+Vedge edge 0 modtype=psk8edge
++ tsymb=symbper data=random carfreq=freq1
+Redge edge 0 50
+
+Vqam16 qam16 0 modtype=qam16 mary=16 save_IQfile="qam16.dat"
++ tsymb=symbper data=random carfreq=freq1
+Rqam16 qam16 0 50
+
+Vgmsk gmsk 0 modtype=gmsk tsymb=symbper carfreq=freq1
+Rgmsk gmsk 0 50
+
+Vmfsk mfsk 0 modtype=mfsk mary=4 fsk_index=0.5
++ lpf=gauss tsymb=symbper data=random carfreq=freq1
+Rmfsk mfsk 0 50
+
+Vbband bband 0 modtype=baseband mary=4
++ tsymb=symbper ttrans='0.3*symbper' data=000001010011100101110111
+Rbband bband 0 50
+
+Vqam8 qam8 0 modtype=user mapfile="map8qam.dat"
++ lpf=rc beta=0.5
++ tsymb=symbper delay='0.5*symbper' data=prbs7
++ carfreq=freq1 carmag=2.0 carphase=-10
+Rqam8 qam8 0 50
+
+Viqmod iqmod 0 modtype=iqmod IQfile=qam32gauss.dat
++ ishift=1.0 qshift=-0.1 carfreq=freq1
+Riqmod iqmod 0 50
+
+* Outputs
+.probe env_mod  vr(oqpsk).h(1)    vi(oqpsk).h(1)
+.probe env_mod  vr(pi4dqpsk).h(1) vi(pi4dqpsk).h(1)
+.probe env_mod  vr(mpsk).h(1)     vi(mpsk).h(1)
+.probe env_mod  vr(edge).h(1)     vi(edge).h(1)
+.probe env_mod  vr(qam16).h(1)    vi(qam16).h(1)
+.probe env_mod  vr(gmsk).h(1)     vi(gmsk).h(1)
+.probe env_mod  vr(mfsk).h(1)     vi(mfsk).h(1)
+.probe env_mod  vr(bband).h(0)
+.probe env_mod  vr(qam8).h(1)     vi(qam8).h(1)
+.probe env_mod  vr(iqmod).h(1)    vi(iqmod).h(1)
+
+.let env_mod EnvPower_pi4dqpsk = 'vm(pi4dqpsk).h(1)*vm(pi4dqpsk).h(1)'
+.let env_mod EnvPower_qam8 = 'vm(qam8).h(1)*vm(qam8).h(1)'
+
+.tran 10n 10m
+.probe all(v)
+
+#COM
+* Analysis
+.ENV tstop=envstop tstep=envstep
++    fund=freq1 nharm=1
+*+    annotate = 1
+*+    sweep Vpi4dqpsk(beta) LIST 3 0.3 0.35 0.4
+#ENDCOM
+
+.end

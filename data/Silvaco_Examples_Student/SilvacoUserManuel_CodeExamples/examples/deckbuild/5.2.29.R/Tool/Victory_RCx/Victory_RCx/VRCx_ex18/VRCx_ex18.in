@@ -1,0 +1,110 @@
+# (c) Silvaco Inc., 2024
+
+# GDS2, netlist reduction and contact statement
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex18” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.gds cell=INV_MET_POLY_COMB mapfile=$'name'.map depth=10 \
+     material=silicon rulefile=$'name'.lmp gasheight=100
+
+ELECTRODES substrate
+
+## Process Description ##
+
+## Trench
+ETCH material=silicon thickness=0.35 max mask=AA
+DEPOSIT material=oxide thickness=0 max
+
+## Gate oxide level
+DEPOSIT material=gateox thickness=0.01 max
+ETCH material=gateox mask=*GATE reverse
+DEPOSIT material=oxide thickness=0 max
+
+## Poly
+DEPOSIT material=polysilicon thickness=0.22 max
+ETCH material=polysilicon mask=CPOL
+ELECTRODES mask=*GATE material=polysilicon
+
+## Contact 
+DEPOSIT material=PMD thickness=0.22 min
+DEPOSIT material=PMD thickness=0.75 max
+
+ETCH material=PMD mask=CCON reverse
+ETCH material=oxide
+STRIP material=resist
+
+## Stop Source/Drain/Substrate Contacts Shorting to Substrate ##
+## since substrate is treated as conductor here in other examples##
+## substrate is a dielectric and thus no problem of short circuit ##
+
+DEPOSIT material=gateox thickness=0.01 min
+
+## Named polygons will be converted into electrodes ##
+ELECTRODES mask=*CONT material=gateox
+
+## Metal 1 
+DEPOSIT material=ALU1 thickness=0.62 max
+ETCH material=ALU1 mask=CME1
+ELECTRODES mask=CME1 material=ALU1 
+
+## passiv 
+DEPOSIT material=TEOS thickness=1.5 max
+DEPOSIT material=NIT thickness=1.2 max
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VP_sv.str" gds2="$'name'.gds" cell="INV_MET_POLY_COMB" \
+     layermap="$'name'.map" map="$'name'.lmp"
+
+###############################
+# Assign materials parameters #
+###############################
+
+MATERIAL silicon conductivity=1000
+MATERIAL material("poly")   conductivity=1.0/(6*0.22*1e-4)
+MATERIAL material("ALU1")   conductivity=1.0/(70e-3*0.62*1e-4)
+MATERIAL material("TEOS")   permittivity=4.2
+MATERIAL material("PMD")    permittivity=4.2
+MATERIAL material("NIT")    permittivity=6
+MATERIAL Material("gateox") permittivity=0.0001
+MATERIAL material("ALU2")   conductivity=1.0/(70e-3*0.62*1e-4)
+MATERIAL material("ALU3")   conductivity=1.0/(70e-3*0.62*1e-4)
+MATERIAL material("HDP")    permittivity=4.1
+
+## Save the 3D structure
+SAVE structure="$'name'.str"
+
+## Parasitic Extraction ## 
+# Extract the resistance but keep only those above 1ohm
+INTERCONNECT resistance adaptr=0.05 minres=1 
+
+# First a calculation is made with 5% for every electrodes. 
+INTERCONNECT capacitance adaptc=0.05 capsolver=1
+
+# Then Vdd since the precision asked is higher.
+INTERCONNECT capacitance contact="Vdd" adaptC=0.03 capsolver=1
+
+# you can also precise all the electrodes with a precision from
+# the lowest  to the highest
+# Interconnect Capacitance contact="Vdd"    adapt=0.07 capsolver=1
+# Interconnect Capacitance contact="Vss"    adapt=0.05 capsolver=1
+# Interconnect Capacitance contact="In"     adapt=0.03 capsolver=1
+# Interconnect Capacitance contact="Out"    adapt=0.02 capsolver=1
+
+SAVE spice="$'name'.net"
+
+victoryvisual $'name'.str:$'name'.set
+
+QUIT

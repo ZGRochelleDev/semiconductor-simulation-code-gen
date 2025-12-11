@@ -1,0 +1,17 @@
+Answer:
+**Required:**
+
+a) Netlist.
+
+b) Output file with $v_{out}$ value.
+
+<span style="color:#4257B2">What is the required output?</span>
+**Introduction:**
+
+In this problem, we are given a circuit diagram consisting of a voltage-controlled voltage source ($\text{E}_1$), a resistor ($R_1$), and a load resistance ($R_L$). We need to write a netlist for this circuit using **ngspice**, which will then be used to calculate the output voltage ($v_{out}$).
+
+<span style="color:#36FFC9">How can we do it?</span>
+
+**Solution:**
+
+To write a netlist for the given circuit using **ngspce**, we first need to define the components and their values. Then, we use the appropriate commands to connect them together according to the circuit diagram. Finally, we run the simulation and extract the desired output.

@@ -1,0 +1,276 @@
+# (c) Silvaco Inc., 2024
+
+# Amorphous IGZO TFT Simulation 2. Simulation v.s Experiment
+
+# Required Modules
+#  Victory Process:
+#   -2D Core Simulator
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+###### VARIABLES ######
+# Example Name
+SET name=TFT_ex07
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+# W/L=200um/100um
+# Lgs_overlap=10um
+
+##### substrate glass defintion
+INIT meshdepth=2 material=SiO2 from=-80 to=80 depth=5 gasheight=2 resolution=0.5
+
+LINE x location=-80 spacing=2
+LINE x location=-60 spacing=0.25
+LINE x location=-50 spacing=0.25
+LINE x location=0 spacing=2
+LINE x location=50 spacing=0.25
+LINE x location=60 spacing=0.25
+LINE x location=80 spacing=2
+
+LINE z location=-1 spacing=0.005
+LINE z location=-0.925 spacing=0.01
+LINE z location=-0.95 spacing=0.005
+LINE z location=-0.90 spacing=0.01
+LINE z location=-0.4 spacing=0.1
+LINE z location=0 spacing=0.1
+LINE z location=5 spacing=1
+
+# Gate metal
+DEPOSIT conformal material=aluminum thickness=0.5
+
+# Gate metal pattern
+# Loverlap=10um
+ETCH material=aluminum thickness=0.55 angle=40 dry outside.x=-60,60
+
+# double Gate ins depo
+DEPOSIT conformal material=Si3N4 thickness=0.4 
+DEPOSIT conformal material=SiO2 thickness=0.05
+
+# active a-IGZO : 50nm
+DEPOSIT conformal material=IGZO thickness=0.05 
+
+# Etch stopper 50nm
+DEPOSIT conformal material=SiO2 thickness=0.05 
+
+# active channel pattern
+Etch material=SiO2 thickness=0.1 dry outside.x=-50,50 
+
+# S/D metal
+DEPOSIT conformal material=aluminum thickness=0.2 
+
+# SD pattern
+Etch material=aluminum thickness=0.55 dry between.x=-50,50
+
+# passivation
+DEPOSIT conformal material=SiO2 thickness=0.1
+DEPOSIT conformal material=Si3N4 thickness=0.1
+
+# S/D electrode definition 
+Electrode name=gate x=0 z=-0.2
+Electrode name=source x=-70 z=-0.6
+Electrode name=drain x=70 z=-0.6
+
+SAVE name = $'name'_VP
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in = $'name'_VP
+REMESH conformal
+SAVE out = $'name'_VM_con
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile = $'name'_VM_con.str width=200
+
+# modify IGZO to have a name "channel" and GI
+REGION number=4 modify material=IGZO name=channel
+REGION number=9 modify material=SiO2 name=GI
+
+#### MATERIAL/PHYSICAL MODELS ####
+# some figure of merit from paper.
+# Ion=0.86 @ vgs=vds=10.1
+# Von=3.05= Vgs sharp increase
+# VT=5.3 = Vgs @Ids=1nA  -> simulated Vt=5.32V
+# SS=0.84 (V/dec)
+# Vgs-VT=15V
+# Ion/Ioff=1.7e6
+
+# bottom interface fixed charge
+INTERFACE qf=-2e11 intregion="GI/channel"
+
+# actual gate metal workfunction
+CONTACT name=gate workfunction=5.15
+
+# S/D metal WF.
+CONTACT name=source workfunction=5 surf.rec vsurfn=3.272e7 vsurfp=3.272e7
+CONTACT name=drain workfunction=5 surf.rec vsurfn=3.272e7 vsurfp=3.272e7
+
+# GI and passivation insulator epsilon
+MATERIAL material=Si3N4 permittivity=7
+MATERIAL material=SiO2 permittivity=3.9
+
+MOBILITY material=IGZO mun0=8.15 mup0=1.63 vsatn=3.272e7 vsatp=3.272e7
+
+# a-IGZO bandgap, density of states, and affinity
+MATERIAL material=IGZO nc300=8e18 nv300=4.5e21 eg300=3.2 affinity=4.6
+
+# a-IGZO channel bulk DOS
+DEFECTS material=IGZO continuous tfile = $'name'_bulk.log numa=24 numd=24 \
+ f.tftacc=$'name'_0.lib f.tftdon=$'name'_0.lib \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14  
+
+# between AOS(Amorphous Oxide Semiconductor) and gate insulator
+INTDEFECT s.i intregion="GI/channel" continuous tfile = $'name'_interface.log \
+ numa=24 numd=24 nta=2.38e12 ntd=2.25e16 wta=0.19 wtd=0.1 \
+ nga=0 ngd=0 ega=0.62 egd=0.78 wga=0.15 wgd=0.15 \
+ sigtae=1e-14 sigtah=1e-14 sigtde=1e-14 sigtdh=1e-14 \  
+ siggae=1e-14 siggah=1e-14 siggde=1e-14 siggdh=1e-14  
+
+MATERIAL material=IGZO taun0=1e-8 taup0=1e-8 
+
+MODELS fermidirac ust print
+
+MATERIAL d.tunnel=1e-6 me.tunnel=0.2
+
+#### NUMERICAL METHOD ####
+METHOD newton climit=1e-4 maxtraps=10 
+
+OUTPUT con.band val.band u.trap
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SAVE outfile = $'name'_init_trap.str
+SAVE trap.file = $'name'_init_trap.dat x=0 y=-0.99
+
+############## IDVG ###################
+
+SOLVE vdrain=0.1
+SAVE outfile = $'name'_vd0p1_trap.str
+SAVE trap.file = $'name'_vd0p1_trap.dat x=0 y=-0.99
+
+SOLVE vdrain=1.1
+SOLVE vdrain=4
+SOLVE vdrain=5.1
+SOLVE vdrain=10.1
+SAVE outfile = $'name'_vd10p1_trap.str
+SAVE trap.file = $'name'_vd10p1_trap.dat x=0 y=-0.99
+
+LOAD infile = $'name'_vd0p1_trap.str master
+SOLVE previous
+LOG outfile = $'name'_vd0p1_vg15_trap.log
+SOLVE previous vgate=0 vstep=0.5 vfinal=15 name=gate
+SAVE trap.file = $'name'_vd0p1_vg15_trap.dat x=0 y=-0.99
+
+LOG off
+
+EXTRACT init infile = "$'name'_vd0p1_vg15_trap.log"
+EXTRACT name="VT" x.val from curve(v."gate", i."drain") where y.val=1e-9
+EXTRACT name="idvg" curve(v."gate", i."drain") outfile = "$'name'_vd0p1_vg15_trap.dat"
+
+LOAD infile = $'name'_vd10p1_trap.str master
+SOLVE previous
+LOG outfile = $'name'_vd10p1_vg15_trap.log
+SOLVE previous vgate=0 vstep=0.5 vfinal=15 name=gate
+SAVE trap.file = $'name'_vd10p1_vg15_trap.dat x=0 y=-0.99
+
+LOG off
+
+EXTRACT init infile = "$'name'_vd10p1_vg15_trap.log"
+EXTRACT name="idvg" curve(v."gate", i."drain") outfile = "$'name'_vd10p1_vg15_trap.dat"
+
+#################### IDVD #####################
+
+SOLVE initial
+
+SOLVE vgate=1
+SOLVE vgate=4 
+SOLVE vgate=6
+
+SOLVE vgate=8
+SAVE outfile = $'name'_vg8_trap.str
+
+SOLVE vgate=10
+SAVE outfile = $'name'_vg10_trap.str
+
+SOLVE vgate=12
+SAVE outfile = $'name'_vg12_trap.str
+
+LOAD infile = $'name'_vg8_trap.str master
+SOLVE previous
+LOG outfile = $'name'_vg8_vd10_trap.log
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+LOAD infile = $'name'_vg10_trap.str master
+SOLVE previous
+LOG outfile = $'name'_vg10_vd10_trap.log
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+LOAD infile = $'name'_vg12_trap.str master
+SOLVE previous
+LOG outfile = $'name'_vg12_vd10_trap.log
+SOLVE vdrain=0 vstep=0.5 vfinal=10 name=drain
+LOG off
+
+EXTRACT init infile = "$'name'_vg8_vd10_trap.log"
+EXTRACT name="idvd3" curve(v."drain", i."drain") outfile = "$'name'_vg8_vd10_trap.dat"
+
+EXTRACT init infile = "$'name'_vg10_vd10_trap.log"
+EXTRACT name="idvd4" curve(v."drain", i."drain") outfile = "$'name'_vg10_vd10_trap.dat"
+
+EXTRACT init infile = "$'name'_vg12_vd10_trap.log"
+EXTRACT name="idvd5" curve(v."drain", i."drain") outfile = "$'name'_vg12_vd10_trap.dat"
+
+################## CV #################
+
+# set area=200e-4*100e-4
+# set d=0.450e-4
+# set eps=8.854e-14 
+# set cox=3.9*$eps*$area/$d
+
+SOLVE initial
+
+LOG outfile = $'name'_vgsweep_acfreq2E3.log
+SOLVE vgate=0 vstep=0.5 vfinal=20 name=gate ac freq=2e3*1
+LOG off
+
+EXTRACT init infile = "$'name'_vgsweep_acfreq2E3.log"
+EXTRACT name="cv1" curve(v."gate", 2*c."gate""drain"/1e-12) outfile = "$'name'_CV_freq2E3.dat"
+
+SOLVE initial
+LOG outfile = $'name'_vgsweep_acfreq100E3.log
+SOLVE vgate=0 vstep=0.5 vfinal=20 name=gate ac freq=100e3
+LOG off
+
+EXTRACT init infile = "$'name'_vgsweep_acfreq100E3.log"
+EXTRACT name="cv2" curve(v."gate", 2*c."gate""drain"/1e-12) outfile = "$'name'_CV_freq100E3.dat"
+
+SOLVE initial
+
+LOG outfile = $'name'_vgsweep_acfreq1E6.log
+SOLVE vgate=0 vstep=0.5 vfinal=20 name=gate ac freq=1e6
+LOG off
+
+EXTRACT init infile = "$'name'_vgsweep_acfreq1E6.log"
+EXTRACT name="cv3" curve(v."gate", 2*c."gate""drain"/1e-12) outfile = "$'name'_CV_freq1E6.dat"
+
+# DOS of Interface & Bulk; 
+victoryvisual $'name'_bulk.log:$'name'_bulk.set \
+  $'name'_interface.log:$'name'_interface.set
+
+# Plot the IDVG curves, the IDVD curves, the CV curves
+victoryvisual '($'name'_vd0p1_exp.dat+$'name'_vd10p1_exp.dat+$'name'_vd0p1_vg15_trap.dat+$'name'_vd10p1_vg15_trap.dat)':$'name'_idvg.set \
+  '($'name'_vg8_exp.dat+$'name'_vg10_exp.dat+$'name'_vg12_exp.dat+$'name'_vg8_vd10_trap.dat+$'name'_vg10_vd10_trap.dat+$'name'_vg12_vd10_trap.dat)':$'name'_idvd.set \
+  '($'name'_CV_freq2E3.dat+$'name'_CV_freq100E3.dat+$'name'_CV_freq1E6.dat)':$'name'_cv.set
+
+QUIT

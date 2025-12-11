@@ -1,0 +1,72 @@
+# (c) Silvaco Inc., 2024
+
+# Effect of Tilt, Energy & Dose on Implant Profile in Silicon
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+SET name=VP_Implant_ex01
+
+############ PROCESS SIMULATION ###########################
+GO victoryprocess simflags="-P 4"
+
+#TITLE: Tilt angle dependence for MC Implantation in Silicon: Tilts: 0,3,5,7
+
+INIT meshdepth=2 material=Si from=0.0 to=0.25 depth=4 gasheight=2 resolution=0.1
+LINE z location = 0 	spacing=0.01
+LINE z location = 0.05 	spacing = 0.005
+LINE z location = 0.24	spacing=0.005
+LINE z location = 0.26	spacing=0.005
+LINE z location = 0.4 	spacing=0.01
+LINE z location = 1 	spacing =0.01
+LINE z location = 1.5 	spacing = 0.1
+
+SAVE name=$"name"_init conformalstr
+
+LOOP steps=5
+ASSIGN name=tilt n.value=(0,1,3,5,7) print
+
+LOAD name=$"name"_init
+IMPLANT boron energy=10 dose=1e14 bca tilt=$"tilt" n.ion=100000 
+SAVE name=$"name"_tilt_$"tilt" conformalstr  
+L.END
+
+#TITLE: Energy dependence for MC Implantation in Silicon
+LOOP steps=4
+ASSIGN name=energy n.value=(20,40,60,100) print
+LOAD name = $"name"_init
+IMPLANT boron energy=$"energy" dose=1e14 tilt=7 bca n.ion=100000
+SAVE name=$"name"_energy_$"energy"keV conformalstr
+L.END
+
+#TITLE: Dose dependence for MC Implantation in Silicon
+LOOP steps=4
+ASSIGN name=dose n.value=(2e11,2e13,2e14,2e15) print
+LOAD name = $"name"_init
+IMPLANT boron energy = 10 dose=$"dose" tilt=7 bca n.ion=100000
+SAVE name=$"name"_dose_$"dose" conformalstr
+L.END
+
+victoryvisual \
+$"name"_tilt_0_exVC.str:$"name"_tilt.set+\
+$"name"_tilt_1_exVC.str:$"name"_tilt.set+\
+$"name"_tilt_3_exVC.str:$"name"_tilt.set+\
+$"name"_tilt_5_exVC.str:$"name"_tilt.set+\
+$"name"_tilt_7_exVC.str:$"name"_tilt.set 
+
+victoryvisual \
+$"name"_energy_20keV_exVC.str:$"name"_energy.set+\
+$"name"_energy_40keV_exVC.str:$"name"_energy.set+\
+$"name"_energy_60keV_exVC.str:$"name"_energy.set+\
+$"name"_energy_100keV_exVC.str:$"name"_energy.set
+
+# "+" instered automatically into extracted value, use --noplus option in VV
+victoryvisual --noplus \
+$"name"_dose_2e+11_exVC.str:$"name"_dose.set^\
+$"name"_dose_2e+13_exVC.str:$"name"_dose.set^\
+$"name"_dose_2e+14_exVC.str:$"name"_dose.set^\
+$"name"_dose_2e+15_exVC.str:$"name"_dose.set
+
+QUIT

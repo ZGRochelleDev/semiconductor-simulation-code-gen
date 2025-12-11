@@ -1,0 +1,324 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Process and Device Simulation of a Split-Gate Trench UMOSFET
+
+# Required Modules
+#  Victory Process
+#   -3D Oxidation
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Silicon_Power_ex14” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 orientation=100 from="0.0,0.0" to="0.44,0.44" \
+  depth=2 gasheight=10 resolution=0.03 material=silicon \
+  dopants="phosphorus" dopingvalues=3e+19 surface.z=3
+
+#Base volume 3D grid
+LINE x location=0.0  spacing=0.2
+LINE x location=0.44 spacing=0.2
+
+LINE y location=0.0  spacing=0.2
+LINE y location=0.44 spacing=0.2
+
+LINE z location=-2  spacing=0.5
+LINE z location=1.5 spacing=1
+LINE z location=3   spacing=0.2
+LINE z location=5   spacing=1
+
+EPITAXY time=15 temperature=1100 thickness=3 \
+  dopants="phosphorus" dopingvalues=2e+16
+
+# Form a trench with rounded bottom, by combination of DRY and WET ETCH steps
+DEPOSIT material=nitride thickness=0.3 max
+
+SPECIFYMASKPOLY mask="circle0" circle npoints=36 center="0.0,0.0" radius=0.141
+ETCH thick=1.975 dry angle=87 mask="circle0" reverse ref.z=-0.3
+
+SPECIFYMASKPOLY mask="circle1" circle npoints=36 center="0.0,0.0" radius=0.25
+ETCH wet thickness=0.125 mask="circle1" reverse
+
+STRIP material=nitride 
+
+#Trench oxidation and oxide CVD
+DIFFUSE time=6 temperature=1050 dryo2 pressure=1.00 hcl.pc=3
+DEPOSIT material=oxide thickness=0.1 conformal
+
+EXPORT 2D structure=$'name'_VP_ex_2D.str y=0
+SAVE name=temp 
+
+# EXTRACT oxide thickness on the trench bottom and sidewall
+go victoryextract
+load in=$'name'_VP_ex_2D.str
+EXTRACT.THICKNESS name="bottomox" regions="SiO2" nth=1  x.val=0.005
+EXTRACT.THICKNESS name="sideox" regions="SiO2" nth=1  z.val=0.7
+
+go victoryp simflags="-P 4"
+LOAD name=temp
+
+# Split-gate poly deposition
+DEPOSIT material=polysilicon thickness=0.7 thicknessStep=5 min \
+  dopants="phosphorus" dopingvalues="1e20"
+
+# "Etchback" the thick oxide to achieve required ipOxThick and GateOxThick
+DEPOSIT material=oxide thickness=0.243 min
+ETCH material=oxide thickness=0.093 thicknessStep=5 wet
+
+# DEPOSIT Polysilicon Gate
+DEPOSIT material=polysilicon thickness=0.44 min \
+  dopants="phosphorus" dopingvalues="1e20"
+
+LINE x location=0.20 spacing=0.012
+LINE x location=0.25 spacing=0.012
+LINE y location=0.20 spacing=0.012
+LINE y location=0.25 spacing=0.012
+
+# Minimum spacing in Z direction
+LINE remove z location=1.5
+LINE z location=0.40 spacing=0.03
+LINE z location=0.84 spacing=0.03
+
+# Pwell doping
+IMPLANT boron energy=200 dose=2.3e12
+
+DIFFUSE time=50 temperature=1050
+
+# Add fine grid to capture N+ IMPLANT
+LINE z location=0.1 spacing=0.01
+
+ETCH material=oxide thickness=0.06 max
+
+# N+ IMPLANT and drive
+IMPLANT arsenic dose=2e+15 energy=10 tilt=7
+DIFFUSE time=30 temperature=950
+
+# Isolation oxide and recessed ETCH for P+ IMPLANT and Source contact
+DEPOSIT material=oxide thickness=0.5 conformal 
+
+SPECIFYMASKPOLY mask="circle2" circle npoints=36 center="0.0,0.0" radius=0.36
+
+ETCH material=oxide mask="circle2" max thickness=1
+ETCH material=silicon thickness=0.5 min mask="circle2" 
+
+# P+ IMPLANT and drive
+IMPLANT boron dose=6e+12 energy=15 tilt=0
+DIFFUSE time=2 temperature=800
+
+# Contact metal deposition
+DEPOSIT material=aluminum thickness=0.2 conformal
+
+# Assign electrods
+ELECTRODES name=gate x=0.05 y=0.05 z=0.62 
+ELECTRODES name=sgate x=0.025 y=0.025 z=1.3
+ELECTRODES name=source x=0.05 y=0.05
+ELECTRODES name=drain substrate
+
+# SAVE simulation status for REMESHing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+# Delaunay refinment
+REMESH delaunay 
+
+# Base Mesh
+REFINE max.size=0.04 regions="*"
+
+# Interface refinement - to pick up the MOS channel
+REFINE max.interface.size=0.0025 max.interface.distance=0.2 \
+  grading="sqrt2"
+
+# Junction refinement
+REFINE max.junction.size=0.01 grading="sqrt2" max.junction.distance=0.2
+
+# find the SiO2/Si interface and add a little refinment in both
+# (adds a little mesh to the thin gate ox (minimum 2 mesh lines in the ox))
+# and in the silicon around the trench). focus on interface means less mesh 
+# as not a glodal refinment
+REFINE regions="sio2,silicon" max.interface.size=0.01 grading="linear" \
+  interface.regions="sio2" other.interface.regions="silicon"
+
+SAVE out=$'name'_VM_del.str
+
+
+####### DEVICE SIMULATION ####### 
+# Id-Vg
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS  material=silicon cvt srh print 
+
+CONTACT name=gate n.polysilicon
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD pam.bicgst norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# Bias the drain 
+SOLVE vdrain=0.1 
+
+LOG outfile=$'name'_VD_Vth.log
+
+# Ramp the gate voltage
+SOLVE vgate=0 vstep=0.2 vfinal=6.0 name=gate
+
+LOG off
+
+# EXTRACT Vth
+GO victoryextract
+LOAD in="$'name'_VD_Vth.log"
+EXTRACT.LOG name=mean expression="abs(ave(DRAIN VOLTAGE))/2.0"
+CURVE name=IV x=abs(GATE VOLTAGE) y=abs(DRAIN CURRENT)
+EXTRACT.CURVE name="Vth" expression="intercept(y=0, max(slope(curve.IV)))-$'mean'"
+
+
+####### DEVICE SIMULATION ####### 
+# Id-Vd
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS  material=silicon cvt srh print 
+
+CONTACT name=gate n.polysilicon
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD pam.bicgst norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+# Bias the gate 
+SOLVE vstep=0.5 vfinal=5.0 name=gate
+
+LOG outfile=$'name'_VD_IdVd.log
+
+# Ramp the drain bias
+SOLVE vdrain=0.05 previous
+SOLVE vdrain=0.1
+SOLVE vdrain=0.2
+SOLVE vdrain=0.5
+SOLVE vstep=0.5 vfinal=8 name=drain
+SOLVE vstep=1.0 vfinal=20 name=drain
+SOLVE vstep=2.0 vfinal=50 name=drain
+LOG off
+
+# Id target of 1000 A/cm^2 for extracting Rds(on)
+go victoryextract
+SET Id_target=1000*(0.44e-4)*(0.44e-4)
+LOAD in="$'name'_VD_IdVd.log"
+CURVE name=rd x="Drain Current" y="(Drain Voltage)/(Drain Current)"
+EXTRACT.CURVE name=Rds_on expression="intercept(x=$'Id_target', curve.rd)"
+
+
+####### DEVICE SIMULATION ####### 
+# Breakdown
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS  material=silicon cvt srh print 
+
+CONTACT name=gate n.polysilicon
+
+INTERFACE qf=3e10
+
+IMPACT selberherr
+
+#### NUMERICAL METHODS ####  
+METHOD pam.bicgst norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_BV.log
+#
+SOLVE vdrain=0.1 previous
+#
+SOLVE vdrain=0.5 vstep=0.5 vfinal=2 name=drain
+SOLVE vstep=1.0 vfinal=10 name=drain
+SAVE outfile=$'name'_VD_BV_10V.str
+
+SOLVE vstep=2.0 vfinal=46 name=drain
+SOLVE vstep=1.0 vfinal=60 name=drain compliance=5e-10 cname=drain
+
+CONTACT name=drain current
+
+SOLVE mult istep=1.5 ifinal=1e-7 name=drain previous
+
+
+
+LOG off
+
+SAVE outfile=$'name'_VD_BV.str
+
+GO victoryextract
+LOAD in="$'name'_VD_BV.log"
+EXTRACT.LOG name=BVDSS expression="max(Drain Voltage)"
+
+
+####### DEVICE SIMULATION ####### 
+# CV
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS  material=silicon cvt srh print 
+
+CONTACT name=gate n.polysilicon
+
+INTERFACE qf=3e10
+
+#### NUMERICAL METHODS ####  
+METHOD pam.gmres norm.scaling.local
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_VD_CV.log
+
+# Ramp the drain voltage and do small-signal AC analysis for each Vd
+SOLVE vdrain=0 vstep=0.25 vfinal=2.0 name=drain AC freq=1e6
+SOLVE vdrain=3 vstep=1.0  vfinal=10  name=drain AC freq=1e6
+
+####### VISUALIZATION OF RESULTS #######
+# Plot the structure and mesh
+victoryvisual \
+$'name'_VM_del.str:$'name'_mesh.set \
+$'name'_VD_Vth.log \
+$'name'_VD_IdVd.log \
+$'name'_VD_BV.log:$'name'_bv.set \
+$'name'_VD_CV.log:$'name'_CV.set
+
+QUIT

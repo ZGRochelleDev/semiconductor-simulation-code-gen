@@ -1,0 +1,19 @@
+Answer:
+**Required:**
+
+We need to write a netlist that can be used with ngspice and has the following specifications:
+
+- $C_1 = 10\ \mathrm{nF}$,
+- $R_1 = 1\ \mathrm{k}\Omega$,
+- The output voltage is $V_{out} = 1\ \text{V}$.
+
+<span style="color:#4257B2">What should we do?</span>
+**Introduction:**
+
+In this problem, we are required to create a netlist that can work with ngspice and have the given specifications. To achieve this, we will use the appropriate components and parameters specified in the task.
+
+<span style="color: #4257B6">How can we create such a netlist?</span>
+
+**Solution:**
+
+To create a netlist that works with ngspice, we first need to define the circuit components using the appropriate component types. In this

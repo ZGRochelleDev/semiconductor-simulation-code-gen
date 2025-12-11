@@ -1,0 +1,4 @@
+V1 = sin(t)
+R1 = 1k ohm
+D1 = dclip(Vout)
+D2 = dclip(Vin)

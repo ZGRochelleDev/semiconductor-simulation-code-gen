@@ -1,0 +1,182 @@
+# (c) Silvaco Inc., 2024
+
+# Optical Simulation of Liquid Crystal in the In-plane Switching (IPS) Mode
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor 
+#  Victory Mesh
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex23” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT  material=oxide gasheight=5 depth=1 from="0,0" to="10,30"
+
+# Create one mask with two electrodes.
+SPECIFYMASKPOLY maskname=ELEC p1="2.5,1" p2="0.5,15" p3="2.5,29" p4="4.5,29" p5="2.5,15" p6="4.5,1" electrode="Pix"
+SPECIFYMASKPOLY maskname=ELEC p1="7.5,1" p2="5.5,15" p3="7.5,29" p4="9.5,29" p5="7.5,15" p6="9.5,1" electrode="Com" add
+
+LINE x position=0 spac=0.25
+LINE x position=10 spac=0.25
+
+LINE y position=0 spac=0.25
+LINE y position=1 spac=0.5
+LINE y position=15 spac=0.5
+LINE y position=29 spac=0.5
+LINE y position=30 spac=0.25
+
+LINE z position=-5 spacing=1
+LINE z position=-3 spacing=0.1
+LINE z position=-1.5 spacing=0.1
+LINE z position=-0.05 spacing=0.025
+LINE z position=0 spacing=0.1
+LINE z position=1 spacing=1
+
+# Pattern electrodes.
+DEPOSIT material="ITO" thick=0.05 min
+MASK "ELEC"
+ETCH material="ITO" thick=0.05 min
+STRIP
+ELECTRODE mask="ELEC" material="ITO"
+
+DEPOSIT material="LC" thick=3 min
+
+DEPOSIT oxide thick=1 min
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+## Create a Conformal Mesh Structure File ##
+
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal
+SAVE out=$'name'_VM.str
+
+# The electrical simulation is carried out in the following section. 
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VM.str"
+
+MATERIAL ITO conductivity=1000
+MATERIAL oxide permittivity=3.9
+
+# Specify the anisotropic permittivity and the elastic constants of the LC.
+SETLC epsparadir=10.7 epsvertdir=3.7 splay=14.4e-12 twist=6.9e-12 bend=18.3e-12 cpenalty=1000
+
+# Specify the rubbing angle and the pre-tilt angle on the top and at the bottom of the LC region.
+LCBNDARYB partition(0,10) rubangle(90) tiltangle(1)
+LCBNDARYT partition(0,10) rubangle(90) tiltangle(1)    
+
+SOLVER linearsolver=pam pamsolver=gmres ddprecond=RAS preconditioner=amp multilevel=0 fillratio=1.e-3 lsmaxiter=200 lstolerance=1.0e-10 nlsmaxiter=100 nlstolerance=1.0e-8
+
+OPTION lsconvergeinfo=1 nlsconvergeinfo
+
+# Ramp the pixel voltage to 6V with a step of 0.5V.
+# Save the structure at each 0.5V interval from 0 to 6V.
+SETPIXELBIAS("Pix",0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6)
+
+INTERCONNECT capacitance domainboundarycondition=cyclic savestep=0.5 structure="$'name'" 
+
+# Save the parasitic capacitance netlist.
+SAVE spice="$'name'.dat"
+
+# The optical simulation is carried out in the following section. 
+# The beam is set to propagate from the maximum z toward the minimum z. 
+
+# Crossed ideal polarizers
+GO victoryrcx simflags="-P 2"
+
+# Loops are used to calculate the optical transmission at different bias voltages.
+# The wavelength and the incident angle of the monochramatic source beam
+# is defined as 0.55 microns and 0 (normal incidence), respectively. 
+# The transmittance and the reflectance can be read from the runtime output.
+SET Volt=0
+LOOP steps=13
+OPTICS structure="$'name'.V$'Volt'.str" indexfile="$'name'_index.txt" pixelvolt=$Volt \
+    wavelength=0.55 angle=0 lightorient=fromtop polanglestart=0 polangleend=90 \
+    dx=0.25 dy=0.5 dzmax=0.1 polindexstart=1.5 polindexend=1.5 \
+    topview="$'name'_ips_V$'Volt'_top" 
+# TMMmethod=TMM4x4
+SET Volt=$Volt+0.5
+L.END
+
+# The wavelength scan starts from 0.39 microns and ends at 0.75 microns
+# with a wavelength step of 10nm.
+SET Volt=4
+LOOP steps=5
+OPTICS structure="$'name'.V$'Volt'.str" indexfile="$'name'_index.txt" pixelvolt=$Volt \
+    wlsweep(0.39,0.75,0.01) angle=0 lightorient=fromtop polanglestart=0 polangleend=90 \
+    dx=0.25 dy=0.5 dzmax=0.1 polindexstart=1.5 polindexend=1.5 \
+    outspec="$'name'_ips_V$'Volt'_spec" 
+# TMMmethod=TMM4x4
+SET Volt=$Volt+0.5
+L.END 
+
+# The full range of the polar and azimuthal angle is scanned in a 5-degree step. 
+SET Volt=0
+LOOP steps=2
+OPTICS structure="$'name'.V$'Volt'.str" indexfile="$'name'_index.txt" pixelvolt=$Volt \
+    wavelength=0.55 lightorient=fromtop polanglestart=0 polangleend=90 \
+    dx=0.25 dy=0.5 dzmax=0.1 polindexstart=1.5 polindexend=1.5 \
+    anglesweep(0,90,5) thetasweep(0,360,5) angleview="$'name'_ips_V$'Volt'_angle"
+# TMMmethod=TMM4x4
+SET Volt=$Volt+5
+L.END 
+
+# Crossed non-ideal polarizer
+GO victoryrcx simflags="-P 2"
+
+# The ideal polarizers are disabled by setting their polarization angles to be 100.
+SET Volt=0
+LOOP steps=13
+OPTICS structure="$'name'.V$'Volt'.str" indexfile="$'name'_index.txt" pixelvolt=$Volt \
+    wavelength=0.55 angle=0 lightorient=fromtop polanglestart=100 polangleend=100 \
+    dx=0.25 dy=0.5 dzmax=0.1 \
+    StartEndLayers(180, 0, 1.5, 1.5, 2e-05, 0.002; 180, 90, 1.5, 1.5, 2e-05, 0.002) \
+  topview="$'name'_ips_V$'Volt'_top_pol" 
+# TMMmethod=TMM4x4
+SET Volt=$Volt+0.5
+L.END 
+
+victoryvisual $'name'_VM.str:$'name'_VM.set 
+
+victoryvisual \
+$'name'_ips_V1_top.str:$'name'_transm.set \
+$'name'_ips_V2_top.str:$'name'_transm.set \ 
+$'name'_ips_V3_top.str:$'name'_transm.set \
+$'name'_ips_V4_top.str:$'name'_transm.set \
+$'name'_ips_V5_top.str:$'name'_transm.set \
+$'name'_ips_V6_top.str:$'name'_transm.set
+
+victoryvisual \
+$'name'_ips_V4_spec.log:$'name'_transm_log.set+\ 
+$'name'_ips_V4.5_spec.log:$'name'_transm_log.set+\
+$'name'_ips_V5_spec.log:$'name'_transm_log.set+\
+$'name'_ips_V5.5_spec.log:$'name'_transm_log.set+\
+$'name'_ips_V6_spec.log:$'name'_transm_log.set
+
+victoryvisual \
+$'name'_ips_V0_angle.str:$'name'_transm_ang.set \
+$'name'_ips_V5_angle.str:$'name'_transm_ang.set
+
+victoryvisual \
+$'name'_ips_V1_top_pol.str:$'name'_transm_pol.set \
+$'name'_ips_V2_top_pol.str:$'name'_transm_pol.set \ 
+$'name'_ips_V3_top_pol.str:$'name'_transm_pol.set \
+$'name'_ips_V4_top_pol.str:$'name'_transm_pol.set \
+$'name'_ips_V5_top_pol.str:$'name'_transm_pol.set \
+$'name'_ips_V6_top_pol.str:$'name'_transm_pol.set
+
+QUIT
+
+
+

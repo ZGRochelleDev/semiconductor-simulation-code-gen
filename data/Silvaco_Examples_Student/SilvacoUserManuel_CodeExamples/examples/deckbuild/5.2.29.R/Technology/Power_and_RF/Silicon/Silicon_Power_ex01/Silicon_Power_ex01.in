@@ -1,0 +1,154 @@
+# (c) Silvaco Inc., 2024
+
+# Reverse Recovery of a Power Diode
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D MixedMode
+
+# Example Name
+SET name="Silicon_Power_ex01"
+
+####### DEVICE SIMULATOR #######
+# The structure consists of a rectangular silicon power diode. 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0 spacing=10
+X.MESH location=10 spacing=10
+
+Y.MESH location=0 spacing=2.5
+Y.MESH location=185 spacing=3.5
+Y.MESH location=370 spacing=2.0
+
+REGION number=1 material=silicon
+
+ELECTRODE number=1 name=cathode top
+ELECTRODE number=2 name=anode bottom
+
+DOPING material=silicon n.type uniform concentration=1e14
+DOPING material=silicon n.type gaussian concentration=2e19 \
+       y.characteristic=7
+DOPING material=silicon p.type gaussian concentration=2e19 \
+       peak=370 junction=350
+
+SAVE outfile=$'name'_VD.str
+
+####### DEVICE SIMULATOR #######
+# Steady-state simulation of circuit with power diode
+GO victorydevice simflags="-P 4"
+.BEGIN
+
+V1 1 0  1000.
+R1 1 2  1m
+L1 2 3  3nH
+ADIODE  3=cathode 4=anode width=5.e7 infile=$'name'_VD.str
+R2 4 0  1mg
+I1 0 4  300.
+
+# Short cut, applies voltage directly to nodes without ramping
+.NODESET v(1)=1000. v(2)=1000. v(3)=1000. v(4)=1000.5
+
+# vchange - This parameter can be useful for reaching steady-state
+#           convergence with a bad initial guess
+# toldc - Relative accuracy to be achieved during steady-state 
+#         analysis for the calculation of voltages in circuit nodes
+.NUMERIC vchange=0.1 toldc=1e-6
+
+.SAVE outfile=$'name'_VD_save
+
+# m2ln : Uses the modified two-level Newton solution method during 
+#        steady-state simulation.
+# print : Enables printing of circuit nodes voltages after the 
+#         calculation for each bias point (DC analysis) 
+#         or time step (transient the analysis).
+.OPTIONS m2ln print
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####
+# conmob - Specifies a concentration-dependent mobility model
+# fldmob - Models velocity saturation effects that limit mobilities
+#          at high electric fields
+# consrh - Selects the SRH model with concentration-dependent lifetimes
+# auger - Selects the standard Auger recombination model
+# bgn - Specifies bandgap narrowing
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS device=ADIODE region=1 conmob fldmob consrh auger bgn print
+
+# taun0 - Sets the nominal SRH electron lifetime
+# taup0 - Sets the nominal SRH hole lifetime
+MATERIAL device=ADIODE region=1 taun0=5e-6 taup0=2e-6
+
+# Impact ionisation - critical for breakdown simulations
+# Selects the model described by Selberherr
+IMPACT device=ADIODE region=1 selberherr
+
+####### DEVICE SIMULATOR #######
+# Reverse recovery of power diode
+GO victorydevice simflags="-P 4"
+.BEGIN
+
+V1 1 0  1000.
+R1 1 2  1m
+L1 2 3  3nH
+ADIODE  3=cathode 4=anode width=5.e7 infile=$'name'_VD.str
+R2 4 0  1mg EXP 1mg 1e-3 0. 20ns 10 200
+I1 0 4  300.
+#
+# lte - Local (relative) truncation error for transient analysis
+# toltr - Relative accuracy to be achieved during transient 
+#         analysis for the calculation of voltages in circuit nodes
+# vcharge - This parameter can be useful for reaching steady-state
+#           convergence with a bad initial guess
+.NUMERIC lte=0.3 toltr=1.e-5 vchange=10.
+
+# print : Enables printing of circuit nodes voltages after the 
+#         calculation for each bias point (DC analysis) 
+#         or time step (transient the analysis).
+# relpot - Enables the use of relative convergence criteria
+#          for potential for Victory Device models.
+# write - How often the solution is to be saved in standard 
+#         structure files during the simulation
+.OPTIONS print relpot write=10
+
+.LOG outfile=$'name'_VD
+.LOAD infile=$'name'_VD_save
+.SAVE master=$'name'_VD
+
+.TRAN 0.1ns 2us
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####
+# conmob - Specifies a concentration-dependent mobility model
+# fldmob - Models velocity saturation effects that limit mobilities
+#          at high electric fields
+# consrh - Selects the SRH model with concentration-dependent lifetimes
+# auger - Selects the standard Auger recombination model
+# bgn - Specifies bandgap narrowing
+# print - To obtain a comprehensive listing of the model selections,
+#         parameters, and material constants
+MODELS device=ADIODE region=1 conmob fldmob consrh auger bgn print
+
+# taun0 - Sets the nominal SRH electron lifetime
+# taup0 - Sets the nominal SRH hole lifetime
+MATERIAL device=ADIODE region=1 taun0=5e-6 taup0=2e-6
+# Impact ionisation - critical for breakdown simulations
+# Selects the model described by Selberherr
+IMPACT device=ADIODE region=1 selberherr
+
+####### DEVICE SIMULATOR #######
+# Reverse recovery of power diode
+GO victorydevice simflags="-P 4"
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+  $'name'_VD.str:$'name'_struct.set \
+  $'name'_VD_tr.log:$'name'_VD_tr.set
+
+QUIT

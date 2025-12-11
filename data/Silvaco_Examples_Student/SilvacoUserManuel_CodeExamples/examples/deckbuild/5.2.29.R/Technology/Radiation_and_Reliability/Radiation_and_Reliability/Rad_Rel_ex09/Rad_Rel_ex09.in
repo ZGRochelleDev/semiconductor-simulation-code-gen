@@ -1,0 +1,239 @@
+# (c) Silvaco Inc., 2024
+
+# Single Event Latchup of a 3D 65nm CMOS Inverter
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#   -3D Diffusion & Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D Single Event Effects
+
+# Example Name
+SET name=“Rad_Rel_ex09”
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT layout=$'name'.lay material=silicon depth=1 gasheight=1
+
+# Create Base Mesh
+SET X=0
+LOOP steps=15
+LINE x location=$X
+SET X=0.0325+$X
+L.END
+SET X=0
+LOOP steps=33
+LINE y location=$X
+SET X=0.0325+$X
+L.END
+
+# Add Mesh for Single Event Upset Strike
+LINE x location=0.315
+LINE x location=0.335
+LINE y location=0.51
+LINE y location=0.53
+
+# Add mesh for Active Channel Regions
+LINE y location=0.19
+LINE y location=0.2
+LINE y location=0.205
+LINE y location=0.21
+LINE y location=0.245
+LINE y location=0.25
+LINE y location=0.255
+LINE y location=0.265
+
+LINE y location=0.775
+LINE y location=0.785
+LINE y location=0.79
+LINE y location=0.795
+LINE y location=0.83
+LINE y location=0.835
+LINE y location=0.84
+LINE y location=0.85
+
+# Add Depth Mesh
+LINE z location=-1
+LINE z location=-0.3315
+LINE z location=-0.2315
+LINE z location=-0.1315
+LINE z location=-0.1215
+LINE z location=-0.1115
+LINE z location=-0.1015
+LINE z location=-0.0915
+LINE z location=-0.0015
+LINE z location=-0.001
+LINE z location=-0.0005
+LINE z location=0
+LINE z location=0.2
+LINE z location=1
+
+# Trench Formation
+ETCH material=silicon thick=0.2 max mask=ACTIVE
+DEPOSIT material=oxide thick=0 max
+
+# Well Implants
+DEPOSIT material=oxynitride thick=0.003 max
+DOPING material=silicon boron=5e15
+MATERIAL material=oxynitride inherit=oxide
+
+MASK mask=NWELL reverse
+IMPLANT bf2 dose=3e12   energy=5  tilt=7 rotation=27
+IMPLANT bf2 dose=6e12   energy=10 tilt=7 rotation=27
+IMPLANT bf2 dose=1.2e13 energy=20 tilt=7 rotation=27
+IMPLANT bf2 dose=8e13   energy=50 tilt=7 rotation=27
+STRIP material=barrier
+
+MASK mask=NWELL
+IMPLANT arsenic dose=8e11   energy=5  tilt=7 rotation=27
+IMPLANT arsenic dose=1.6e12 energy=10 tilt=7 rotation=27
+IMPLANT arsenic dose=3.2e12 energy=20 tilt=7 rotation=27
+IMPLANT arsenic dose=8e13   energy=50 tilt=7 rotation=27
+STRIP material=barrier
+
+# Gate Formation
+ETCH material=oxynitride thick=0.0015 max
+DEPOSIT material=polysilicon thick=0.1 max
+# Leave some polysilicon to bring peak of nLDD implant close to the surface
+ETCH material=polysilicon thick=0.09 max mask=POLY
+
+# LDD Implants
+MASK mask=NWELL reverse
+IMPLANT arsenic dose=2e14 energy=5 tilt=0 rotation=0
+SAVE name=nLDD conformalstr
+STRIP material=barrier
+ETCH material=polysilicon thick=0.11 max mask=POLY
+MASK mask=NWELL
+IMPLANT bf2 dose=1e13 energy=5 tilt=0 rotation=0
+STRIP material=barrier
+
+# Spacer
+DEPOSIT material=nitride thick=0.03 conformal curved
+DEPOSIT material=nitride thick=0.07 min
+ETCH material=nitride thick=0.1 angle=80 dry mask=POLY deltacd=0.0305
+ETCH material=nitride thick=0.031 min mask=POLY reverse
+
+# Source Drain Implants
+MASK mask=NWELL reverse
+IMPLANT arsenic dose=1e15 energy=5 tilt=0 rotation=0
+STRIP material=barrier
+MASK mask=NWELL
+IMPLANT bf2 dose=1e15 energy=5 tilt=0 rotation=0
+STRIP material=barrier
+
+# Spike RTA
+METHOD dif.nbIterations=1000000
+DIFFUSE temperature=800 t.final=1100 time=0.25
+
+# Polycide
+MASK mask=POLY reverse
+DEPOSIT material=CoSix thickness=0.03 min
+STRIP material=barrier
+
+# Contact Holes
+DEPOSIT material=BPSG thickness=0.1 max
+ETCH material=BPSG thickness=0.25 max mask=CONT angle=86 reverse
+ETCH material=oxynitride thick=0.002 min
+
+# Metal 1
+DEPOSIT material=aluminum thick=0.1 max 
+ETCH material=aluminum thick=0.2 max mask=METAL
+
+ELECTRODES mask=METAL material=aluminum
+
+SAVE name=$'name'_vp_0
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_vp_0
+REMESH conformal
+SAVE out=$'name'_0.str
+
+# Optional Check of n- and p-channel Transistor Vt Characteristics
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_0.str
+
+MATERIAL material=oxynitride permittivity=6
+MODELS   material=silicon     consrh cvt
+MODELS   material=polysilicon consrh
+METHOD   climit=1e-4 linear.max.iterations=2500 px.tol=1e-8 cx.tol=1e-8 \
+         seu.integrate pas norm.scaling.local pas.minpivot=0
+
+SOLVE init
+SOLVE previous
+SAVE outfile=0V.str
+SOLVE vvdd=0.001
+SOLVE vvdd=0.01
+SOLVE vvdd=0.05
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+LOG outfile=$'name'_2.log
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=1 name=gate
+LOG off
+
+SOLVE init
+SOLVE previous
+SOLVE vvss=-0.01
+SOLVE vvss=-0.05
+SOLVE vdrain=-0.01
+SOLVE vdrain=-0.05
+LOG outfile=$'name'_3.log
+SOLVE vgate=-0.01
+SOLVE vgate=-0.05 vstep=-0.05 vfinal=-1 name=gate
+LOG off
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+MESH infile=$'name'_0.str
+
+MATERIAL material=oxynitride permittivity=6
+MODELS   material=silicon     consrh cvt
+MODELS   material=polysilicon consrh
+CONTACT  name=drain current
+METHOD   climit=1e-4 linear.max.iterations=2500 px.tol=1e-8 cx.tol=1e-8 \
+         itlimit=30 seu.integrate pas norm.scaling.local
+
+SET let=1
+SET density=$let*0.011
+SINGLEEVENTUPSET b.density=$density pcunits radius=0.02 t0=5e-12 tc=2e-13 \
+      entrypoint="0.325,0.52,-0.001" exitpoint="0.325,0.52,1.001" radialgauss
+
+SOLVE init
+SOLVE previous
+
+# Ramp Up DC  Bias Condition
+LOG outfile=$'name'_0.log
+SOLVE vvdd=0.001
+SOLVE vvdd=0.015 vstep=0.015 vfinal=1.2 name=vdd
+LOG off
+
+# ION STRIKE ANALYSIS SIMULATION
+LOG outfile=$'name'_1.log
+SOLVE tstop=4.7e-12 dt=1e-13 prev
+SOLVE tstop=5e-12 dt=1e-13 prev
+SAVE outfile=$'name'_1.str
+SOLVE tstop=5.3e-12 dt=1e-13 prev
+SOLVE tstop=1e-6 dt=1e-13 prev
+LOG off
+
+victoryvisual \
+$'name'_0.str:$'name'_0_str.set \
+$'name'_1.str:$'name'_1_str.set
+
+victoryvisual \
+$'name'_0.log:$'name'_0.set \
+$'name'_1.log:$'name'_1.set \
+'($"name"_2.log+$"name"_3.log)':$'name'_2_3.set
+
+QUIT

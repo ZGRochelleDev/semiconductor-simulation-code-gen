@@ -1,0 +1,118 @@
+# (c) Silvaco Inc., 2024
+
+# Single Photon APD Operated in Steady State Conditions 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Single Event Effects
+
+# Example Name
+Set name=“Photodiode_ex13” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH cylindrical
+
+X.MESH location=0 spacing=0.005
+X.MESH location=1 spacing=0.1
+
+Y.MESH location=-1.1 spacing=0.01
+Y.MESH location=-1 spacing=0.01
+Y.MESH location=-0.5 spacing=0.05
+Y.MESH location=0 spacing=0.01
+Y.MESH location=1 spacing=0.05
+Y.MESH location=1.5 spacing=0.1
+Y.MESH location=2 spacing=0.05
+Y.MESH location=3 spacing=0.01
+Y.MESH location=3.1 spacing=0.02
+
+REGION number=1 material=silicon
+
+ELECTRODE name=cathode top
+ELECTRODE name=anode bottom
+
+DOPING p.type conc=1e11 uniform
+DOPING n.type conc=2.8e19 gaussian char=0.05 y.min=-1.1 y.max=-1
+DOPING p.type conc=2e17 gaussian char=0.05 y.min=0 y.max=0
+DOPING p.type conc=1e19 gaussian char=0.05 y.min=3 y.max=3.1
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MODELS consrh conmob fldmob print
+
+IMPACT selb
+
+BEAM number=1 angle=-90 wavelength=0.7 x.origin=0 y.origin=4.5
+
+PROBE field dir=90 x=0 y=1.5
+PROBE vel.electron x=0 y=1.5
+PROBE vel.hole x=0 y=1.5
+PROBE generation x=0 y=1.5
+
+#### NUMERICAL METHODS #### 
+METHOD climit=1e-4  seu.integrate
+
+#### SOLUTION SOLVING #### 
+# Dark and Light I-V Characteristics
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_Dark.log
+
+SOLVE vcathode=0.05 vstep=0.05 vfinal=55 name=cathode
+SAVE outf=$'name'_Vc55_dark.str
+
+SOLVE vstep=0.05 vfinal=80 name=cathode
+
+LOG off
+
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_Light.log
+
+SOLVE vcathode=0.05 vstep=0.05 vfinal=55 name=cathode b1=0.001
+SAVE outf=$'name'_Vc55_Light.str
+
+SOLVE vstep=0.05 vfinal=80 name=cathode b1=0.001
+
+LOG off
+
+
+# Single Photon Transient Response
+
+# Set Total Charge Density in pC to One Hole and One Electron per Micron
+# Make Total Track Length Equal to 1um = One Electron/Hole Pair
+
+set density=1.6e-7
+SINGLEEVENTUPSET entry="0, 1" exit="0, 2" \
+ radius=0.2 b.density=$density pcunits t0=5e-12 tc=1e-13
+
+# Add Contact Load Resistor to Provide Output Voltage Signal
+CONTACT name=cathode resistance=1e8 ohms
+
+SOLVE init
+LOAD infile=$'name'_Vc55_dark.str
+
+SOLVE previous
+
+LOG outfile=$'name'_Photon.log
+SOLVE dt=1e-12 tstop=4.5e-12
+
+METHOD dt.max=1e-14
+SOLVE tstop=5e-12
+
+SAVE outf=$'name'_Photon.str
+
+SOLVE tstop=5.5e-12
+
+METHOD dt.max=1e-7
+SOLVE dt=1e-14 tstop=1e-6
+
+victoryvisual \
+$'name'_Dark.log+$'name'_Light.log \
+$'name'_Photon.log:$'name'_Photon.set
+
+QUIT

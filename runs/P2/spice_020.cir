@@ -1,0 +1,9 @@
+*Mos_current_mirror
+vdd in 0 5V
+M1 in out 0 0 0 10k
+M2 out 0 0 bias 0 0 5V 10k
+.Rref in bias 10k
+.load in out 10K
+.op
+.I(load)
+.end

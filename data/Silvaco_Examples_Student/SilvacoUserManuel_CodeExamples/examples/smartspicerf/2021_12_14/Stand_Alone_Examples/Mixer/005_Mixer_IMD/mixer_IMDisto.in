@@ -1,0 +1,29 @@
+* InterModDisto
+.include HBT_ne600p.inc
+
+.param prf=-30_dBm
+.param vlo=316.2m
+
+Pif out  gnd
+Prf rf   gnd
++ mag2f=prf mag3f='prf-10'
+
+Vlo  lo gnd mag1f=vlo
+
+*------------- Pdisto -------------------
+.SPECTRAL
++ fund1=1Ghz     nharm1=5
++ fund2=900MegHz nharm2=2
++ fund3=920MegHz nharm3=2
++ solver=mfgmres
++ lrs_tol=0.5
++ oversample=2
++ annotate=3  waves 
+
+.PROBE SPEC_SP vdb(out) @Pif[pout]
+
+.MEASURE SPECT_SP v20  FIND vdb(out) AT= 20MegHz
+.MEASURE SPECT_SP v80  FIND vdb(out) AT= 80MegHz
+.MEASURE SPECT_SP v100 FIND vdb(out) AT=100MegHz
+
+.END

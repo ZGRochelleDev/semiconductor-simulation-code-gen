@@ -1,0 +1,135 @@
+# (c) Silvaco Inc., 2024
+
+# Vertical DMOS Gate Charging Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+
+# Example Name
+SET name=Silicon_Power_ex05
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+# Building 2D DMOS structure for Gate Charging characteristics 
+
+INIT material=silicon orientation=100 from=0.00 to=10.00 depth=1 gasheight=10 \
+  resolution="0.25,0.2" meshdepth=2  surface.z=7 \
+  dopants="phosphorus" dopingvalues="1.0e18"
+
+LINE x location=0.00 spacing=0.2
+LINE x location=2.00 spacing=0.1
+LINE x location=3.00 spacing=0.05
+LINE x location=5.00 spacing=0.05
+LINE x location=10.00 spacing=2
+#
+LINE z location=0 spacing=0.02
+LINE z location=0.25 spacing=0.02
+LINE z location=1 spacing=0.05
+LINE z location=2 spacing=0.05
+LINE z location=3 spacing=0.1
+LINE z location=7 spacing=0.5
+LINE z location=8 spacing=0.5
+
+EPITAXY time=10 temperature=1200 thickness=7 divisions=15 \
+  dopants="phosphorus" dopingvalues="1.0e15"
+
+LINE z location=-2 spacing=0.5
+LINE z location=0 spacing=0.05
+LINE z location=2 spacing=0.1
+
+DEPOSIT conformal material=oxide thickness=0.06
+
+DEPOSIT conformal material=polysilicon thickness=0.35 
+
+DEPOSIT conformal material=oxide thickness=0.35 
+
+DEPOSIT conformal material=photoresist thickness=1 
+
+ETCH material=photoresist left.to=3 dry thickness=1
+ETCH material=oxide left.to=3 dry thickness=0.35
+ETCH material=polysilicon left.to=3 dry thickness=0.35
+ETCH material=oxide left.to=3 dry thickness=0.06
+
+IMPLANT boron dose=1e14 energy=80 bca n.ions=100000
+
+ETCH material=photoresist dry
+
+DIFFUSE time=100 temperature=1100
+
+IMPLANT arsenic dose=3e15 energy=100 bca n.ions=100000
+
+DIFFUSE time=20 temperature=1100
+
+DEPOSIT conformal material=oxide thickness=0.5 
+ETCH material=oxide thickness=0.5  dry
+ETCH between="0,2.5" thickness=0.9 dry
+
+DIFFUSE time=1 temperature=1100
+
+DEPOSIT conformal material=aluminum thickness=1 
+ETCH material=aluminum right.to=3.5 dry thickness=12.26
+
+ELECTRODES name=source x=0
+ELECTRODES name=gate x=5 z=-0.2
+ELECTRODES name=drain substrate
+
+# save simulation status  
+SAVE name=$'name'_VP_sv conformalstr
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### MIXED MODE SETUP ####
+.BEGIN
+
+#  transient PULSE   i1 i2   td   tr   tf   pwidth period
+IIN  0  GG  0  pulse 0  1e-5 1e-8 1e-8 1e-8 1.0    2
+RG   GG G   10
+AMOS 0=source G=gate D=drain infile=$'name'_VP_sv_exVC.str width=1e4
+IOUT 0  D   0
+DOUT D  DD  idealDiode
+VDD  DD 0   0
+
+.MODEL idealDiode d()
+.NODESET v(G)=0 v(D)=0 v(DD)=0
+.NUMERIC vchange=1.0 LTE=0.05
+.OPTIONS m2ln print 
+
+.SAVE outfile=$'name'_VD_mix
+
+.LOG outfile=$'name'_VD_mix onefile
+
+.DC IOUT 0 1e-9 0.1e-9
+.DC IOUT 1e-9 1e-8 1e-9
+.DC IOUT 1e-8 1e-7 1e-8
+.DC IOUT 1e-7 1e-6 1e-7
+.DC IOUT 1e-6 1e-5 1e-6
+.DC IOUT 1e-5 2e-5 1e-5
+.DC VDD 0 20 0.2
+
+.TRAN 1e-8 1e-4 compliance="V(G)>20"
+
+.END
+
+#### MATERIAL/PHYSICAL MODELS ####  
+CONTACT device=AMOS name=gate n.poly
+INTERFACE device=AMOS qf=2e11
+
+MODELS device=AMOS cvt consrh auger bgn print
+IMPACT device=AMOS selberherr
+
+METHOD climit=1e-4 
+
+GO internal
+
+victoryvisual \
+  $'name'_VD_mix_AMOS.str:$'name'_struct.set \
+  $'name'_VD_mix_tr.log:$'name'_trans.set
+
+QUIT

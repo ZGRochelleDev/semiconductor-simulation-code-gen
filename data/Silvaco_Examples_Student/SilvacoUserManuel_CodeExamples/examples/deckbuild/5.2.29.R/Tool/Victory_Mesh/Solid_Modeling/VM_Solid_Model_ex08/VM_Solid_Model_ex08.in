@@ -1,0 +1,34 @@
+# (c) Silvaco Inc., 2024
+
+# BEND a structure
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+#   -3D Solid Modeling
+
+# Example Name
+SET name = "VM_Solid_Model_ex08"
+
+#### STRUCTURE SPECIFICATION ####
+GO victorymesh simflags = "-P 4"
+
+# Create a layered 3D cuboid
+LAYERS point = "0,0,0" cuboid.width = 2 materials = "oxide, silicon" out = "cuboid" \
+num.edges = 60 layer.offset = 0 layer.deltas = "1,2" layer.num.edges = "2, 2"
+
+REMESH delaunay out = "cuboid"
+
+SAVE out = "$'name'_cuboid"
+
+# Using the BEND command,
+BEND sine axes = "X,Y" frequencies = "1,3" amplitudes = "0.5,1" out = "bend"
+
+REMESH delaunay out = "bend"
+
+SAVE out = "$'name'_bend"
+
+victoryvisual $'name'_cuboid.str $'name'_bend.str 
+
+QUIT
+

@@ -1,0 +1,139 @@
+# (c) Silvaco Inc., 2024
+
+# Charge Integration Analysis
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+SET name=“CIS_CCD_ex02”
+
+# Charge Integration
+# In this example we will calculate the charge generated in the well
+# of adjacent green and red pixels under green light illumination
+# and look at the saturation of charge collection and blooming
+# into the adjacent pixel.
+#
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+MESH
+#
+# Structure definition
+#
+X.MESH location=0    spacing=0.1
+X.MESH location=10   spacing=0.1
+Y.MESH location=0    spacing=0.25
+Y.MESH location=1.5  spacing=0.1
+Y.MESH location=2.5  spacing=0.1
+Y.MESH location=5.0  spacing=0.05
+Y.MESH location=5.5  spacing=0.05
+Y.MESH location=6.5  spacing=0.05
+Y.MESH location=9.5  spacing=0.1
+Y.MESH location=10.5 spacing=0.1
+#
+REGION num=1 silicon y.min=6.5
+REGION num=2 oxide y.max=6.5
+REGION num=3 material=aluminum x.min=2.5  x.max=7.5  y.min=5 y.max=5.5
+#
+# color filters
+#
+REGION num=4 oxide y.min=1.5 y.max=2.5 x.min=0.0 x.max=4.0
+REGION num=5 oxide y.min=1.5 y.max=2.5 x.min=6.0 x.max=10.0
+#
+ELECTRODE num=1 substrate
+ELECTRODE num=2 material=aluminum x.min=2.5  x.max=7.5  y.min=5 y.max=5.5
+#
+# Background doping
+#
+DOPING region=1 unif p.type conc=2e15
+#
+# Isolation
+#
+DOPING region=1 gaus p.type conc=1e18 peak=6.5 char=0.25 x.min=2.5  x.max=7.5
+#
+# Nwell
+#
+DOPING region=1 gaus n.type conc=1e16 peak=6.6 char=0.05
+#
+# Here we set some models.  For this analysis these are not too important
+# as we are only looking at photogeneration.
+#
+MODEL srh conmob fldmob print
+#
+# We choose a high index to reflect light in FDFD.
+#
+MATERIAL material=Aluminum real.index=1 imag.index=10
+#
+# Here we set up the red filter to disallow 99% of the green source
+#
+MATERIAL region=5 imag.index=0.1951
+#
+# We choose to output optical intensity 
+#
+OUTPUT opt.int
+#
+# Here we define the optical source.  It is incident normal to the device
+# from above.  It has a wavelength of 0.5325 microns.  We select spacings
+# in time and space.  The space step should be a small fraction of the
+# wavelength (about 1/20th).  We specify to propogate 111 wavelengths.
+# At the end of the simulation we output a structure file of the FDTD
+# representation.
+#
+BEAM num=1 fdtd x.origin=5.0 y.origin=-4.0 angle=90.0 wavelength=0.5325 \
+   td.srate=7 fd.auto prop.leng=10 big.index td.err=0.01 \
+	td.end td.file="$'name'_1" 
+#
+# Here we specify the spherical lenslets by index, location and radius.
+#
+LENS plane=0.0 index=1.586 x.loc=0.0  y.loc=1.1667 radius=4.1667 spheric
+LENS plane=0.0 index=1.586 x.loc=10.0 y.loc=1.1667 radius=4.1667 spheric
+#
+# We specify perfectly matched layers (PMLs) at the top and the bottom
+# to absorb exiting radiation.
+#
+PML top     degree=1 width=1 r90=0.001
+PML bottom  degree=1 width=1 r90=0.001 material=silicon
+#
+# We get an initial solution.
+#
+SOLVE init
+#
+# Specify 2 carrier solutions
+#
+METHOD carriers=2
+#
+# We probe the integrated electron charge in bounding boxes around
+# the N wells.
+#
+PROBE name="Qg" n.conc integrate x.min=0   x.max=2.5  y.min=6.5 y.max=7.5
+PROBE name="Qr" n.conc integrate x.min=7.5 x.max=10.0 y.min=6.5 y.max=7.5
+#
+# Initial solution empty the wells
+#
+METHOD carriers=0
+SOLVE
+SOLVE n.bias=20.0
+#
+# We will capture the output in a log file.
+#
+LOG outf=$'name'_1.log
+#
+# Turn on the light and integrate signal charge in time
+#
+METHOD carriers=2
+SOLVE tstop=1e-6 tstep=1e-9 b1=0.001 ramp.lit ramptime=5e-9
+SAVE outf=$'name'_2.str
+#
+# Plot the results
+#
+
+victoryvisual \
+$'name'_1_te.str:$'name'_1_te.set \
+$'name'_1.log:$'name'_1.set \
+$'name'_2.str:$'name'_2.set
+
+QUIT
+

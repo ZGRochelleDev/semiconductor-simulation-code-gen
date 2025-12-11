@@ -1,0 +1,91 @@
+.PARAM NS0ACC = 5e+17 
+.PARAM K0ACC = 1.79964 
+.PARAM U0ACC = 0.0176643 
+.PARAM MEXPACC = 49.1415 
+.PARAM RC = 0.00100111 
+.PARAM RUTE = -2.98847 
+.PARAM KRC = 3.54068 
+.MODEL asmhemt NMOS (
++LEVEL    = 90             TNOM     = 26.85          TBAR     = 2.5e-08        
++EPSILON  = 1.066e-10      VOFF     = -5.90052       U0       = 0.318433       
++UA       = 0              UB       = 0              VSAT     = 656843         
++DELTA    = 2              AT       = 1.44857        UTE      = -2.06738       
++LAMBDA   = 0.0369669      ETA0     = 0.0714089      VDSCALE  = 4.60146        
++KT1      = -0.0973343     THESAT   = 1              NFACTOR  = 0.426508       
++CDSCD    = 0.001          IMIN     = 1e-15          SHMOD    = 1              
++RTH0     = 23.5877        CTH0     = 1e-09          RDSMOD   = 1              
++VSATACCS = 50000          NS0ACCS  = NS0ACC         NS0ACCD  = NS0ACC         
++K0ACCS   = K0ACC          K0ACCD   = K0ACC          U0ACCS   = U0ACC          
++U0ACCD   = U0ACC          MEXPACCS = MEXPACC        MEXPACCD = MEXPACC        
++LSG      = 3e-06          LDG      = 3e-06          RSC      = RC             
++RDC      = RC             KNS0     = 0              ATS      = 0              
++UTES     = RUTE           UTED     = RUTE           KRSC     = KRC            
++KRDC     = KRC            GATEMOD  = 0              TRAPMOD  = 0              
++RTRAP3   = 1              CTRAP3   = 0.0001         VATRAP   = 10             
++WD       = 0.016          VDLR1    = 2              VDLR2    = 20             
++TALPHA   = 1              VTB      = 250            DELTAX   = 0.01           
++CDLAG    = 1e-06          RDLAG    = 1e+06          IDIO     = 1              
++ATRAPVOFF = 0.1
++BTRAPVOFF = 0.3
++ATRAPETA0 = 0
++BTRAPETA0 = 0.05
++ATRAPRS  = 0.1            BTRAPRS  = 0.6            ATRAPRD  = 0.5            
++BTRAPRD  = 0.6            RTRAP1   = 1              RTRAP2   = 1              
++CTRAP1   = 1e-05          CTRAP2   = 1e-06          A1       = 0.1            
++VOFFTR   = 1e-09          CDSCDTR  = 1e-15          ETA0TR   = 1e-15          
++RONTR1   = 1e-12          RONTR2   = 1e-13          RONTR3   = 1e-13          
++CGSO     = 0              CGDO     = 0              CDSO     = 0              
++CGDL     = 0              VDSATCV  = 100            CFG      = 0              
++CFD      = 0              CJ0      = 0              VBI      = 0.9            
++KTVBI    = 0              KTCFG    = 0              MZ       = 0.5            
++AJ       = 0.1            DJ       = 1              ADOSI    = 0              
++BDOSI    = 1              QM0I     = 0.001          FNMOD    = 0              
++TNMOD    = 0              NOIA     = 1.5e-11        NOIB     = 0              
++NOIC     = 0              EF       = 1              TNSC     = 1e+27          
++ADOSFP1  = 0              ADOSFP2  = 0              ADOSFP3  = 0              
++ADOSFP4  = 0              BDOSFP1  = 1              BDOSFP2  = 1              
++BDOSFP3  = 1              BDOSFP4  = 1              CBDO     = 0              
++CBGO     = 0              CBSO     = 0              CDSCDFP1 = 0              
++CDSCDFP2 = 0              CDSCDFP3 = 0              CDSCDFP4 = 0              
++CFGD     = 0              CFGD0    = 0              CFGDSM   = 1e-24          
++CFP1SCALE = 0
++CFP2SCALE = 0
++CFP3SCALE = 0
++CFP4SCALE = 0
++CSUBSCALE1 = 0
++CSUBSCALE2 = 0
++CSUBSCALE3 = 0
++CSUBSCALE4 = 0
++CSUBSCALEI = 0
++ETA0FP1  = 1e-09          ETA0FP2  = 1e-09          ETA0FP3  = 1e-09          
++ETA0FP4  = 1e-09          FP1MOD   = 0              FP2MOD   = 0              
++FP3MOD   = 0              FP4MOD   = 0              
++GAMMA0FP1 = 2.12e-12
++GAMMA0FP2 = 2.12e-12
++GAMMA0FP3 = 2.12e-12
++GAMMA0FP4 = 2.12e-12
++GAMMA0I  = 2.12e-12       
++GAMMA1FP1 = 3.73e-12
++GAMMA1FP2 = 3.73e-12
++GAMMA1FP3 = 3.73e-12
++GAMMA1FP4 = 3.73e-12
++GAMMA1I  = 3.73e-12       GDSMIN   = 1e-12          IGDDIO   = 1              
++IGSDIO   = 1              IMINFP1  = 1e-15          IMINFP2  = 1e-15          
++IMINFP3  = 1e-15          IMINFP4  = 1e-15          KTCFGD   = 0              
++KTFP1    = 0.05           KTFP2    = 0.05           KTFP3    = 0.05           
++KTFP4    = 0.05           KTGD     = 0              KTGS     = 0              
++NFACTORFP1 = 0.5
++NFACTORFP2 = 0.5
++NFACTORFP3 = 0.5
++NFACTORFP4 = 0.5
++NJGD     = 2.5            NJGS     = 2.5            QM0FP1   = 0.001          
++QM0FP2   = 0.001          QM0FP3   = 0.001          QM0FP4   = 0.001          
++RGATEMOD = 0              RSHG     = 0.001          U0FP1    = 0.1            
++U0FP2    = 0.1            U0FP3    = 0.1            U0FP4    = 0.1            
++VDSCALEFP1 = 10
++VDSCALEFP2 = 10
++VDSCALEFP3 = 10
++VDSCALEFP4 = 10
++VOFFFP1  = -25            VOFFFP2  = -50            VOFFFP3  = -75            
++VOFFFP4  = -100           VSATFP1  = 100000         VSATFP2  = 100000         
++VSATFP3  = 100000         VSATFP4  = 100000         XGW      = 0 )

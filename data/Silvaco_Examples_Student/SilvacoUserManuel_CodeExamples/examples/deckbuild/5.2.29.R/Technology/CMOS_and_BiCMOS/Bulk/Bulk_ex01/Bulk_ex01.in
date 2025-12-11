@@ -1,0 +1,210 @@
+# (c) Silvaco Inc., 2024
+
+# Hot Electron Reliability 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bulk_ex01” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH 
+X.MESH location=0.0 spacing=0.1
+X.MESH location=0.5 spacing=0.1 
+X.MESH location=0.65 spacing=0.025 
+X.MESH location=0.75 spacing=0.025
+X.MESH location=0.9 spacing=0.005
+X.MESH location=1.2 spacing=0.1
+X.MESH location=1.5 spacing=0.1
+
+Y.MESH location=-0.02 spacing=0.005
+Y.MESH location=0.0 spacing=0.001
+Y.MESH location=0.1 spacing=0.025
+Y.MESH location=0.2 spacing=0.05
+Y.MESH location=0.4 spacing=0.05
+Y.MESH location=1.0 spacing=0.2
+Y.MESH location=2.0 spacing=0.5
+
+# Regions and electrodes
+REGION number=1 y.min=0 silicon
+REGION number=2 y.max=0.0 oxide
+
+ELECTRODE number=1 name=gate x.min=0.5 length=0.5 y.min=-0.02 y.max=-0.02
+ELECTRODE number=2 name=source left length=0.2 y.min=0.0 y.max=0.0
+ELECTRODE number=3 name=drain right length=0.2 y.min=0.0 y.max=0.0
+ELECTRODE number=4 name=substrate substrate
+
+# Device doping
+DOPING uniform p.type conc=2.e16
+DOPING gauss p.type conc=1.e17 char=0.1
+DOPING gauss n.type conc=1.e20 x.right=0.5 junc=0.2 ratio=0.6
+DOPING gauss n.type conc=1.e20 x.left=1.0 junc=0.2 ratio=0.6
+
+# Save structure for biasing
+SAVE outfile=$'name'_VD.str
+
+# Unstressed
+GO victorydevice simflags="-P 4"
+
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SOLVE prev
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_DC.log
+
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6.
+
+# Stress the device
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh cvt hei hcte.el devdeg.e nearflg ig.elinf=9.4e-7
+DEGRADATION f.nta=$'name'_devdeg.nta sigmae=2.e-15 sigmah=1.e-17
+
+#### NUMERICAL METHODS #### 
+METHOD newton trap climit=1e-5 dt.max=1000
+ 
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE vgate=0 vstep=0.1 name=gate vfinal=1.5
+SOLVE vdrain=0 vstep=0.1 name=drain vfinal=3.3
+
+OUTPUT devdeg
+
+SOLVE tstep=1e-5 tstop=0.01 
+SAVE outf=$'name'_VD_0p01s.str
+
+SOLVE tstep=1e-3 tstop=0.1 
+SAVE outf=$'name'_VD_0p1s.str
+
+SOLVE tstep=1e-2 tstop=1 
+SAVE outf=$'name'_VD_1s.str
+
+SOLVE tstep=1e-2 tstop=1000 
+SAVE outf=$'name'_VD_1000s.str
+
+SOLVE tstep=1e3 tstop=10000 
+SAVE outf=$'name'_VD_10000s.str
+
+# Vth at 0.01s stress
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+# load the stressed solution
+LOAD infile=$'name'_VD_0p01s.str
+
+SOLVE init 
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_0p01s.log
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6
+
+# Vth at 0.1s stress
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+# load the stressed solution
+LOAD infile=$'name'_VD_0p1s.str
+
+SOLVE init 
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_0p1s.log
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6
+
+# Vth at 1s stress
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+# load the stressed solution
+LOAD infile=$'name'_VD_1s.str
+
+SOLVE init 
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_1s.log
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6
+
+# Vth at 1000s stress
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+# load the stressed solution
+LOAD infile=$'name'_VD_1000s.str
+
+SOLVE init 
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_1000s.log
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6
+
+# Vth at 10000s stress
+GO victorydevice simflags="-P 4"
+# Load the structure
+MESH inf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.polysilicon
+INTERFACE qf=5.e10
+MODELS temp=300 print srh auger cvt 
+
+#### SOLUTION SOLVING #### 
+# load the stressed solution
+LOAD infile=$'name'_VD_10000s.str
+
+SOLVE init 
+SOLVE vdrain=0 vstep=0.02 name=drain vfinal=0.1
+
+LOG outf=$'name'_VD_10000s.log
+SOLVE vgate=0.5 vstep=0.25 name=gate vfinal=6
+
+victoryvisual '($'name'_VD_DC.log+$'name'_VD_0p01s.log+$'name'_VD_0p1s.log+$'name'_VD_1s.log+$'name'_VD_1000s.log+$'name'_VD_10000s.log)'
+
+QUIT

@@ -1,0 +1,18 @@
+* Stability & Gain Circles
+
+.include 'LNAcircuit.inc'
+.param rpar21=470
+
+Pout 9  0  R=40
+Prf  in 0  R=50
+$ ----------------------
+.HNET Prf Pout
++  LIN 11 800MegHz 1GHz
++  FUND=900MegHz
++  annotate=3 waves
++  LOAD_STAB_CIRCLES
++  SOURCE_STAB_CIRCLES
++  GAIN_CIRCLES
++  POWER_GAIN_CIRCLES
+
+.END

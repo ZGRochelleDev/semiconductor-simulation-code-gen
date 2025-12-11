@@ -1,0 +1,86 @@
+# (c) Silvaco Inc., 2024
+
+# Boolean operations on masks
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name="VP_Masking_ex03" 
+
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon from="0,0" to="1,1" depth=0.2 resolution=0.02 gasheight=1
+
+# Define two separate mask layers (circles) 
+# that overlap eachother
+SPECIFYMASKPOLY maskname="first" circle \
+ center="0.4, 0.5" radius=0.3 npoints=100
+
+SPECIFYMASKPOLY maskname="second" circle \
+ center="0.6, 0.5" radius=0.3 npoints=100
+
+#Boolean operations on the overlapping masks
+
+# AND
+SPECIFYMASKPOLY newmask="AND_circles" \
+ mask1="first" AND mask2="second"
+
+# OR
+SPECIFYMASKPOLY newmask="OR_circles" \
+ mask1="first" OR mask2="second"
+
+# XOR
+SPECIFYMASKPOLY newmask="XOR_circles" \
+mask1="first" XOR mask2="second"
+
+# SUBTRACT
+SPECIFYMASKPOLY newmask="SUBTRACT_circles" \
+mask1="first" SUBTRACT mask2="second"
+
+# Save initial condition structure for later re-load
+SAVE name=$'name'_Init_sv
+
+# Deposit barrier material on a block of Silicon
+# using the 4 newly created masks
+
+# AND
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="AND_circles"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_AND.str"
+
+# OR
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="OR_circles"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_OR.str"
+
+# XOR
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="XOR_circles"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_XOR.str"
+
+# SUBRACT
+LOAD name=$'name'_Init_sv
+DEPOSIT material=barrier thick=0.1 max mask="SUBTRACT_circles"
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_SUBTRACT.str"
+
+victoryvisual \
+$'name'_AND.str \
+$'name'_OR.str \ 
+$'name'_XOR.str \
+$'name'_SUBTRACT.str
+
+QUIT

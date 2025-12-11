@@ -1,0 +1,92 @@
+# (c) Silvaco Inc., 2024
+
+# Local Oxidation (LOCOS)
+
+# Required Modules
+#  Victory Process
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex15” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+## For Speed of Execution, Here we do a 2D Simulation ##
+
+INIT  layout=$'name'.lay depth=1 material=silicon resolution=0.03 gasheight=1 \
+      flow.dim=2D_XZ from=0 to=10 at=5
+
+CARTESIAN mask=POLY spacing=0.08
+CARTESIAN mask=CONT spacing=0.02
+CARTESIAN mask=M1
+
+LINE x location=3      spacing=0.01
+LINE x location=5      spacing=0.2
+LINE x location=7      spacing=0.01
+LINE y location=3      spacing=0.01
+LINE y location=5      spacing=0.2
+LINE y location=7      spacing=0.01
+LINE z location=0      spacing=0.005
+LINE z location=-0.02  spacing=0.005
+LINE z location=-0.1   spacing=0.01
+LINE z location=-0.22  spacing=0.02
+
+## Pad oxide ##
+
+DEPOSIT material=oxide thickness=0.02 max
+
+## LOCOS ##
+
+DEPOSIT material=nitride thickness=0.08 max
+ETCH material=nitride mask=LOCOS max
+DIFFUSE time=50 minutes temperature=1050 weto2
+
+## Conductors ##
+
+ETCH material=nitride thickness=0.2 dry
+DEPOSIT material=polysilicon thickness=0.2 conformal mask=POLY
+ELECTRODES mask=POLY material=polysilicon
+
+DEPOSIT material=oxynitride thickness=0.08 conformal
+ETCH material=oxynitride thickness=0.08 dry
+
+# Etch Material=Nitride Thickness=1 Min Mask=CONT reverse
+ETCH material=oxide thickness=1 min mask=CONT reverse
+DEPOSIT material=aluminum thickness=0.4 conformal mask=M1
+ELECTRODES mask=M1 material=aluminum
+
+ELECTRODES substrate
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal max.distance=1e-6
+SAVE out=$'name'_VP_sv_2D.str mode=victoryrcx
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+## Extract CapacitanceS
+
+INIT structure="$'name'_VP_sv_2D.str"
+
+MATERIAL oxide       permittivity=3.9
+MATERIAL oxynitride  permittivity=6
+MATERIAL silicon     permittivity=11.8
+MATERIAL polysilicon conductivity=1000
+MATERIAL aluminum    conductivity=1e6
+
+INTERCONNECT capacitance adaptC=0.01
+
+SAVE spice="caps.net"
+
+victoryvisual $'name'_VP_sv_2D.str
+
+QUIT

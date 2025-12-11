@@ -1,0 +1,181 @@
+# (c) Silvaco Inc., 2024
+
+# Using Reflect on a GaAs/AlGaAs Stripe Geometry Laser
+
+# Required Modules
+#  Atlas
+#   -Blaze
+#   -Laser
+
+# Example Name
+SET name=“Photon_LASER_ex04” 
+
+####### DEVICE SIMULATION ####### 
+GO atlas simflags="-P 2"
+#
+# SECTION 1: Mesh Specification
+#
+MESH  space.mult=1.0 ^diag.flip width=2
+# 
+X.MESH loc=0 spac=0.2
+X.MESH loc=2 spac=0.2
+X.MESH loc=4 spac=0.5
+X.MESH loc=6 spac=0.5
+#
+Y.MESH loc=0.0 spac=0.1
+Y.MESH loc=0.5 spac=0.1
+Y.MESH loc=0.55 spac=0.025
+Y.MESH loc=0.7 spac=0.015
+Y.MESH loc=0.75 spac=0.0075
+Y.MESH loc=0.85 spac=0.0075
+Y.MESH loc=0.9 spac=0.015
+Y.MESH loc=1.05 spac=0.025
+Y.MESH loc=1.1 spac=0.1
+Y.MESH loc=2.1 spac=0.2
+#
+# SECTION 2: Structure Specification
+#
+REGION     num=1  material=AlGaAs x.min=0 x.max=6.0 \
+ y.min=0.0 y.max=0.75 x.composition=0.5
+#
+REGION     num=2  material=GaAs x.min=0 x.max=6.0 \
+ y.min=0.75 y.max=0.85
+#
+REGION     num=3  material=AlGaAs x.min=0 x.max=6.0 \
+ y.min=0.85 y.max=2.1 x.composition=0.5
+#
+ELECTRODE      num=1  name=anode     x.min=0.0 x.max=1.5 y.min=0.0 y.max=0.0
+ELECTRODE      num=2  name=cathode   bottom
+#
+DOPING     uniform reg=1  p.type conc=1.e18
+DOPING     uniform reg=2  n.type conc=4.e15
+DOPING     uniform reg=3  n.type conc=4.e17
+#
+# SECTION 3: Material models
+#
+MATERIAL material=GaAs   taun0=1.e-9 taup0=1.e-9 copt=1.5e-10 
+MATERIAL material=AlGaAs taun0=1.e-9 taup0=1.e-9 copt=1.5e-10 align=0.6
+#
+MODEL  
+MODEL material=GaAs     fldmob srh optr
+MODEL material=AlGaAs   fldmob srh optr
+#
+# SECTION 4: Ramp Up Near Lasing
+#
+SOLVE init
+OUTPUT con.band val.band
+#
+METHOD newton autonr trap  maxtrap=6 climit=1e-6
+#
+SOLVE vanode=0.1
+SOLVE vanode=0.2
+SOLVE vanode=0.4 vstep=0.4 name=anode vfinal=1.2
+#
+# SECTION 5: Laser Model
+#
+LX.M  n=1  x=0
+LX.M  n=37 x=5
+#
+LY.M  n=1  y=0.5
+LY.M  n=33 y=1.1
+#
+MODELS material=GaAs fldmob  srh optr fermi print gainmod=1
+LASER maxch=10 itmax=100 nmodes=1 reflect photon.energy=1.43 \
+ ^lmodes toler=0.01 sin=40000 tauss=0.05 cavity.length=100
+#
+METHOD las.trap las.atrap=0.5 las.maxtraps=2
+#
+# SECTION 6: Laser Simulation
+#
+LOG outf= $'name'_0.log
+SOLVE vanode=1.25 vstep=0.05 name=anode vfinal=2.05
+SOLVE vanode=2.06 vstep=0.02 name=anode vfinal=2.2
+save outfile= $'name'_0.str
+#
+GO atlas simflags="-P 2"
+Title Full Structure Laser Simulation
+#
+# SECTION 1: Mesh Specification
+#
+mesh  space.mult=1.0 diag.flip width=1
+# 
+X.MESH loc=-6 spac=0.5
+X.MESH loc=-4 spac=0.5
+X.MESH loc=-2 spac=0.2
+X.MESH loc=0 spac=0.2
+X.MESH loc=2 spac=0.2
+X.MESH loc=4 spac=0.5
+X.MESH loc=6 spac=0.5
+#
+Y.MESH loc=0.0 spac=0.1
+Y.MESH loc=0.5 spac=0.1
+Y.MESH loc=0.55 spac=0.025
+Y.MESH loc=0.7 spac=0.015
+Y.MESH loc=0.75 spac=0.0075
+Y.MESH loc=0.85 spac=0.0075
+Y.MESH loc=0.9 spac=0.015
+Y.MESH loc=1.05 spac=0.025
+Y.MESH loc=1.1 spac=0.1
+Y.MESH loc=2.1 spac=0.2
+#
+# SECTION 2: Structure Specification
+#
+REGION     num=1  material=AlGaAs x.min=-6.0 x.max=6.0 \
+ y.min=0.0 y.max=0.75 x.composition=0.5
+#
+REGION     num=2  material=GaAs x.min=-6.0 x.max=6.0 \
+ y.min=0.75 y.max=0.85
+#
+REGION     num=3  material=AlGaAs x.min=-6.0 x.max=6.0 \
+ y.min=0.85 y.max=2.1 x.composition=0.5
+#
+ELECTRODE       num=1  name=anode     x.min=-1.5 x.max=1.5 y.min=0.0 y.max=0.0
+ELECTRODE       num=2  name=cathode   bottom
+#
+DOPING     uniform reg=1  p.type conc=1.e18
+DOPING     uniform reg=2  n.type conc=4.e15
+DOPING     uniform reg=3  n.type conc=4.e17
+#
+# SECTION 3: Material models
+#
+MATERIAL material=GaAs   taun0=1.e-9 taup0=1.e-9 copt=1.5e-10 
+MATERIAL material=AlGaAs taun0=1.e-9 taup0=1.e-9 copt=1.5e-10 align=0.6
+#
+MODEL  
+MODEL material=GaAs     fldmob srh optr
+MODEL material=AlGaAs   fldmob srh optr
+#
+SOLVE init
+OUTPUT con.band val.band
+#
+METHOD newton autonr trap  maxtrap=6 climit=1e-6
+#
+SOLVE vanode=0.1
+SOLVE vanode=0.2
+SOLVE vanode=0.4 vstep=0.4 name=anode vfinal=1.2
+#
+# SECTION 5: Laser Model
+#
+LX.M  n=1  x=-5
+LX.M  n=37 x=5
+#
+LY.M  n=1  y=0.5
+LY.M  n=33 y=1.1
+#
+MODELS material=GaAs fldmob  srh optr fermi print gainmod=1
+LASER maxch=10 itmax=100 nmodes=1 photon.energy=1.43 \
+ ^lmodes toler=0.01 sin=40000 tauss=0.05 cavity.length=100
+#
+METHOD las.trap las.atrap=0.5 las.maxtraps=2
+#
+# SECTION 6: Laser Simulation
+#
+LOG outf= $'name'_1.log
+SOLVE vanode=1.25 vstep=0.05 name=anode vfinal=2.05
+SOLVE vanode=2.06 vstep=0.02 name=anode vfinal=2.2
+#
+save outfile= $'name'_1.str
+
+victoryvisual $'name'_1.log:$'name'_1_log.set $'name'_0.str:$'name'_0.set $'name'_1.str:$'name'_1.set
+
+QUIT

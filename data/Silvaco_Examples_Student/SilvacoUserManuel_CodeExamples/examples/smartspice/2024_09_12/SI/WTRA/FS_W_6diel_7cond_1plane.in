@@ -1,0 +1,70 @@
+*Example: 6 diel., 7 cond., 1 plane
+
+
+VIMPULSE1 inp1 gnd PULSE 4.82v 0v 5n 0.5n 0.5n 25n 100ns
+VIMPULSE2 inn1 gnd PULSE 0v 4.82v 5n 0.5n 0.5n 25n 100ns
+VIMPULSE3 inp2 gnd PULSE 4.82v 0v 10n 0.5n 0.5n 25n 100ns
+VIMPULSE4 inn2 gnd PULSE 0v 4.82v 10n 0.5n 0.5n 25n 100ns
+VIMPULSE5 inp3 gnd PULSE 4.82v 0v 15n 0.5n 0.5n 25n 100ns
+VIMPULSE6 inn3 gnd PULSE 0v 4.82v 15n 0.5n 0.5n 25n 100ns
+
+W1 in1 in2  in3  in4  in5  in6  gnd gnd
++ out1 out2 out3 out4 out5 out6 gnd gnd
++ FSmodel=conduct7_6diel N=6 l=5
+
+.MATERIAL diel_1 DIELECTRIC ER=4.0 LOSSTANGENT=0.05
+.MATERIAL diel_2 DIELECTRIC ER=3.5 LOSSTANGENT=0.05
+.MATERIAL diel_3 DIELECTRIC ER=3.0 LOSSTANGENT=0.05
+.MATERIAL diel_4 DIELECTRIC ER=2.5 LOSSTANGENT=0.05
+.MATERIAL diel_5 DIELECTRIC ER=2.0 LOSSTANGENT=0.05
+.MATERIAL diel_6 DIELECTRIC ER=1.5 LOSSTANGENT=0.05
+.MATERIAL copper METAL CONDUCTIVITY=50.0meg
+
+.SHAPE rect_1 RECTANGLE WIDTH=20u, HEIGHT=10u
+.SHAPE rect_2 RECTANGLE WIDTH=20u, HEIGHT=5u
+.SHAPE rect_3 RECTANGLE WIDTH=30u, HEIGHT=10u
+.SHAPE rect_4 RECTANGLE WIDTH=50u, HEIGHT=15u
+
+.LAYERSTACK st_1
++ LAYER=(copper,1u),
++ LAYER=(diel_1,40u),
++ LAYER=(diel_2,20u),
++ LAYER=(diel_3,10u),
++ LAYER=(diel_4,10u),
++ LAYER=(diel_5,20u),
++ LAYER=(diel_6,20u)
+
+.FSOPTIONS options1 PRINTDATA=YES COMPUTERS=yes COMPUTEGD=yes
+.MODEL conduct7_6diel W MODELTYPE=FieldSolver,
++ LAYERSTACK=st_1, FSOPTIONS=options1, RLGCFILE=FS_W_6diel_7cond_1plane.rlgc
++ CONDUCTOR=(SHAPE=rect_1, MATERIAL=copper, ORIGIN=(30u,41u)),
++ CONDUCTOR=(SHAPE=rect_2, MATERIAL=copper, ORIGIN=(80u,41u)),
++ CONDUCTOR=(SHAPE=rect_2, MATERIAL=copper, ORIGIN=(110u,41u)),
++ CONDUCTOR=(SHAPE=rect_1, MATERIAL=copper, ORIGIN=(160u,41u)),
++ CONDUCTOR=(SHAPE=rect_3, MATERIAL=copper, ORIGIN=(60u,81u)),
++ CONDUCTOR=(SHAPE=rect_3, MATERIAL=copper, ORIGIN=(120u,81u))
++ CONDUCTOR=(SHAPE=rect_4, MATERIAL=copper, ORIGIN=(80u,102u))
+
+
+RIN1 inp1 in1 50
+RIN2 inn1 in4 50
+RIN3 inp2 in2 50
+RIN4 inn2 in3 50
+RIN5 inp3 in5 50
+RIN6 inn3 in6 50
+
+ROUT1 out1 0 50
+ROUT2 out2 0 50
+ROUT3 out3 0 50
+ROUT4 out4 0 50
+ROUT5 out5 0 50
+ROUT6 out6 0 50
+
+.OPTION PROBE POST
+
+.TRAN 0.5n 500n
+
+.PROBE v(in1) v(in2) v(in3) v(in4) v(in5) v(in6)
++ v(out1) v(out2) v(out3) v(out4) v(out5) v(out6)
+
+.END

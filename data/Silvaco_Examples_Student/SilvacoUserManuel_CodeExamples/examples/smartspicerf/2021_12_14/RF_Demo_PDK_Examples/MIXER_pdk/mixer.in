@@ -1,0 +1,188 @@
+* U:\SSRF_examples\RF_Demo_PDK_Examples\MIXER\mixer
+* Gateway 4.2106.0.R Spice Netlist Generator
+* Simulation timestamp: 14-Dec-2021 15:13:29
+* Workspace name:       U:\SSRF_examples\RF_Demo_PDK_Examples\MIXER\mixer.workspace
+* Simulation name:      U:\SSRF_examples\RF_Demo_PDK_Examples\MIXER\mixer.schlr
+* Switchlist:            N/A (Gateway Legacy Mode)
+
+* Schematic name: mixer
+I1 VDD NET6 DC 60u
+M1 NET8 NET6 GND GND mn W=10e-06 L=1u AS=6.6e-12 AD=6.6e-12 PS=21.32e-06 PD=21.32e-06
++ M=20
+M2 NET6 NET6 GND GND mn W=10e-06 L=1u AS=6.6e-12 AD=6.6e-12 PS=21.32e-06 PD=21.32e-06
++ M=1
+V1 VDD GND DC 3
+V4 NET7 GND DC 1.5
+V6 NET11 GND DC 1
+XC1 LOIN_M NET3 mimcap LT=6.5728e-06 M=1
+XC2 IFOUT_M IFOUT_P mimcap LT=3.2864e-06 M=1
+XC3 LOIN_P NET1 mimcap LT=6.5728e-06 M=1
+XC4 IFOUT_P IFOUT_M mimcap LT=3.2864e-06 M=1
+XM1 IFOUT_P NET1 NET5 NET5 rfnmos2v LR=240e-09 WR=5e-06 NR=8 M=1
+XM4 IFOUT_P NET3 NET4 NET4 rfnmos2v LR=240e-09 WR=5e-06 NR=8 M=1
+XM5 IFOUT_M NET1 NET4 NET4 rfnmos2v LR=240e-09 WR=5e-06 NR=8 M=1
+XM6 IFOUT_M NET3 NET5 NET5 rfnmos2v LR=240e-09 WR=5e-06 NR=8 M=1
+XM7 NET4 RFIN_P NET8 NET8 rfnmos2v LR=240e-09 WR=5e-06 NR=16 M=1
+XM8 NET5 RFIN_M NET8 NET8 rfnmos2v LR=240e-09 WR=5e-06 NR=16 M=1
+XR1 NET7 NET3 rpoly W=2e-06 L=131.34e-06 nc=3 M=1
+XR2 VDD IFOUT_P rpoly W=2e-06 L=25.207e-06 nc=3 M=1
+XR3 VDD IFOUT_M rpoly W=2e-06 L=25.207e-06 nc=3 M=1
+XR4 NET11 RFIN_P rpoly W=2e-06 L=131.34e-06 nc=3 M=1
+XR5 NET11 RFIN_M rpoly W=2e-06 L=131.34e-06 nc=3 M=1
+XR6 NET7 NET1 rpoly W=2e-06 L=131.34e-06 nc=3 M=1
+
+* Global Nodes Declarations
+.GLOBAL GND
+
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE V(IFOUT_M) V(IFOUT_P)
+
+* Schematic Netlist rebuilt at runtime
+
+*
+.inc ..\libraries\models\sbcd_rf.lib
+.OP
+*
+.PARAM prf=-40_dBm  vlo = 0.3
+.OPTIONS EXPERT=777
+
+#com
+***********************
+* Output Harmonics
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M  MTS1(prf 0 1 -1 0)
+Vlop LOIN_P  GND     mag1f=vlo
+Vlom LOIN_M  GND     mag1f=vlo          phase1f=180
+*------------- Pdisto -------------------
+.SPECTRAL
++ fund1=1Ghz     nharm1=5
++ fund2=10MegHz  nharm2=15
++ solver=mfgmres
++ lrs_tol=0.5
++ oversample=2
++ annotate=3  waves 
+*
+.PROBE SPECT_SP vm(IFOUT_P, IFOUT_M)
+*
+#endcom
+
+#com
+***********************
+* Noise Figure
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M
+Vlop LOIN_P  GND     mag1=vlo
+Vlom LOIN_M  GND     mag1=vlo  phase1=180
+*-------- Noise Figure Measurement -----
+.HNOISE Pif Prf
++   DEC 10 10MHz 100MHz
++   fund=1GHz
++   refSB=-1
++   Kmax=10
++   Annotate=3
++   WAVES
+*
+#endcom
+
+#com
+***********************
+* S-Parameter
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M
+Vlop LOIN_P  GND     mag1=vlo
+Vlom LOIN_M  GND     mag1=vlo  phase1=180
+*-------- S-parameter Measurement --------
+.HNET Prf Pif
++ start=-200MegHz stop=200MegHz step=10MegHz
++ FTYPE=REL	
++ FUND=1GHz nharm=5
++ PORTHARM=(1,0)
++ FAXIS=OUT
++ annotate=3 
++ waves
+*
+#endcom
+
+#com
+***********************
+* ConvGain
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M
+Vlop LOIN_P  GND     mag1=vlo
+Vlom LOIN_M  GND     mag1=vlo  phase1=180
+*-------- TF analysis ------------
+.HTF v(IFOUT_P, IFOUT_M)
++ LIN 51 1Meg 301Meg
++ FUND=1GHz
++ SB=(-1, 1)
++ annotate=3 
++ waves
+*
+.let HTF Prf_Gain1h='db(tfh1_prf)'
+.let HTF Prf_Gain_1h='db(tfh_1_prf)'
+*
+#endcom
+
+#com
+***********************
+* 1db Compression Point
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M  MTS1(prf 0 1 -1 0)
+Vlop LOIN_P  GND     mag1f=vlo
+Vlom LOIN_M  GND     mag1f=vlo          phase1f=180
+*-------- Calculation the 1 dB Compression Point -----
+.SPECTRAL
++ fund1=1Ghz     nharm1=5
++ fund2=10MegHz  nharm2=10
++ solver=mfgmres
++ lrs_tol=0.5
++ oversample=2
++ annotate=3  
++ waves 
++ SWEEP prf -40 0 5
+*
+*.PROBE SPECT_SP vm(IFOUT_P, IFOUT_M)
+*
+.MEASURE SPECT_SP dbOUT FIND vdb(IFOUT_P, IFOUT_M) AT=10Meg
+.MEASURE MEAS r_1dbCompression COMPR1DB dbOUT EP=-35
+#endcom
+
+*#com
+***********************
+* IIP3
+***********************
+Pif  IFOUT_P IFOUT_M R=10K
+Prf  RFIN_P  RFIN_M  MTS1(prf 0 1 -1 0) MTS2(prf 0 1 0 -1)
+Vlop LOIN_P  GND     mag1f=vlo
+Vlom LOIN_M  GND     mag1f=vlo          phase1f=180
+*-------- Calculation the IIP3 -----
+.SPECTRAL
++ fund1=1Ghz      nharm1=5
++ fund2=10MegHz   nharm2=2
++ fund3=10.1MegHz nharm3=2
++ solver=mfgmres
++ lrs_tol=0.5
++ oversample=2
++ annotate=3  
++ waves 
++ SWEEP prf -40 0 5
+*
+*.PROBE SPECT_SP vm(IFOUT_P, IFOUT_M)
+*
+*.MEASURE SPECT_SP dbOUT FIND vdb(IFOUT_P, IFOUT_M) AT=10Meg
+*.MEASURE MEAS r_1dbCompression COMPR1DB dbOUT EP=-35
+.MEASURE SPECT_SP POUT_1 FIND vdb(IFOUT_P, IFOUT_M) AT=10Meg
+.MEASURE SPECT_SP POUT_3 FIND vdb(IFOUT_P, IFOUT_M) AT=10.2Meg
+.MEASURE MEAS resIP3 IP3 POUT_1 POUT_3 EP=-35 GAIN=2
+*#endcom
+
+.END

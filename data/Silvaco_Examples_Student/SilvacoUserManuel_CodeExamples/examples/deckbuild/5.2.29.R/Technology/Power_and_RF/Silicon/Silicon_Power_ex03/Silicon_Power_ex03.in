@@ -1,0 +1,177 @@
+# (c) Silvaco Inc., 2024
+
+# Guard Ring Breakdown Analysis
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Silicon_Power_ex03” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+ 
+INIT meshdepth=2 resolution=1 from=0.00 to=350.0 depth=120 \
+ gasheight=6.1 material=silicon c.phosphorus=6e13
+
+LINE x location=0.00 spacing=4 
+LINE x location=90.0 spacing=4
+LINE x location=96.0 spacing=1
+LINE x location=99.0 spacing=0.1
+
+LINE x location=102.0 spacing=1
+LINE x location=113.0 spacing=2
+LINE x location=124.0 spacing=1
+
+LINE x location=127.0 spacing=0.1
+LINE x location=130.0 spacing=1
+LINE x location=133.0 spacing=0.1
+
+LINE x location=136.0 spacing=1
+LINE x location=148.0 spacing=2
+LINE x location=160.0 spacing=1
+
+LINE x location=163.0 spacing=0.1
+LINE x location=166.0 spacing=1
+LINE x location=169.0 spacing=0.1
+
+LINE x location=172.0 spacing=1
+LINE x location=185.0 spacing=2
+LINE x location=198.0 spacing=1
+
+LINE x location=201.0 spacing=0.1
+LINE x location=204.0 spacing=1
+LINE x location=207.0 spacing=0.1
+
+LINE x location=210.0 spacing=1
+LINE x location=228.0 spacing=2
+LINE x location=238.0 spacing=1
+
+LINE x location=241.0 spacing=0.1
+LINE x location=244.0 spacing=1
+LINE x location=247.0 spacing=0.1
+
+LINE x location=250.0 spacing=1
+LINE x location=256.0 spacing=4
+LINE x location=350.0 spacing=4
+
+LINE z location=-2.50 spacing=0.2 
+LINE z location=0.00 spacing=0.05 
+LINE z location=5.00 spacing=0.1
+LINE z location=10.00 spacing=2
+LINE z location=50.0 spacing=5
+LINE z location=120.0 spacing=10
+ 
+DEPOSIT material=oxide thickness=2.50 max
+
+#Open multiple windows for guard ring implants
+ETCH material=oxide between="-1,99" between="127,133" \
+ between="163,169" between="201,207" between="241,247"
+
+IMPLANT boron dose=1.0e15 energy=100 
+DIFFUSE time=420 temperature=1100
+ 
+ETCH material=oxide right.to=335.00
+
+DEPOSIT conformal material=polysilicon thickness=0.8 
+
+ETCH material=polysilicon between="119,130" \
+ between="155,166" between="193,204" between="233,244" between="280,310"
+
+# Define electrode location / names
+ELECTRODE name=anode x=1
+ELECTRODE name=cathode x=348 z=-0.5
+ELECTRODE name=plate1 x=150
+ELECTRODE name=plate2 x=180
+ELECTRODE name=plate3 x=220
+ELECTRODE name=plate4 x=260
+ELECTRODE name=substrate substrate
+
+# Save simulation status and generate conformal (based off LINE statements)
+# mesh (conformalstr) for electrical simulation
+SAVE name=$'name'_VP_sv conformalstr
+
+####### DEVICE SIMULATION ####### 
+# Breakdown (BV) using lumped elements (resistance) to float 
+# the field plates
+GO victoryd simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_sv_exVC.str
+
+# use large resistors on field plate electrodes to float
+CONTACT name=plate1 resistance=1e20
+CONTACT name=plate2 resistance=1e20
+CONTACT name=plate3 resistance=1e20
+CONTACT name=plate4 resistance=1e20
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS conmob fldmob bgn consrh auger print 
+
+# Impact ionisation - critical for breakdown simulations
+IMPACT selberherr
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_RES_BV.log
+
+# Voltage ramp
+SOLVE vanode=-0.1 vstep=-0.1 vfinal=-1 name=anode 
+SOLVE vanode=-1.5 vstep=-0.5 vfinal=-5 name=anode 
+SOLVE vanode=-6 vstep=-1 vfinal=-10 name=anode 
+SOLVE vanode=-12 vstep=-2 vfinal=-20 name=anode 
+SOLVE vanode=-30 vstep=-10 vfinal=-1500 name=anode cname=anode compliance=-1e-8
+
+# Save once compliance reached - at 1e-08A - breakdown
+SAVE outfile=$'name'_VD_RES_BV.str
+
+####### DEVICE SIMULATION ####### 
+# Repeat for comparison Breakdown (BV) using current boundary
+# to float  the field plates
+GO victoryd simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VP_sv_exVC.str
+
+# switch field plates to current boundary to float
+CONTACT name=plate1 current
+CONTACT name=plate2 current
+CONTACT name=plate3 current
+CONTACT name=plate4 current
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS conmob fldmob bgn consrh auger print 
+
+# Impact ionisation - critical for breakdown simulations
+IMPACT selberherr
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+# save / log current voltage data on electrodes
+# from this point onwards to file 
+LOG outfile=$'name'_VD_CUR_BV.log
+
+# Voltage ramp
+SOLVE vanode=-0.1 vstep=-0.1 vfinal=-1 name=anode 
+SOLVE vanode=-1.5 vstep=-0.5 vfinal=-5 name=anode 
+SOLVE vanode=-6 vstep=-1 vfinal=-10 name=anode 
+SOLVE vanode=-12 vstep=-2 vfinal=-20 name=anode 
+SOLVE vanode=-30 vstep=-10 vfinal=-1500 name=anode cname=anode compliance=-1e-8
+
+# Save once compliance reached - at 1e-08A - breakdown
+SAVE outfile=$'name'_VD_CUR_BV.str
+
+# Plot EField and BV for both methods
+victoryvisual \
+$'name'_VD_RES_BV.str:$'name'_Efield_RES_BV.set \
+$'name'_VD_CUR_BV.str:$'name'_Efield_CUR_BV.set \
+$'name'_VD_RES_BV.log+$'name'_VD_CUR_BV.log
+
+QUIT

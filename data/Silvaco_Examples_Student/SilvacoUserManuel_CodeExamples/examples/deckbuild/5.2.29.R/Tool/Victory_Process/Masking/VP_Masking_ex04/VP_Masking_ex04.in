@@ -1,0 +1,37 @@
+# (c) Silvaco Inc., 2024
+
+# Optical proximity correction (OPC): LER using external PSD file
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+SET name="VP_Masking_ex04"
+
+###################### PROCESS SIMULATION #####################
+GO victoryp simflags="-P 4"
+
+INIT material="silicon" depth=0.35 gasheight=0.8 from="0, -0.05" to="0.5, 0.15" resolution=0.005
+
+SPECIFYMASKPOLY mask=line rectangle LB="0,0" RT="1,0.05" n.yplus=2 pitch.y=0.1
+
+# PSD.AMPLITUDESCALING = 1e-9 convert nm^3 to um^3
+# PSD.FREQUENCYSCALEIN = 1e3 convert nm^-1 to um^-1
+
+#randomseed:Seed for random values generator initialization when adding noise to mask. 
+# Keeping this value constant between simulations ensures the same perturbations will be applied to mask.
+
+SPECIFYMASKPOLY newmask="noise" addnoisetomask="line" psd.file=$"name"_psd.dat psd.amplitudescaling=1e-9 \
+psd.frequencyscaling=1e3 psd.cutofffrequency=100 randomseed=1000
+
+SAVE name=$"name"_pre
+
+DEPOSIT material="hardmask" thickness=0.2 min
+ETCH max mask=noise thickness=0.4
+
+SAVE name=$"name"_post conformalstr
+
+victoryvisual $"name"_post_exVC.str
+
+QUIT

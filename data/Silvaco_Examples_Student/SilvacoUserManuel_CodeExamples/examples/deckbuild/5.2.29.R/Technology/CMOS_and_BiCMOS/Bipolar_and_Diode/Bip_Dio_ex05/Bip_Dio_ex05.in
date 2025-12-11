@@ -1,0 +1,63 @@
+# (c) Silvaco Inc., 2024
+
+# Human Body Model in a Diode
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+
+# Example Name
+Set name=“Bip_Dio_ex05” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 2"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+X.MESH location=0.00 spacing=0.25
+X.MESH location=2.00 spacing=0.25
+#
+Y.MESH location=0.00 spacing=0.02
+Y.MESH location=0.2 spacing=0.002
+Y.MESH location=2 spacing=0.2
+
+REGION number=1 silicon
+ 
+ELECTRODE number=1 top name=emitter
+ELECTRODE number=2 bottom name=base
+
+DOPING uniform conc=5e16 p.type 
+DOPING gauss n.type conc=1.e20 dir=y junction=0.2 peak=0 
+
+SAVE outf=$'name'_VD.str
+
+# Mixedmode transient simulation
+GO victorydevice simflags="-P 2"
+
+.begin
+c1 1 0 150p
+r1 1 2 1.0e6 exp 1.0e6 1500 0. 1ps 10 10
+aesd 0=base 2=emitter width=10 infile=$'name'_VD.str
+ 
+.ic v(1)=40 v(2)=0
+
+.tran 0.3ps 4.e-6
+ 
+.log outfile=$'name'
+
+.end
+
+#### MATERIAL/PHYSICAL MODELS #### 
+THERMCONTACT number=1 device=aesd y.min=2 y.max=2 ext.temp=300 alpha=1000
+MODELS device=aesd region=1 conmob fldmob fermi srh auger bgn lat.temp 
+MATERIAL device=aesd region=1 taup0=1e-7 taun0=1e-7
+IMPACT device=aesd reg=1 selb
+
+GO victoryd simflags="-P 2"
+
+victoryvisual $'name'_VD.str:$'name'_MeshDop.set \
+$'name'_tr.log:$'name'_Heat.set \
+$'name'_tr.log:$'name'_Cur.set
+
+QUIT

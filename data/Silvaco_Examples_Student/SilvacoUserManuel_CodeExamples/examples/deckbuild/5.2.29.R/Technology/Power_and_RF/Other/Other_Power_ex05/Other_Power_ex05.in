@@ -1,0 +1,175 @@
+# (c) Silvaco Inc., 2024
+
+# InP/InGaAs/InP Double HBT with varying doping profile 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Other_Power_ex05” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.0 spacing=0.05
+X.MESH location=0.3 spacing=0.05
+X.MESH location=0.6 spacing=0.05
+X.MESH location=1.0 spacing=0.05
+
+Y.MESH location=0.0 spacing=0.02
+Y.MESH location=0.048 spacing=0.01
+Y.MESH location=0.05 spacing=0.01
+Y.MESH location=0.052 spacing=0.01
+Y.MESH location=0.06 spacing=0.01
+Y.MESH location=0.145 spacing=0.01
+Y.MESH location=0.15 spacing=0.01
+Y.MESH location=0.151 spacing=0.005
+Y.MESH location=0.18 spacing=0.01
+Y.MESH location=0.19 spacing=0.01
+Y.MESH location=0.2 spacing=0.01
+Y.MESH location=0.21 spacing=0.002
+Y.MESH location=0.2199 spacing=0.0001
+Y.MESH location=0.22 spacing=0.005
+Y.MESH location=0.2201 spacing=0.0001
+Y.MESH location=0.23 spacing=0.005
+Y.MESH location=0.26 spacing=0.01
+Y.MESH location=0.29 spacing=0.005
+Y.MESH location=0.2999 spacing=0.0001
+Y.MESH location=0.3 spacing=0.05
+Y.MESH location=0.301 spacing=0.001
+Y.MESH location=0.31 spacing=0.005
+Y.MESH location=0.32 spacing=0.005
+Y.MESH location=0.34 spacing=0.05
+Y.MESH location=0.7 spacing=0.03
+Y.MESH location=0.72 spacing=0.005
+Y.MESH location=0.721 spacing=0.005
+Y.MESH location=0.725 spacing=0.01
+Y.MESH location=1.0 spacing=0.07
+
+REGION number=1 material=oxide 
+REGION number=2 material=InGaAs x.min=0.0 x.max=0.3 y.min=0.0 y.max=0.15 x.comp=0.47 
+REGION number=3 material=InP x.min=0.0 x.max=0.3 y.min=0.15 y.max=0.22 
+REGION number=4 material=InGaAs x.min=0.0 x.max=0.6 y.min=0.22 y.max=0.3 x.comp=0.47 
+REGION number=5 material=InP x.min=0.0 x.max=1.0 y.min=0.3 y.max=1.0
+
+ELECTRODE number=1 name=emitter x.min=0.0 x.max=0.3 y.min=0.0 y.max=0.0
+ELECTRODE number=2 name=base x.min=0.45 x.max=0.6 y.min=0.22 y.max=0.22
+ELECTRODE number=3 name=collector bottom
+
+# Here two ASCII files are called to specify the doping properties.
+DOPING x.min=0.0 x.max=1.0 y.min=0.0 y.max=1.0 n.type ascii infile=$'name'_n.dat
+DOPING x.min=0.0 x.max=1.0 y.min=0.0 y.max=1.0 p.type ascii infile=$'name'_p.dat
+
+SAVE outf=$'name'_VD.str
+
+####### DEVICE SIMULATION #######
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MOBILITY material=InP f.conmun=$'name'_InP_skr_vp.lib f.conmup=$'name'_InP_skr_vp.lib
+MOBILITY material=InGaAs f.conmun=$'name'_InGaAs_skr_vp.lib f.conmup=$'name'_InGaAs_skr_vp.lib
+
+MODEL fermi print cubic35
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+
+OUTPUT band.param con.band val.band e.mob h.mob flowlines u.srh u.auger
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+
+SOLVE vcollector=0.0001 
+SOLVE vcollector=0.001 
+SOLVE vcollector=0.01 
+SOLVE vcollector=0.1 
+SOLVE vcollector=2
+
+SOLVE vbase=0.0001 
+SOLVE vbase=0.001 
+SOLVE vbase=0.01 
+SOLVE vbase=0.1 
+SOLVE vstep=0.05 vfinal=0.4 name=base
+
+LOG outf=$'name'_IV.log
+
+SOLVE
+
+SOLVE vstep=0.05 vfinal=1.5 name=base
+
+SAVE outfile=$'name'_IV.str
+
+go victoryextract
+LOAD in="$'name'_IV.log"
+CURVE name=icvb x="Base Voltage" y="Collector Current"
+EXTRACT.CURVE name=Ic expression="intercept(x=1.5, curve.icvb)"
+CURVE name=ibvb x="Base Voltage" y="Base Current"
+EXTRACT.CURVE name=Ib expression="intercept(x=1.5, curve.ibvb)"
+EXTRACT.VDOE name=betamax expression=$Ic/$Ib
+CURVE name=gain x="(Collector Current)/(Base Current)" y="Base Voltage"
+EXTRACT.CSV csvfile="$'name'_gain.csv"
+
+# Frequency analysis
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VD.str
+####### DEVICE SIMULATION #######
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MOBILITY material=InP f.conmun=$'name'_InP_skr_vp.lib f.conmup=$'name'_InP_skr_vp.lib
+MOBILITY material=InGaAs f.conmun=$'name'_InGaAs_skr_vp.lib f.conmup=$'name'_InGaAs_skr_vp.lib
+
+MODEL fermi print cubic35
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+
+OUTPUT band.param con.band val.band e.mob h.mob flowlines u.srh u.auger
+
+SOLVE previous
+
+SOLVE vcollector=0.0001 ac freq=1e6
+SOLVE vcollector=0.001 ac freq=1e6
+SOLVE vcollector=0.01 ac freq=1e6
+SOLVE vcollector=0.1 ac freq=1e6
+SOLVE vcollector=0.5 ac freq=1e6
+SOLVE vcollector=0.75 ac freq=1e6
+SOLVE vcollector=1.0 ac freq=1e6
+
+SOLVE vbase=0.0001 ac freq=1e6
+SOLVE vbase=0.001 ac freq=1e6
+SOLVE vbase=0.01 ac freq=1e6
+SOLVE vbase=0.1 ac freq=1e6
+SOLVE vbase=0.5 ac freq=1e6
+SOLVE vbase=0.75 ac freq=1e6
+SOLVE vbase=1.0 ac freq=1e6
+
+LOG outf=$'name'_freq.log gains inport=base outport=collector width=50
+
+SOLVE vbase=1.0 vcollector=1.0 ac \
+	freq=1 fstep=10 nfstep=7 mult.freq 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=2e7 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=4e7 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=6e7 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=1e8 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=2e8 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=4e8 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=1e9 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=2.5e9 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=3.5e9 
+SOLVE vbase=1.0 vcollector=1.0 ac freq=2.2e10 
+
+LOG off
+
+victoryvisual \
+$'name'_VD.str \
+$'name'_IV.log:$'name'_IV.set \
+$'name'_gain.csv:$'name'_Gain.set \
+$'name'_freq.log:$'name'_UniPwrGain.set
+
+QUIT

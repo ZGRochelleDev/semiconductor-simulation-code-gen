@@ -1,0 +1,88 @@
+# (c) Silvaco Inc., 2024
+# Relating Platinum Diffusion to Minority Carrier Lifetime Control
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+
+# Example name
+SET name="Silicon_Power_ex15"
+
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 from=0.0 to=10.0 depth=20 gasheight=400 resolution=0.5 material=silicon dopants="phosphorus" dopingvalues="2e19" flow.dim=2D_XZ flip
+
+LINE x loc=0  spac=5
+LINE x loc=10 spac=5
+
+LINE z loc=20 spac=0.2
+LINE z loc=10 spac=3
+LINE z loc=0 spac=0.2
+LINE z loc=-20 spac=0.2
+LINE z loc=-210 spac=10
+LINE z loc=-340 spac=0.2
+LINE z loc=-360 spac=0.2
+
+DEPOSIT material=silicon min thickness=370 dopants="phosphorus" dopingvalues="1e14" 
+
+DIFFUSE time=120 temp=1350 c.boron=1.e19
+
+DEPOSIT material=barrier thickness=2.0 max
+
+FLIP
+
+METHOD material=silicon model=pt_diffusion activation.no
+
+DIFFUSE time=5 min temperature=700 dopants="Pt" dopingvalues="1e14"
+
+FLIP
+
+STRIP material=barrier
+
+DEPOSIT material=aluminum thickness=5 min
+
+ELECTRODE x=0.1 name=anode
+ELECTRODE substrate name=cathode
+
+#  Save the final structure
+SAVE name=$'name' conformalstr
+
+
+GO victoryd simflags="-P 4"
+
+MESH infile=$'name'_VP_exVC.str width=5e7
+
+TRAP e.level=0.42 acceptor f.density="$'name'_Pt_trap.txt" degen=1 sign=3.20e-14 sigp=2.70e-12
+
+MATERIAL material=silicon taun0=1.0e-2 taup0=1.0e-2
+
+CONTACT name=cathode resistance=10 ohms inductance=3.0e-9 henrys
+
+MODEL srh conmob bgn auger fldmob  print
+
+METHOD  newton  climit=1.e-4 
+
+OUTPUT recomb u.auger u.srh u.trap traps traps.ft
+
+SOLVE init 
+SOLVE previous
+
+SOLVE vanode=0 vstep=0.5 vfinal=100 name=anode
+
+LOG outf=$'name'_trr.log
+
+SOLVE vanode=100 ramptime=10e-6 tstep=1.0e-11 tstop=40e-6
+
+SOLVE vanode=-100 ramptime=10e-6 tstep=1.0e-11 tstop=60e-6
+
+SOLVE tstep=1.0e-11 tstop=120e-6
+LOG off
+
+victoryvisual $'name'_trr.log
+
+QUIT
+

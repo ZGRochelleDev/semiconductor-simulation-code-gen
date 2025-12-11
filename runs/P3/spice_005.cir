@@ -1,0 +1,6 @@
+plaintext
+.V1 in 0 AC1
+.C1 in 0 0.1 n
+.R1 out 0 2 k
+.AC dec 100M 10M
+.END

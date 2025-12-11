@@ -1,0 +1,113 @@
+# (c) Silvaco Inc., 2024
+
+# Creating an SRAM in Victory Process 
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex17” 
+
+# Build the structure using VictoryProcess Cell Mode
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.lay depth=1 material=silicon rulefile=$'name'.lmp
+
+ELECTRODES substrate
+
+SET accuracy=0.002
+
+# Trench Etch
+LITHOGRAPHY mask=AA maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=silicon thickness=0.5 angle=87 dry mask=AA_LITHO \
+     tolerance=$accuracy
+
+# Intrinsic gate oxide capacitance is already in Spice Model card, so
+# create a low permittivity active gate oxide layer to remove intrinsic Cox
+DEPOSIT material=oxide thickness=0 max
+DEPOSIT material=gateox thickness=0.01 max
+ETCH material=gateox thickness=0.1 max mask=*GATE reverse
+DEPOSIT material=oxide thickness=0 max
+
+# Poly Gate formation
+DEPOSIT material=poly thickness=0.2 max
+LITHOGRAPHY mask=poly maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=Polysilicon thickness=0.22 angle=87 dry mask=poly_LITHO \
+     tolerance=$accuracy
+ELECTRODES mask=*GATE material=polysilicon
+
+# Contacts
+DEPOSIT material=oxide thickness=0.4 max
+LITHOGRAPHY mask=cont reverse maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=oxide thickness=0.66 angle=87 dry mask=cont_LITHO \
+     tolerance=$accuracy
+# Stop Source/Drain/Substrate Contacts Shorting to Substrate
+DEPOSIT material=gateox thickness=-0.6 max
+ELECTRODES mask=*CONT material=gateox
+
+# Metal 1
+DEPOSIT material=aluminum thickness=0.6 max
+LITHOGRAPHY mask=M1 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=aluminum thickness=0.66 angle=87 dry mask=M1_LITHO \
+     tolerance=$accuracy
+ELECTRODES mask=M1 material=aluminum
+
+# M1 to M2 Vias
+DEPOSIT material=oxide thickness=1 max
+LITHOGRAPHY mask=via1 reverse maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=oxide thickness=1.1 angle=87 dry mask=via1_LITHO \
+     tolerance=$accuracy
+
+# Metal 2
+DEPOSIT material=aluminum thickness=0.8 max
+LITHOGRAPHY mask=M2 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=aluminum thickness=0.88 angle=87 dry mask=M2_LITHO \
+     tolerance=$accuracy
+ELECTRODES mask=M2 material=aluminum
+
+# M1 to M2 Vias
+DEPOSIT material=oxide thickness=0.6 max
+LITHOGRAPHY mask=via2 reverse maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=oxide thickness=1.1 angle=87 dry mask=via2_LITHO \
+     tolerance=$accuracy
+
+# Metal 3
+DEPOSIT material=aluminum thickness=1 max
+LITHOGRAPHY mask=M3 maskcriticalintensity=0.5 maskaperture=0.5 \
+            maskdefocus=0 wavelength=0.248
+ETCH material=aluminum thickness=1.1 angle=87 dry mask=M3_LITHO \
+     tolerance=$accuracy
+ELECTRODES mask=M3 aluminum
+
+# Passivation
+DEPOSIT material=oxide thickness=1 max
+
+SAVE name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT layout="$'name'_VP_sv.lay" depth=1.0 silicon map="$'name'.lmp" \
+     structure="$'name'_VP_sv.str"
+
+MATERIAL silicon conductivity=1000
+MATERIAL material("gateox") permittivity=0.01
+
+INTERCONNECT adaptr=0.05 adaptr=0.05
+
+SAVE spice="$'name'_VP_sv.net" 
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

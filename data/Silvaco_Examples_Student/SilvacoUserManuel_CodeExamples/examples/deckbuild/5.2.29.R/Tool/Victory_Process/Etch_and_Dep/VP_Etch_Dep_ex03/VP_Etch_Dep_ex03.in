@@ -1,0 +1,127 @@
+# (c) Silvaco Inc., 2024
+
+# Introduction to physical etching models, Part 2
+
+# Required Modules
+#  Victory Process
+#   -2D Physical Etch & Deposit
+
+# Example Name
+Set name=“VP_Etch_Dep_ex03” 
+
+# Anisotropic etch with multiple materials
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+# different rates for differnt materials, the barrier/mask will now be etched
+# effecting the final profile
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 RATIO=0.5 \
+	MATERIAL="barrier" RATE=0.05 RATIO=0.5
+
+ETCH MODEL="anisotropic" TIME=30 SECONDS MATERIALPROPERTIES=myetchprop  solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_AnisoMultiMaterial.str
+
+# “primary” etching model - single particle model
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 RATIO=0.5 \
+	MATERIAL="barrier" RATE=0.05 RATIO=0.5
+
+# Call "Primary" etch model
+ETCH MODEL="primary" TIME=30 SECONDS MATERIALPROPERTIES=myetchprop  solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Primary.str
+
+# Parametrized primary - spacial velocity
+# distribution of the reactive particles is isotropic
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+FLUX NAME="particleflux" \
+	PRI_C_FUNCTION="cosinepower" \
+	PRIDEP1="theta" \
+	PRIPAR1=3
+
+TOPOGRAPHYMODEL NAME="parametrized_primary" \
+	REACTIONMODEL="fluxdependent" \
+	FLUXMODEL="particleflux"
+
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 RATIO=0.5 \
+	MATERIAL="barrier" RATE=0.05 RATIO=0.5
+
+ETCH MODEL="parametrized_primary" TIME=30 SECONDS MATERIALPROPERTIES="myetchprop"  solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_PrimaryParam.str
+
+# RIE Model
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=0.8 depth=0.05 \
+resolution=0.005,0.005 meshdepth=2 gasheight=0.5 at=0 flow.dim=2D_xz
+
+SPECIFYMASKPOLY rect lb="0.33,-10" rt="0.47, 10" maskname="mymask"
+
+DEPOSIT material=nitride max thick=0.1
+
+DEPOSIT material=barrier max thick=0.1 mask="mymask"
+
+Flux  name="rieetcherflux"  \
+	primaryfunctionname="rieflux" \
+	primaryparam="60.0"   primaryparam="0.05" \
+	primarydepend="theta" primarydepend="surfacematerial"
+
+TopographyModel name="rieetchmodel" \
+	reactionmodelname="fluxdependent" \
+	fluxmodelname="rieetcherflux"
+
+ETCHDEPOPROPERTIES NAME="myetchprop" u.m \
+	MATERIAL="nitride" RATE=0.1 RATIO=0.5
+
+ETCH MODEL="rieetchmodel" TIME=30 SECONDS MATERIALPROPERTIES="myetchprop"  solver="lax_friedrich" maxcfl=0.5
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_RIE.str
+
+victoryvisual \
+$'name'_AnisoMultiMaterial.str \
+$'name'_Primary.str \
+$'name'_PrimaryParam.str \
+$'name'_RIE.str
+
+QUIT

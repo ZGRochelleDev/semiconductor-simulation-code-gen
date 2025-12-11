@@ -1,0 +1,159 @@
+# (c) Silvaco Inc., 2024
+
+# Crosstalk in InSb Detector Arrays 
+
+# Required Modules
+#  Victory Device
+#   -3D Simulator
+#   -3D Optical
+
+# Example Name
+Set name=“Photodiode_ex09” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH three.d 
+
+X.MESH location=0 spacing=4 
+X.MESH location=20 spacing=4 
+X.MESH location=60 spacing=4 
+X.MESH location=80 spacing=4 
+X.MESH location=120 spacing=4 
+X.MESH location=140 spacing=4 
+X.MESH location=180 spacing=4 
+X.MESH location=200 spacing=4 
+X.MESH location=240 spacing=4 
+X.MESH location=260 spacing=4 
+X.MESH location=300 spacing=4 
+X.MESH location=320 spacing=4 
+
+Y.MESH location=-2 spacing=2
+Y.MESH location=0 spacing=2.5 
+Y.MESH location=10 spacing=2.5 
+Y.MESH location=12.5 spacing=0.625 
+Y.MESH location=15 spacing=0.625 
+Y.MESH location=17 spacing=1 
+
+Z.MESH location=0 spacing=4 
+Z.MESH location=20 spacing=4 
+Z.MESH location=60 spacing=4 
+Z.MESH location=80 spacing=4 
+Z.MESH location=120 spacing=4 
+Z.MESH location=140 spacing=4 
+Z.MESH location=180 spacing=4 
+Z.MESH location=200 spacing=4 
+Z.MESH location=240 spacing=4 
+Z.MESH location=260 spacing=4 
+Z.MESH location=300 spacing=4 
+Z.MESH location=320 spacing=4 
+
+REGION number=0 oxide
+REGION number=1 x.min=0 x.max=320 y.min=0 y.max=10 z.min=0 z.max=320 material=InSb donor=1e15
+
+REGION number=2 x.min=20 x.max=60 y.min=10 y.max=15 z.min=20 z.max=60 material=InSb donor=1e15
+REGION number=3 x.min=80 x.max=120 y.min=10 y.max=15 z.min=20 z.max=60 material=InSb donor=1e15
+REGION number=4 x.min=140 x.max=180 y.min=10 y.max=15 z.min=20 z.max=60 material=InSb donor=1e15
+REGION number=5 x.min=200 x.max=240 y.min=10 y.max=15 z.min=20 z.max=60 material=InSb donor=1e15
+REGION number=6 x.min=260 x.max=300 y.min=10 y.max=15 z.min=20 z.max=60 material=InSb donor=1e15
+
+REGION number=7 x.min=20 x.max=60 y.min=10 y.max=15 z.min=80 z.max=120 material=InSb donor=1e15
+REGION number=8 x.min=80 x.max=120 y.min=10 y.max=15 z.min=80 z.max=120 material=InSb donor=1e15
+REGION number=9 x.min=140 x.max=180 y.min=10 y.max=15 z.min=80 z.max=120 material=InSb donor=1e15
+REGION number=10 x.min=200 x.max=240 y.min=10 y.max=15 z.min=80 z.max=120 material=InSb donor=1e15
+REGION number=11 x.min=260 x.max=300 y.min=10 y.max=15 z.min=80 z.max=120 material=InSb donor=1e15
+
+REGION number=12 x.min=20 x.max=60 y.min=10 y.max=15 z.min=140 z.max=180 material=InSb donor=1e15
+REGION number=13 x.min=80 x.max=120 y.min=10 y.max=15 z.min=140 z.max=180 material=InSb donor=1e15
+REGION number=14 x.min=140 x.max=180 y.min=10 y.max=15 z.min=140 z.max=180 material=InSb donor=1e15
+REGION number=15 x.min=200 x.max=240 y.min=10 y.max=15 z.min=140 z.max=180 material=InSb donor=1e15
+REGION number=16 x.min=260 x.max=300 y.min=10 y.max=15 z.min=140 z.max=180 material=InSb donor=1e15
+
+REGION number=17 x.min=20 x.max=60 y.min=10 y.max=15 z.min=200 z.max=240 material=InSb donor=1e15
+REGION number=18 x.min=80 x.max=120 y.min=10 y.max=15 z.min=200 z.max=240 material=InSb donor=1e15
+REGION number=19 x.min=140 x.max=180 y.min=10 y.max=15 z.min=200 z.max=240 material=InSb donor=1e15
+REGION number=20 x.min=200 x.max=240 y.min=10 y.max=15 z.min=200 z.max=240 material=InSb donor=1e15
+REGION number=21 x.min=260 x.max=300 y.min=10 y.max=15 z.min=200 z.max=240 material=InSb donor=1e15
+
+REGION number=22 x.min=20 x.max=60 y.min=10 y.max=15 z.min=260 z.max=300 material=InSb donor=1e15
+REGION number=23 x.min=80 x.max=120 y.min=10 y.max=15 z.min=260 z.max=300 material=InSb donor=1e15
+REGION number=24 x.min=140 x.max=180 y.min=10 y.max=15 z.min=260 z.max=300 material=InSb donor=1e15
+REGION number=25 x.min=200 x.max=240 y.min=10 y.max=15 z.min=260 z.max=300 material=InSb donor=1e15
+REGION number=26 x.min=260 x.max=300 y.min=10 y.max=15 z.min=260 z.max=300 material=InSb donor=1e15
+
+ELECTRODE number=1 x.min=20 x.max=60 y.min=15 y.max=17 z.min=20 z.max=60 material=aluminum name=anode1
+ELECTRODE number=2 x.min=80 x.max=120 y.min=15 y.max=17 z.min=20 z.max=60 material=aluminum name=anode2
+ELECTRODE number=3 x.min=140 x.max=180 y.min=15 y.max=17 z.min=20 z.max=60 material=aluminum name=anode3
+ELECTRODE number=4 x.min=200 x.max=240 y.min=15 y.max=17 z.min=20 z.max=60 material=aluminum name=anode4
+ELECTRODE number=5 x.min=260 x.max=300 y.min=15 y.max=17 z.min=20 z.max=60 material=aluminum name=anode5
+ELECTRODE number=6 x.min=20 x.max=60 y.min=15 y.max=17 z.min=80 z.max=120 material=aluminum name=anode6
+ELECTRODE number=7 x.min=80 x.max=120 y.min=15 y.max=17 z.min=80 z.max=120 material=aluminum name=anode7
+ELECTRODE number=8 x.min=140 x.max=180 y.min=15 y.max=17 z.min=80 z.max=120 material=aluminum name=anode8
+ELECTRODE number=9 x.min=200 x.max=240 y.min=15 y.max=17 z.min=80 z.max=120 material=aluminum name=anode9
+ELECTRODE number=10 x.min=260 x.max=300 y.min=15 y.max=17 z.min=80 z.max=120 material=aluminum name=anode10
+ELECTRODE number=11 x.min=20 x.max=60 y.min=15 y.max=17 z.min=140 z.max=180 material=aluminum name=anode11
+ELECTRODE number=12 x.min=80 x.max=120 y.min=15 y.max=17 z.min=140 z.max=180 material=aluminum name=anode12
+ELECTRODE number=13 x.min=140 x.max=180 y.min=15 y.max=17 z.min=140 z.max=180 material=aluminum name=anode13
+ELECTRODE number=14 x.min=200 x.max=240 y.min=15 y.max=17 z.min=140 z.max=180 material=aluminum name=anode14
+ELECTRODE number=15 x.min=260 x.max=300 y.min=15 y.max=17 z.min=140 z.max=180 material=aluminum name=anode15
+ELECTRODE number=16 x.min=20 x.max=60 y.min=15 y.max=17 z.min=200 z.max=240 material=aluminum name=anode16
+ELECTRODE number=17 x.min=80 x.max=120 y.min=15 y.max=17 z.min=200 z.max=240 material=aluminum name=anode17
+ELECTRODE number=18 x.min=140 x.max=180 y.min=15 y.max=17 z.min=200 z.max=240 material=aluminum name=anode18
+ELECTRODE number=19 x.min=200 x.max=240 y.min=15 y.max=17 z.min=200 z.max=240 material=aluminum name=anode19
+ELECTRODE number=20 x.min=260 x.max=300 y.min=15 y.max=17 z.min=200 z.max=240 material=aluminum name=anode20
+ELECTRODE number=21 x.min=20 x.max=60 y.min=15 y.max=17 z.min=260 z.max=300 material=aluminum name=anode21
+ELECTRODE number=22 x.min=80 x.max=120 y.min=15 y.max=17 z.min=260 z.max=300 material=aluminum name=anode22
+ELECTRODE number=23 x.min=140 x.max=180 y.min=15 y.max=17 z.min=260 z.max=300 material=aluminum name=anode23
+ELECTRODE number=24 x.min=200 x.max=240 y.min=15 y.max=17 z.min=260 z.max=300 material=aluminum name=anode24
+ELECTRODE number=25 x.min=260 x.max=300 y.min=15 y.max=17 z.min=260 z.max=300 material=aluminum name=anode25
+ELECTRODE number=26 x.min=0 x.max=320 y.min=10 y.max=12 z.min=0 z.max=10 material=aluminum name=cathode
+ELECTRODE number=27 x.min=0 x.max=10 y.min=10 y.max=12 z.min=0 z.max=320 material=aluminum name=cathode
+ELECTRODE number=28 x.min=310 x.max=320 y.min=10 y.max=12 z.min=0 z.max=320 material=aluminum name=cathode
+ELECTRODE number=29 x.min=0 x.max=320 y.min=10 y.max=12 z.min=310 z.max=320 material=aluminum name=cathode
+
+DOPING gaussian peak=15 conc=1e19 p.type char=0.5 x.left=0 x.right=320 z.left=0 z.right=320 
+
+#### MATERIAL/PHYSICAL MODELS ####
+MATERIAL material=InSb mun=47.7e4 mup=850 taun0=5e-8 taup0=5e-8 permittivity=16.8 tc.const=0.18 copt=5e-11 me.tunnel=0.014 mh.tunnel=0.43
+
+# set contact material to be opaque
+MATERIAL material=Aluminum imag.index=1000 real.index=3.16228
+ 
+# define physical models 
+MODELS srh fermi conmob auger optr temperature=77 cubic35 print
+
+# set light in the middle of thr detector with beam size L x L
+# Blackbody radiation source at 2000kelvin
+BEAM num=1 x.origin=0.0 y.origin=-50 z.origin=0 angle=90.0 xmin=140 xmax=180 zmin=140 zmax=180 raytrace=$'name'_ray.str wavelength=5.5 power.file=$'name'.spec
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE b1=0.1
+SOLVE b1=0.5
+SOLVE b1=1
+
+LOG outf='$name'_init.log
+SOLVE prev
+
+SAVE outfile='$name'_bias.str
+
+GO victoryextract
+LOAD in="$'name'_init.log"
+set i=1
+loop steps=25
+EXTRACT.LOG name="crosstalk_$'i'" expression="max((Anode$'i' Current)/(Anode13 Current))"
+set i=$i+1
+l.end
+EXTRACT.LOG name="Total_crosstalk" \
+expression="max(((Anode1 Current)+(Anode2 Current)+(Anode3 Current)+(Anode4 Current)+(Anode5 Current)+(Anode6 Current)+ \
+(Anode7 Current)+(Anode8 Current)+(Anode9 Current)+(Anode10 Current)+(Anode11 Current)+(Anode12 Current)+ \
+(Anode14 Current)+(Anode15 Current)+(Anode16 Current)+(Anode17 Current)+(Anode18 Current)+(Anode19 Current)+(Anode20 Current)+ \
+(Anode21 Current)+(Anode22 Current)+(Anode23 Current)+(Anode24 Current)+(Anode25 Current))/(Anode13 Current))"
+EXTRACT.LOG name="QE" expression=max((Cathode Current)/(Available Photo Current))
+
+victoryvisual \
+$'name'_bias.str:$'name'_Mat.set \
+$'name'_bias.str:$'name'_NetDop.set
+
+QUIT

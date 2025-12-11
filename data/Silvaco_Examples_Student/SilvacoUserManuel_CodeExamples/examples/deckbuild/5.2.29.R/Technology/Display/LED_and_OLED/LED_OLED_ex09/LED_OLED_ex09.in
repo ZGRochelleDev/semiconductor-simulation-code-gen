@@ -1,0 +1,100 @@
+# (c) Silvaco Inc., 2024
+
+# Charge generation layer(CGL) simulation for tandem OLED
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Organic
+
+# Reference:
+# Lu Feiping et al.
+# "Numerical Model of tandem organic light-emitting diodes 
+# based on a transition metal oxide interconnect layer"
+# in Journal of Semiconductors, Vol. 35, No.4 , April 2014 
+
+###### VARIABLES ######
+# Example Name
+SET name=LED_OLED_ex09
+
+###### DEVICE SIMULATION ######
+GO victorydevice simflags="-80 -P 4" 
+
+#### STRUCTURE SPECIFICATION ####
+# Put width=1e8*1e3 to make a Current Density[mA/cm^2].
+MESH width=1e8*1e3
+X.MESH location=0  spacing=0.5
+X.MESH location=1  spacing=0.5
+
+Y.MESH location=0    spacing=0.005
+Y.MESH location=0.08 spacing=0.0002
+Y.MESH location=0.09 spacing=0.0002
+Y.MESH location=0.13 spacing=0.002
+
+# Anode-ITO/Alq3/MoO3/NPB/LiF:Al-Cathode
+REGION num=1 material=Alq3      x.minimum=0 x.maximum=1 y.minimum=0    y.maximum=0.08 name=ETL
+REGION num=2 user.material=MoO3 x.minimum=0 x.maximum=1 y.minimum=0.08 y.maximum=0.09 name=CGL
+REGION num=3 material=NPB       x.minimum=0 x.maximum=1 y.minimum=0.09 y.maximum=0.13 name=HTL
+
+ELECTRODE num=1 name=anode   x.minimum=0 x.maximum=1 y.minimum=0    y.maximum=0
+ELECTRODE num=2 name=cathode x.minimum=0 x.maximum=1 y.minimum=0.13 y.maximum=0.13
+
+# Thermionic emission at Alq3/MoO3 interface
+INTERFACE s.s thermionic qn.barrier=0.117 \
+ x.minimum=0 x.maximum=1 y.minimum=0.08-0.005 y.maximum=0.08+0.005 
+
+# Charge generation at MoO3/NPB interface
+INTERFACE s.s thermionic danielsson \
+ dnls.nt=1e13 dnls.cn=1.0e-5 dnls.cp=1.0e-5 dnls.et=0 \
+ x.minimum=0 x.maximum=1 y.minimum=0.088 y.maximum=0.092 
+
+#### MATERIAL/PHYSICAL MODELS ####
+#ITO workfunction= 4.8~5.0 eV
+CONTACT name=anode workf=4.8 
+#LiF:Al 
+CONTACT name=cathode workf=4.3 
+
+MATERIAL material=Alq3 eg300=2.6 affinity=2.9 permittivity=3.0 nc300=1e21 nv300=1e21
+MATERIAL material=MoO3 eg300=4.4 affinity=5.3 permittivity=3.0 nc300=1e21 nv300=1e21 \
+	 user.default=organic user.group=semiconductor 
+MATERIAL material=NPB  eg300=3.0 affinity=2.4 permittivity=3.0 nc300=1e21 nv300=1e21
+
+MOBILITY material=Alq3 mun0=3e-6   mup0=8e-8  e0n.pfmob=1e5 e0p.pfmob=1e5
+MOBILITY material=NPB  mun0=6e-8   mup0=6e-4  e0n.pfmob=1e5 e0p.pfmob=1e5
+MOBILITY material=MoO3 mun0=2e-4   mup0=2e-4  e0n.pfmob=1e5 e0p.pfmob=1e5
+
+MATERIAL m.vthn=0.25 m.vthp=0.25
+
+MODELS langevin pfmob print 
+
+#### OUTPUT INFORMATION ####
+PROBE name=j_elec  j.elec        maximum  v.mag
+PROBE name=j_hole  j.hole        maximum  v.mag
+PROBE name=j_total j.total       maximum  v.mag
+PROBE name=j_cond  j.conduction  maximum  v.mag
+
+OUTPUT con.band val.band band.param
+
+#### NUMERICAL METHODS ####
+METHOD maxtrap=10 itlimit=40 
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE init
+
+# Ramping Vanode to 12V to plot the J-V Characteristics 
+LOG outfile=$'name'_JV.log 
+SOLVE prev vstep=0.25 vfinal=12.0 name=anode
+SAVE  outfile=$'name'_Va12.str
+LOG off
+
+###### Extracting Current Density versus Voltage Curves
+go victoryextract
+LOAD in="$'name'_JV.log"
+CURVE name="sim" x="Anode Voltage" y="Anode Current"
+EXTRACT.CSV csvfile="$'name'_sim"
+
+###### VISUALIZATION ######
+victoryvisual $'name'_exp.csv+$'name'_sim.csv
+
+QUIT

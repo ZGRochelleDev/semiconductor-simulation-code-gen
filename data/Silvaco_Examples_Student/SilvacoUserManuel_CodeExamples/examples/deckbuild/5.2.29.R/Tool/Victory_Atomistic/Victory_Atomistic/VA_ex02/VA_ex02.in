@@ -1,0 +1,377 @@
+//
+// (c) SILVACO INC., 2024
+//
+// Gated Ultra-Thin Body Structure 
+//
+// SUMMARY: Compute the 3D carrier density profile of a FinFET thanks to a Poisson-Schrodinger (PS) solver.
+//          A FinFET slice of Si oriented <110> is built with a trapezoidal geometry and a tri-gate with a
+//          thin oxide of 1nm. The Fin height is 33 nm, the bottom length is 12 nm, and top length is 8 nm.
+//          Si is described in tight-binding with a sp3d5s* basis.
+//          A voltage ramp is applied to the gate: for each voltage point Vg the PS loop is called up to
+//          reach the self-consistency.
+//          The total charge function Qinv(Vg) is written in the standard output file.
+//          The effective mass is extracted from the band curvature.
+//
+// REQUIRED TOOL: Victory Atomistic
+//
+// WARNING: For this example you must initiate deckbuild with the statement:
+// deckbuild -out VA_ex02.out
+// If you have not done so, please close Deckbuild and restart using the statement above.
+//
+
+//////   DEVICE SIMULATION   //////
+GO victoryatomistic simflags="-P 24"
+
+
+//////   STRUCTURE SPECIFICATION   //////
+Structure
+{
+  Material
+  {
+//  Silicon material, and symmetry group
+    name = Si
+    crystal_structure = diamond
+
+//  Region number and tag
+    regions = (1)
+    tag = Si_device
+
+//  Doping and tight binding parameters
+    doping_type = N
+    doping_density = 1E15
+    Bands:TB:sp3d5sstar:param_set = param_Boykin
+  }
+
+  Material
+  {
+//  Silicon material, and symmetry group
+    name = Si
+    crystal_structure = diamond
+
+//  Region number and tag
+    regions = (2)
+    tag = Si_gate
+
+//  Doping and tight binding parameters
+    doping_type = N
+    doping_density = 0.0
+
+//  Fake Si with SiO2 Gate dielectric properties
+    Lattice:epsilon_dc  = 3.9
+    Bands:BandEdge:Eg_X = 8.8
+    Bands:BandEdge:ml_X = 0.5
+    Bands:BandEdge:mstar_c_dos = 0.5
+    Bands:BandEdge:mt_X = 0.5
+  }
+
+  Domain
+  {
+// A large pseudomorphic domain that contains enough materials (1) and (2)
+    name = device
+    type = pseudomorphic
+    geometry_description = simple_shapes
+    output = (xyz, coupling)
+
+//  Silicon material and orientation <110>
+    base_material = Si_device
+
+    crystal_direction1 = ( 1, 1, 0)
+    crystal_direction2 = (-1, 1, 0)
+    crystal_direction3 = ( 0, 0, 1)
+
+    space_orientation_dir1 =  (1, 0, 0)
+    space_orientation_dir2 =  (0, 1, 0)
+
+//  Dimensions of the device are expressed in unit cells
+    dimension = (1, 40, 80)
+    starting_cell_coordinate = (0, -2, -2)
+
+//  Periodicity in the X-direction
+    periodic = (true, false, false)
+
+//  Region 1 (Si Fin) is passivated by region 2 (fake Si = gate oxide)
+    regions = (1, 2)
+    passivation_regions = 2
+  }
+ 
+  Domain
+  {
+// Poisson domain inherited from device domain
+    name = fem_device             
+    type = finite_elements        
+    mesh_from_domain = device     
+
+// Poisson FEM domains accuracy
+    refinement_regions = (1, 2)  
+    number_of_refinement_steps = 1
+  }
+
+  Geometry
+  {
+// We define two regions for the channel slice (1) and surrounding oxide (2).
+// The regions intersect with the large domain defined above.
+// The regions are trapezoidal with a height = a0 / sqrt(2) along the X-axis.
+    Region
+    {
+// Channel slice of high priority, dimensions in nm, trapezoidal cross section, height.
+      region_number = 1
+      priority = 2
+
+      shape = prism
+      points = [(0, 1.0862, 0), (0, 13.0344, 0), (0, 10.862, 33.6722), (0, 3.2586, 33.6722)]
+      height = 0.384029693
+    }
+
+// Gate oxide of low priority, dimensions in nm, trapezoidal cross section, height.
+    Region
+    {
+      region_number = 2
+      priority = 1
+
+      shape = prism
+      points = [(0, 0, 0), (0, 14.1206, 0), (0, 11.9482, 34.7584), (0, 2.1724, 34.7584)]
+      height = 0.384029693
+    }
+  }
+}
+
+
+//////   SOLVERS DEFINITION   //////
+Solvers
+{
+// Non-linear Poisson solver with FEM domain
+  solver
+  {  
+    name = poisson_device
+    type = NonlinearPoisson
+    domain = fem_device                  // FEM domain
+
+// Solver general options
+    charge_model = electron_hole         // electron-hole mode (excess charge approximation)
+    solve_on_single_replica = true       // Poisson is solved in sequential mode
+    density_solver = schroedinger_device // Density comes from the Schroedinger solver
+    dependent_solvers = ()
+    output_dependent_solvers = ()
+
+// 1D and 3D Output files
+    fem_output = (potential)                                 // 3D pvtu,vtu files of FEM electrostatic potential
+    atomistic_output = (potential, charge, free_charge_cm-3) // 3D vtk file of potential, charge, free charge on each atomic sites
+    node_potential_output = false                            // 3D potential in text format
+    output_at_each_iteration = false                         // 1D output at each iteration
+    do_output_potential_each_iteration = false               // Redundant with checkpoint / restart options
+
+// Newton-Raphson solver
+    full_Newton_step = false             // use of iterative method
+    petsc_solver_algorithm = ls // tr    // PETSc line search or trusted region algorithm is to be used for the self-consistent solution
+    ksp_type = gmres // preonly          // PETSc Krylov method for linear solver
+    pc_type = asm // lu                  // PETSc Preconditionner type: asm for large matrix, lu for small matrix
+    max_iterations = 40                  // maximum number of Newton iterations
+    custom_convergence_test = true       // use custom convergence test
+
+// These options are used if ls (line search algorithm)
+    max_nonlinear_step = 1e2
+    linear_search_step_tolerance = 5e-8
+
+// Checkpoint Restart option and file names
+    restart_data_output_file = PS_FinFET_complex_potential
+    restart_data_input_file = PS_FinFET_complex_potential
+    auto_save = true
+    auto_restart = true
+    level_checkpoint = 0
+
+// Initial guess for the electrostatic potential
+    set_initial_potential = true
+    equilibrium_el_chem_pot = 0
+
+// FinFET boundary conditions of Schottky type for the tri-gate
+    boundary_condition                                       
+    {                                                        
+      type = SchottkyContact                                 
+      name = gate                                            
+                                    
+      surface_of_regions = (2) 
+      single_surface_normal = [(0,0,1), (0,1,0), (0,-1,0)]
+
+// Voltage is defined to relative band alignment with Si and metal work function
+      semiconductor = Si_device
+      metal_work_function = 4.2
+      voltage = 0
+     }
+  }  
+
+  solver
+  {  
+// Schrodinger solver on region 1.
+// Convergence study should be performed against number of K points and number of eigenvalues.
+    name = schroedinger_device
+    type = Schroedinger
+    domain = device
+    active_regions = (1)
+
+// General options
+    charge_model = electron_hole
+    chem_pot    =  0.0                   // Fermilevel
+    temperature = 300                    // For Fermi derivative
+    electron_temperature = 300           // Room temperature for Fermi-Dirac statistic
+
+// Use the poisson potential coming from poisson solver
+    potential_solver = poisson_device
+
+// Passivate and compute the electron density and derivative (electron for N-type, hole for P-type)
+    job_list = (passivate_H, electron_density, derivative_electron_density_over_potential)
+//  job_list = (passivate_H, hole_density, derivative_hole_density_over_potential)
+
+// Eigenvalues output with accuracy
+    output = (energies)
+    output_precision = 7
+
+// Compute eigenmodes with iterative Krylovr-Schur algorithm
+    eigen_values_solver = krylovschur
+    convergence_limit = 1e-8
+    max_number_iterations = 1000
+    linear_solver = gmres
+    preconditioner = mumps
+    monitor_convergence = false // true  // true is for debug mode
+
+// Ask for sufficient number of bands, use a fraction of them ; ncv is subspace block size > number of eigenvalues
+    number_of_eigenvalues = 96
+    number_of_eigenvalues_to_use = 48
+    ncv = 384
+
+// Electron or Hole thresholds are automatically estimated to shift and sort the eigenvalues
+    cutoff_distance_to_bandedge = 0.05 // [eV] distance below(Ec)/above(Ev) band edges that wavefunctions are excluded from density
+    automatic_threshold         = true
+    strict_threshold            = true
+    spatially_varying_threshold = false
+    sort_like_electrons         = true
+   
+// Tight-binding basis with or wo spin-orbit (SO)
+    tb_basis = sp3d5sstar
+  //tb_basis = sp3d5sstar_SO
+
+// 1D Brillouin zone along X-axis
+    kxmin = 0.0
+    kxmax = 0.5
+    number_of_k_points = 24  // Note: simulation parallelism on K-points
+    k_degeneracy = 2.0
+  }
+
+  solver
+  {
+//  Voltage ramp for the gate
+    name = ramper                                                                                 
+    type = Ramper
+    domain = device
+
+//  Solver to ramp with Poisson-Schrodinger solvers 
+    solver = poisson_device
+    potential_solver = poisson_device
+    density_solver = schroedinger_device 
+                                                                                                  
+//  Gate contact ramp
+    contacts = (gate)
+    gate_voltage = 0.
+    gate = (0.0, 0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7)
+                                                                                                  
+//  Output file prefix
+    output_name = PS_FinFET
+
+//  Checkpoint restart option
+    auto_save = true
+    auto_load = true
+    checkpoint_slave = poisson_device
+  }
+
+  solver
+  {
+//  Show the device structure in VTK format
+    name           = device_structure
+    type           = Structure
+    domain         = device
+    output_format  = vtk
+    structure_file = device_structure.vtk
+  }
+
+  solver
+  {
+// Schrodinger solver on region 1.
+// Effective mass extraction from the band curvature for the conduntion band
+    name = CB_bands
+    type = Schroedinger
+    domain = device
+    active_regions = (1)
+
+// Assemble, passivate and compute the band structure
+    job_list           = (assemble_H, passivate_H, calculate_band_structure)
+
+// Tight-binding basis with or wo spin-orbit (SO)
+    tb_basis           = sp3d5sstar
+    //tb_basis           = sp3d5sstar_SO
+
+// Eigenvalues, K-points, band structure output with accuracy
+    output             = (energies, k-points, k-points_energies)
+    output_format = SDB
+    output_precision   = 7
+
+// 1D Brillouin zone sampling along the X-axis
+    k_space_basis      = reciprocal
+    k_points           = [(-0.5), (0.), (0.5)]
+    k_points_labels = (X, G, X)
+    number_of_nodes = (100, 100) //# of kpoints along the X-G line
+
+// Compute eigenmodes with iterative Krylovr-Schur algorithm
+    eigen_values_solver= krylovschur
+    preconditioner = mumps
+    convergence_limit  = 1e-7
+
+// Ask for a small number of bands, use a fraction of them ; ncv is subspace block size > number of eigenvalues
+    number_of_eigenvalues = 20 //larger cross section this might need to be larger
+    number_of_eigenvalues_to_use = 8
+    ncv = 40
+
+// Electron or Hole thresholds are automatically estimated to shift and sort the eigenvalues
+    cutoff_distance_to_bandedge = 0.05 // [eV] distance below(Ec)/above(Ev) band edges that wavefunctions are excluded from density
+    automatic_threshold         = true
+    sort_like_electrons = true
+    strict_threshold = true
+    charge_model = electron_hole
+
+// Compute the effective masses from the band curvature
+    compute_edges_masses = true
+    number_of_subbands = 2                // number of sub-bands
+    compute_edges_masses_at_minima = true // true for electrons, false for holes
+  }
+}
+
+
+//////   GLOBAL SECTION: SOLVERS ARE CALLED   //////
+Global
+{
+// Show device structure, compute the bands structure and effective masses, and do the voltage ramp.
+  solve = (device_structure, CB_bands, ramper)
+
+// Level of debug messages from 1 to 6
+  messaging_level = 5
+
+// Log file
+  logfile = VA_ex02.log
+}
+//////   END DEVICE SIMULATION   //////
+GO internal
+
+
+######   VISUALIZATION   ######
+
+# FinFET Conduction Band Structure
+victoryvisual CB_bands_kpoints_energies.log:CB_bands_kpoints_energies.set
+
+# 3D carrier density and electrostatic potential for a given voltage (start at index = 0).
+# Example at Vg_11 = 0.7 V:
+victoryvisual PS_FinFET_11_potential.vtk:PS_FinFET_11_potential.set
+
+# Extract the Qinv charge from the stdout for each Vg of the voltage ramp
+# when the self-consistency is reached - runtime output has to be saved in VA_ex02.out:
+SYSTEM grep total_charge_density VA_ex02.out | awk 'BEGIN {i = 0};/#[1-9]/{flag=1;next}/#[1-9]/{flag=0}flag {print "Vg_"i++ "  "$3}; END {print "Vg_"i++ "  "$3}' > Qinv.dat
+
+QUIT
+

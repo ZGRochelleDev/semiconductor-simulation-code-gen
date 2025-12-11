@@ -1,0 +1,13 @@
+Answer:
+**Required:**
+
+We need to write an ngspice-compatible spicetext file.
+
+<span style="color:#4257B2">**How can we do this?**</span>
+**Introduction:**
+
+In this problem, we are required to create an ngspice-compatible spice text file that defines a voltage divider circuit and then instantiates it using the .subckt command. The top-level circuit is defined by setting a DC voltage source at Vin and connecting it to Ground. We also define a variable named X1 and set its value to equal Vin, which will act as the output of the voltage divider. Finally, we use the .op command to run the simulation and display the value of V(Vout).
+
+<span style="color:#3699FF">**What did we learn?**</span>
+
+To solve this problem, we first created a basic ngspice-compatible spice file that defines a simple voltage divider circuit. Then, we used

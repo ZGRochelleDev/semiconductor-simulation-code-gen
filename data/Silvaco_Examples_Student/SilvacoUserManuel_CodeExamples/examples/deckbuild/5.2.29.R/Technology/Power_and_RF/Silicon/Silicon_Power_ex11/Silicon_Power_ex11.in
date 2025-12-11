@@ -1,0 +1,150 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Vertical LOCOS power MOSFET
+
+# Required Modules
+#  Victory Process
+#   -3D Diffusion & Implantation
+#   -3D Oxidation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“Silicon_Power_ex11” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon orientation=100 sub.rot=45 c.phosphorus=1e19 \
+ depth=3 gasHeight=10 from="-0.8,-0.8" to="1.35,1.35" \
+ resolution="0.1 0.1 0.12" meshDepth=2 
+
+LINE x location=-0.8 spacing=0.3
+LINE x location=0.4  spacing=0.03
+LINE x location=1.35 spacing=0.2
+
+LINE y location=-0.8 spacing=0.3
+LINE y location=0.4  spacing=0.03
+LINE y location=1.35 spacing=0.2
+
+LINE z location=-10  spacing=0.1
+LINE z location=-8.8 spacing=0.2
+LINE z location=-8   spacing=0.025
+LINE z location=-6.8 spacing=0.2
+LINE z location=-3   spacing=1
+LINE z location=0    spacing=0.1
+LINE z location=3    spacing=1
+
+# thick n-type Drift layer
+DEPOSIT material=silicon thickness=8 c.phosphorus=8e15 conformal
+
+# p-type Base layer
+DEPOSIT material=silicon thickness=0.8 c.boron=1e17 conformal
+
+# define masks
+SPECIFYMASKPOLY mask=Rec_1 P1="-1, 0.55" P2="0, 0.55" \
+ P3="0, 0" P4="0.55,0" P5="0.55, -1" P6="-1, -1"
+SPECIFYMASKPOLY mask=Circ_1 circle npoints=100 center="0,0" \
+ radius=0.55 fromangle=0 toangle=90
+
+# combine masks using boolean operation
+SPECIFYMASKPOLY newmask=J1 mask1=Rec_1 OR mask2=Circ_1
+
+ETCH material=silicon thickness=1.8 mask=J1 reverse max
+ETCH material=silicon thickness=5.5 mask=J1 reverse max deltacd=-0.06
+
+DEPOSIT material=oxide thickness=0.02 \
+ mask=J1 reverse deltacd=-0.06 conformal
+DEPOSIT material=nitride thickness=0.04 \
+ mask=J1 reverse deltacd=-0.06 conformal
+
+# vertical LOCOS growth
+DIFFUSE temperature=1050 wet time=33.5
+
+STRIP material=nitride
+ETCH material=oxide above=-8.8
+
+DEPOSIT material=poly thick=0.1 max
+
+# electrodes
+ELECTRODE name=source z=-8 x=0 y=0
+ELECTRODE name=drain substrate
+
+# Save simulation status
+SAVE name=$'name'_VP_sv
+
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# load simulation status
+LOAD in=$'name'_VP_sv
+
+# remesh type
+REMESH delaunay
+
+# base mesh on all (*) regions 
+REFINE max.size=0.2 regions="*"
+
+# save at any point to inspect mesh so far
+SAVE out=$'name'_VM_Base_Del
+
+# increase sampling to sharpen corners
+REFINE regions="*" max.distance=0.01
+
+# interface refinement. default picks up the MOS channel in the silicon
+REFINE max.interface.size=0.05 grading="linear"
+
+# junction refinement 
+REFINE max.junction.size=0.04  grading="linear"
+
+# Refinement on donors
+REFINE impurity="donor" max.impurity.gradient=0.5 \
+ min.impurity.size=0.1 impurity.floor=1E16
+
+SAVE out=$'name'_VM_Del
+
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_Del.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS conmob fldmob auger fermidirac bgn consrh print
+  
+IMPACT selberherr
+
+#### NUMERICAL METHODS ####
+METHOD pam.gmres climit=1e-4 norm.scaling.local weak=1
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_init.str
+
+LOG outfile=$'name'_VD_BV.log
+  
+SOLVE name=drain vfinal=1 vstep=0.2
+SOLVE name=drain vfinal=10 vstep=1
+SOLVE name=drain vfinal=30 vstep=2.5
+SOLVE name=drain vfinal=95 vstep=5
+SOLVE name=drain vfinal=105 vstep=0.5 compliance=7e-12 cname=drain  
+  
+SAVE outfile=$'name'_VD_BV.str
+
+# Extract BV (maximum voltage from simulation) 
+extract init infile="$'name'_VD_BV.log" 
+extract name="BV" max(v."drain")
+
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VD_BV.str:$'name'_mesh.set \
+$'name'_VD_BV.str:$'name'_impact.set \
+$'name'_VD_BV.log
+
+QUIT

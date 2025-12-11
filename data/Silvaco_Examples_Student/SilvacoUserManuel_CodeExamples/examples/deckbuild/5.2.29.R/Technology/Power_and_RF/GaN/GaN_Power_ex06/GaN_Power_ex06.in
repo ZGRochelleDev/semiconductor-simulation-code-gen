@@ -1,0 +1,184 @@
+# (c) Silvaco Inc., 2024
+
+# A Normally-on Vertical GaN FET (CAVET) I-V Characteristics
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+SET name=GaN_Power_ex06
+
+GO victorydevice simflags="-P 4"
+
+################# DEVICE GEOMETRY: ###################################
+# Half of a Symmetric Device
+
+######################### 2D MESH: #####################################
+# mesh width in the 3rd (Z) direction = CURRENT SCALING:
+
+MESH width = 1.11111e+7
+
+# left half:
+X.MESH location=0 spacing=0.25
+X.MESH location=0.5 spacing=0.05
+X.MESH location=1.0 spacing=0.25
+X.MESH location=1.5 spacing=0.1
+X.MESH location=2.0 spacing=0.25
+X.MESH location=4.3 spacing=0.1
+X.MESH location=4.5 spacing=0.05
+X.MESH location=4.7 spacing=0.1
+X.MESH location=9.5 spacing=0.5
+
+Y.MESH location=0.0 spacing=0.050
+Y.MESH location=0.2 spacing=0.002
+Y.MESH location=0.23 spacing=0.002
+Y.MESH location=0.28 spacing=0.005
+Y.MESH location=0.38 spacing=0.010
+Y.MESH location=0.68 spacing=0.040
+Y.MESH location=2.68 spacing=0.5
+Y.MESH location=3.68 spacing=0.1
+Y.MESH location=4.18 spacing=0.1
+Y.MESH location=4.68 spacing=0.025
+Y.MESH location=4.88 spacing=0.1
+
+############################################################################
+## Structure Specification - REGIONS:
+
+REGION number=1 material=AlGaN y.min=0.2 y.max=0.23 x.min=0 x.max=9.5 x.comp=0.3
+REGION number=2 material=GaN y.min=0.23 y.max=0.28 x.min=0 x.max=9.5
+REGION number=3 material=GaN y.min=0.28 y.max=4.68 x.min=0 x.max=9.5 substrate
+REGION number=4 material=SiN y.min=0 y.max=0.2 x.min=0 x.max=9.5
+
+##### ELECTRODES (CONTACTS) specification:
+ELECTRODE number=1 name=drain y.min=4.68 y.max=4.88 x.min=0 x.max=9.5
+ELECTRODE number=2 name=source y.min=0 y.max=0.38 x.min=0 x.max=0.5
+ELECTRODE number=3 name=gate y.min=0 y.max=0.2 x.min=1.5 x.max=9.5
+
+##### DOPING specification:
+# AlGaN
+DOPING uniform y.min=0.2 y.max=0.23 x.min=0 x.max=9.5 n.type conc=1.5e17
+# Undoped GaN buffer over CBL
+DOPING uniform y.min=0.23 y.max=0.38 x.min=0 x.max=9.5 n.type conc=1e13
+DOPING uniform y.min=0.36 y.max=0.38 x.min=0 x.max=9.5 n.type conc=1e14
+# Epi drift layer
+DOPING uniform y.min=0.38 y.max=4.68 x.min=0 x.max=9.5 n.type conc=2e16
+# Conductive GaN substrate
+DOPING uniform y.min=3.68 y.max=4.68 x.min=0 x.max=9.5 n.type conc=1e18
+# p-type doping of Current Blocking Layer (CBL):
+DOPING uniform y.min=0.38 y.max=0.68 x.min=0.0 x.max=4.5 p.type conc=3e17
+
+##### CONTACTS:
+CONTACT name=drain resistance=0.00162 ohms
+CONTACT name=source resistance=300
+CONTACT name=gate workfun=5.0
+
+######################### MODELS USED: #####################################
+ 
+MATERIAL material=AlGaN taun0=1e-9 taup0=1e-8 ni.min=1e0
+
+MODEL srh auger fermi temp=300 print
+
+## POLARIZATION CHARGE:
+MODEL polarization calc.strain polar.scale=0.7
+
+# impact ionization
+IMPACT SELB e.side 
+ 
+##### MOBILITIES
+# AlGaN:
+MOBILITY region=1 FMCT.n FMCT.p
+# 2DEG :
+MOBILITY region=2 FMCT.n FMCT.p
+# Bulk GaN:
+MOBILITY region=3 FMCT.n FMCT.p GaNsat.n \
+ MU2N.FMCT=1000 MU1N.FMCT=55 NCRITN.FMCT=2e17 ALPHAN.FMCT=1.0
+ 
+OUTPUT band.param con.band val.band charge traps qss polar.charge e.mobility h.mobility
+
+METHOD maxtrap=20 trap
+
+#===================== RUN SOLUTION ==============================
+# solve initial and zero-bias DC solution:
+SOLVE initial
+SOLVE previous 
+
+SAVE outfile=$"name"_0V.str
+
+
+# Extract 2DEG surface density [per cm2]:
+EXTRACT init infile="$"name"_0V.str"
+EXTRACT name="2DEG_density" 1e-4 * area from curve(depth, impurity="Electron Conc" \
+ material="All" mat.occno=1 x.val=(0.5+1/2) ) \
+	where x.min=0.2 and x.max=0.38 
+
+###################################################################
+
+ ##---------- Id-Vg curves, for various Vds: ------------------------
+
+ #### OFF state:
+SOLVE vgate=-0.05 prev 
+SOLVE name=gate vstep=-0.05 vfinal=-2 prev
+SOLVE name=gate vstep=-0.5 vfinal=-8 prev
+
+SAVE outfile=$"name"_Vg-8V_Vd0V.str
+
+ #### Repeat (loop) for various Vds values:
+LOOP steps = 3
+
+ ASSIGN name=Vds n.value=(5, 8, 11)
+
+ LOAD infile=$"name"_Vg-8V_Vd0V.str master
+ SOLVE previous 
+
+ SOLVE vdrain=0.0 vstep=0.5 vfinal=$Vds name=drain prev
+ LOG outfile=$"name"_Vds_$'Vds'V.log
+ SOLVE vgate=-8 prev
+ SOLVE vstep=0.5 vfinal=-7.0 name=gate prev
+ SOLVE vstep=0.1 vfinal= 0.0 name=gate prev
+
+ ## Transconductance (dId/dVg):
+ EXTRACT init infile="$"name"_Vds_$'Vds'V.log"
+ EXTRACT name="gm" deriv(v."gate", i."drain"/10) outfile="$"name"_gm_Vds_$'Vds'V.dat"
+
+ LOG off
+
+L.END
+
+
+
+
+###################################################################
+
+ ##---------- Id-Vd curves, for various Vg: ---------------------
+
+LOAD infile=$"name"_0V.str master
+SOLVE previous
+SAVE outfile=$"name"_Vg_computed.str 
+
+LOOP steps=3
+
+ ASSIGN name=Vg n.value=(0, -3, -6)
+
+ LOAD infile=$"name"_Vg_computed.str master
+ SOLVE previous 
+ SOLVE name=gate vstep=-0.1 vfinal=$Vg prev
+ SAVE outfile=$"name"_Vg_computed.str 
+
+ LOG outfile=$"name"_Vg_$'Vg'V.log
+ SOLVE vdrain=0.0 
+ SOLVE name=drain vstep=0.5 vfinal=12 prev
+ SOLVE name=drain vstep=0.5 vfinal=20 prev
+ SOLVE name=drain vstep=1.0 vfinal=40 prev
+ LOG off
+
+L.END
+
+victoryvisual \
+$"name"_0V.str:$"name"_struct.set \
+$"name"_Vds_5V.log+$"name"_Vds_8V.log+$"name"_Vds_11V.log \
+$"name"_gm_Vds_5V.dat+$"name"_gm_Vds_8V.dat+$"name"_gm_Vds_11V.dat \
+$"name"_Vg_0V.log+$"name"_Vg_-3V.log+$"name"_Vg_-6V.log
+
+QUIT
+

@@ -1,0 +1,40 @@
+ Example #5:  9 Coupled Lines (SC-45, No.9, p.916-917)
+
+.TRAN 0.01n 10n
+.options ACCT NOMOD
+
+.measure TRAN Wpass1 CROSS v(11) val=1.5
+.measure TRAN Wpass2 CROSS v(11) val=-0.5
+
+.measure TRAN RSDEL DELAY V(1) RISE=1 VAL0=0 VAL1=1 TARG=V(11)
+.measure TRAN FLDEL DELAY V(1) FALL=1 VAL0=0 VAL1=1 TARG=V(11)
+.measure TRAN DELDIFF EXPR VAL="abs(fldel-rsdel)" 
+
+V1 1 0 PULSE ( 0v 5v 0 0.1ns 0.5ns 4.9ns)  AC 1  DC 0 
+
+*  <------- in -------------> | <------ out -------------->
+w9  2 4 6 8 10 12 14 16 18 0     3 5 7 9 11 13 15 17 19 0
++    Umodel = W9line
+*+    RLGCfile = W9line.rlc 
++    l =0.01
++    prntab=1
+
+r2 1 2 100
+r4 1 4 100
+r6 1 6 100
+r8 1 8 100
+r10 0 10 100
+r12 1 12 100
+r14 1 14 100
+r16 1 16 100
+r18 1 18 100
+
+*.probe TRAN v(1) v(9) V(11) 
+
+.MODEL W9line W level=3 llev=0 plev=1 elev=1 dlev=2  nlay=1 nl=9
+*+      RLGCwrite=1
++      HT=381u WD=305u SP=102u TH=25u TS=838u KD=4.7; sig=1.e-12
+
+
+.end
+

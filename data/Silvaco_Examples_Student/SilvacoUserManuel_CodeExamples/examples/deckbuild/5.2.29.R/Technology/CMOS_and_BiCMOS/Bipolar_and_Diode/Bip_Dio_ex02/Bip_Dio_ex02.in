@@ -1,0 +1,62 @@
+# (c) Silvaco Inc., 2024
+
+# Schottky Diode Forward Characteristic 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bip_Dio_ex02” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH
+
+X.MESH location=0.00 spacing=0.5
+X.MESH location=3.00 spacing=0.2
+X.MESH location=5.00 spacing=0.25
+X.MESH location=7.00 spacing=0.25
+X.MESH location=9.00 spacing=0.2
+X.MESH location=12.00 spacing=0.5
+
+Y.MESH location=0.00 spacing=0.1
+Y.MESH location=1.00 spacing=0.1
+Y.MESH location=2.00 spacing=0.2
+Y.MESH location=5.00 spacing=0.4
+
+REGION num=1 silicon
+
+ELECTRODE name=anode x.min=5 length=2
+ELECTRODE name=cathode bottom
+
+#.... N-epi DOPING 
+DOPING n.type conc=5.e16 uniform
+
+#.... Guardring DOPING 
+DOPING p.type conc=1e19 x.min=0 x.max=3 junc=1 rat=0.6 gauss
+DOPING p.type conc=1e19 x.min=9 x.max=12 junc=1 rat=0.6 gauss
+
+#.... N+ DOPING 
+DOPING n.type conc=1e20 x.min=0 x.max=12 y.top=2 y.bottom=5 uniform
+
+SAVE outf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MODEL conmob fldmob srh auger bgn 
+CONTACT name=anode workf=4.97
+
+SOLVE init
+
+LOG outf=$'name'_VD.log
+
+SOLVE vanode=0.05 vstep=0.05 vfinal=1 name=anode
+
+victoryvisual $'name'_VD.log \
+ $'name'_VD.str:$'name'_VD.set 
+
+QUIT
+

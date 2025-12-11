@@ -1,0 +1,56 @@
+# (c) Silvaco Inc., 2024
+
+# 3D Orientation dependence oxidation in SiC
+
+# Required Modules
+#  Victory Process
+#   -3D Oxidation
+#   -3D Diffusion & Implantation
+
+# Example Name
+Set name=“VP_Oxidation_ex05” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+# Miscut sphere
+INIT material=sic-4h depth=1.0 gasheight=1.3 \
+ sub.ori="000-1" sub.type="hexagonal" sub.rot=0 sub.miscut.phi=30 sub.miscut.theta=45 \
+ from="-1, -1" to="1,1" resolution=0.05
+
+# circular mask in the centre
+SPECIFYMASKPOLY maskname=hole circle center="0, 0" radius=0.1 npoints=32
+
+# use mask to cut a cylinder then round the bottom with a wet etch
+ETCH min material=sic-4h thickness=0.2 mask=hole reverse
+ETCH WET material=sic-4h thickness=0.6 mask=hole reverse
+
+# Grow oxide
+DIFFUSE DRY time=100 temperature=1000 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'.str
+
+# auto export 2D slices from the 3D structure
+EXPORT 2D ycenter structure=$'name'_xzplane.str
+EXPORT 2D xcenter structure=$'name'_yzplane.str
+
+# extract oxide thicknesses from the 2D planes at relevant points
+go victoryextract
+load in=$'name'_xzplane.str
+EXTRACT.THICKNESS name="xzplane_left_ve" regions="SiO2" nth=1 z.val=0.1
+EXTRACT.THICKNESS name="xzplane_right_ve" regions="SiO2" nth=2 z.val=0.1
+load in=$'name'_yzplane.str
+EXTRACT.THICKNESS name="yzplane_left_ve" regions="SiO2" nth=1 z.val=0.1
+EXTRACT.THICKNESS name="yzplane_right_ve" regions="SiO2" nth=2 z.val=0.1
+EXTRACT.THICKNESS name="bottom_ve" regions="SiO2" nth=1 x.val=0
+
+victoryvisual \
+$'name'.str \
+$'name'_xzplane.str \
+$'name'_yzplane.str \
+$'name'_xzplane.str+$'name'_yzplane.str
+
+
+QUIT

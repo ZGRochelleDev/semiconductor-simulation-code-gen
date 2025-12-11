@@ -1,0 +1,11 @@
++Vin +12V
+|   |
+Rc    GND
+|   |       +
+Re     Base
+|   |       |
+B1      B2
+|   |       -
+Cin    Vin
+|   |
+GND    Ground

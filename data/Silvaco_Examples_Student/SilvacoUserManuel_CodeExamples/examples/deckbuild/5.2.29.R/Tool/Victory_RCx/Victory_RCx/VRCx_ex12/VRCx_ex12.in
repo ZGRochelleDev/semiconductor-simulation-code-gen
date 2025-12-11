@@ -1,0 +1,135 @@
+# (c) Silvaco Inc., 2024
+
+# Performing a 2D Interconnect Simulation in VictoryRCx
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex12” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+#####   2D CALCULATION   #####
+
+INIT layout="$'name'.lay" depth=1 material=silicon gasheight=10 \
+     resolution=0.25 from=0 to=16 at=5.5
+
+## Metal 1 definition ##
+
+DEPOSIT material=oxide thicknes=0.5 max
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET1
+ELECTRODES mask=MET1 material=aluminum
+
+DEPOSIT material=oxide thickness=0.5 max
+
+## Metal 2 definition ##
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET2
+ELECTRODES mask=MET2 material=aluminum
+
+DEPOSIT oxide thickness=0.5 max
+
+## Metal 3 definition ##
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET3
+ELECTRODES mask=MET3 material=aluminum
+
+DEPOSIT material=oxide thickness=0.5 max
+
+ELECTRODES substrate
+
+SAVE name=$'name'_2D_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_2D_sv
+REMESH delaunay
+REFINE region="*" max.size=1
+REFINE regions="aluminum,SiO2" interface.regions="aluminum" \
+other.interface.regions="SiO2" grading="quadratic" max.interface.size=0.15
+
+SAVE out=$'name'_2D_VM_Del.str mode=victoryrcx
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_2D_VM_Del.str"
+
+INTERCONNECT capacitance adaptc=0.05
+
+SAVE spice="$'name'_2D.net"
+
+#####    NOW DO THE SAME CALCULATION IN 3D AND COMPARE   #####
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout="$'name'.lay" depth=1 material=silicon gasheight=10 resolution=0.25
+
+DEPOSIT material=oxide thicknes=0.5 max
+
+## Metal 1 definition ##
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET1
+ELECTRODES mask=MET1 material=aluminum
+
+DEPOSIT material=oxide thickness=0.5 max
+
+## Metal 2 definition ##
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET2
+ELECTRODES mask=MET2 material=aluminum
+
+DEPOSIT oxide thickness=0.5 max
+
+## Metal 3 definition ##
+
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.5 max mask=MET3
+ELECTRODES mask=MET3 material=aluminum
+
+DEPOSIT oxide thickness=0.5 max
+
+ELECTRODES substrate
+
+SAVE name=$'name'_3D_sv
+
+## Create Mesh for 3D Structure ##
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_3D_sv
+
+REMESH delaunay
+REFINE region="*" max.size=1
+REFINE regions="aluminum,SiO2" interface.regions="aluminum" \
+other.interface.regions="SiO2" grading="quadratic" max.interface.size=0.15
+
+SAVE out=$'name'_3D_VM_Del.str mode=victoryrcx
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_3D_VM_Del.str"
+
+INTERCONNECT capacitance adaptc=0.05
+
+SAVE spice="$'name'_3D.net"
+
+victoryvisual $'name'_2D_VM_Del.str \
+$'name'_3D_VM_Del.str:$'name'_3D_VM_Del.set
+
+QUIT

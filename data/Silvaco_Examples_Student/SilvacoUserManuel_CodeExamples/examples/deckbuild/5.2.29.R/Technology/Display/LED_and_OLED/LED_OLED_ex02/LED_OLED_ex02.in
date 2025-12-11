@@ -1,0 +1,156 @@
+# (c) Silvaco Inc., 2024
+
+# UV 4 Multi Quantum Well GaN LED
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Quantum
+#   -2D LED
+
+# Example Name
+Set name=“LED_OLED_ex02” 
+
+# Parameter used for this UV MQW LED
+#############################################################################
+#  Epilayer #  MATERIAL  #  Type  # Thickness #  DOPING    #    Mobility    #
+#           #            # p or n #     [nm]  #   [cm-3]   #    [cm2/V-s]   #
+#############################################################################
+# p-Contact #    GaN     #    p   #    100    #     1e20   #        10      #
+# p-Emitter #  Al0.10GaN #    p   #    200    #     1e20   #        10      #
+# p-Emitter #  Al0.20GaN #    p   #    100    #     1e20   #        10      #
+#  4MQW     #    GaN     #    -   #      3    #       -    #       200      #
+#  3Barrier #  Al0.2GaN  #    -   #      7    #       -    #       100      #
+# n-Emitter #  Al0.2GaN  #    n   #    100    #     2e18   #       100      #
+# n-Contact #    GaN     #    n   #    300    #     2e18   #       100      #
+#############################################################################
+
+GO victoryd simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION #### 
+
+# 1 Dimensional Structure
+# for A Cylindrical 120 diameter(3.14*60*60=1.13e4)
+mesh width=1.13e4
+#
+X.MESH location=0.0 spacing=0.5
+X.MESH location=1.0 spacing=0.5
+#
+Y.MESH location=0.0 spacing=0.05
+Y.MESH location=0.1 spacing=0.001
+Y.MESH location=0.2 spacing=0.025
+Y.MESH location=0.3 spacing=0.001
+Y.MESH location=0.35 spacing=0.01
+Y.MESH location=0.4 spacing=0.0005
+Y.MESH location=0.433 spacing=0.0005
+Y.MESH location=0.483 spacing=0.001
+Y.MESH location=0.533 spacing=0.001
+Y.MESH location=2.033 spacing=0.10
+Y.MESH location=3.533 spacing=0.01
+#
+REGION number=1 y.max=0.1 material=GaN
+REGION number=2 y.min=0.1 y.max=0.3 material=AlGaN x.comp=0.1 
+REGION number=3 y.min=0.3 y.max=0.4 material=AlGaN x.comp=0.2 
+#
+# 4 MQW
+#
+REGION number=4 y.min=0.4 y.max=0.403 material=GaN name=well led qwell
+REGION number=5 y.min=0.403 y.max=0.410 material=AlGaN x.comp=0.2 
+REGION number=6 y.min=0.410 y.max=0.413 material=GaN name=well led qwell
+REGION number=7 y.min=0.413 y.max=0.420 material=AlGaN x.comp=0.2 
+REGION number=8 y.min=0.420 y.max=0.423 material=GaN name=well led qwell
+REGION number=9 y.min=0.423 y.max=0.430 material=AlGaN x.comp=0.2 
+REGION number=10 y.min=0.430 y.max=0.433 material=GaN name=well led qwell
+REGION number=11 y.min=0.433 y.max=0.533 material=AlGaN x.comp=0.2 
+REGION number=12 y.min=0.533 y.max=3.533 material=GaN substrate
+
+ELECTRODE name=anode top
+ELECTRODE name=cathode bottom
+
+DOPING region=1 uniform p.type conc=1e20
+DOPING region=2 uniform p.type conc=1e20
+DOPING region=3 uniform p.type conc=1e20
+# DOPING 4~10 intrinsic
+DOPING region=11 uniform n.type conc=2e18
+DOPING region=12 uniform n.type conc=2e18
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS polarization calc.strain polar.scale=0.15
+
+MATERIAL material=GaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+ augn=1.0e-34 augp=1.0e-34
+MATERIAL material=AlGaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+ augn=1.0e-34 augp=1.0e-34
+MATERIAL material=InGaN taun0=1e-9 taup0=1e-9 copt=1.1e-8 \
+ augn=1.0e-34 augp=1.0e-34 
+
+MATERIAL well.gamma0=10e-3
+
+MATERIAL edb=0.080 eab=0.101
+
+MODELS k.p fermi incomplete consrh auger optr print
+MODELS name=well k.p chuang spontaneous lorentz
+
+MOBILITY material=GaN mun0=300 mup0=10
+MOBILITY material=AlGaN mun0=250 mup0=5
+
+OUTPUT con.band val.band band.param charge polar.charge e.mobility h.mobility \
+ u.srh u.radiative u.auger permi
+
+#### NUMERICAL METHODS ####  
+METHOD climit=1e-4 maxtrap=10 
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+SAVE outf=$'name'_Init.str
+
+PROBE name="Radiative" integrate radiative rname=well
+PROBE name="Recombination" integrate recombination
+
+LOG outf=$'name'_Va.log
+
+SOLVE vstep=0.1 vfinal=2.5 name=anode
+SAVE outf=$'name'_Va2p5.str
+SAVE spectrum=$'name'_Va3p5_spc.log lmin=0.33 lmax=0.38 nsamp=100
+
+SOLVE vstep=0.1 vfinal=3.0 name=anode
+SAVE outf=$'name'_Va3p0.str
+SAVE spectrum=$'name'_Va3p0_spc.log lmin=0.33 lmax=0.38 nsamp=100
+
+SOLVE vstep=0.1 vfinal=3.5 name=anode
+SAVE outf=$'name'_Va3p5.str
+SAVE spectrum=$'name'_Va3p5_spc.log lmin=0.33 lmax=0.38 nsamp=100
+
+SOLVE vstep=0.1 vfinal=4.0 name=anode
+SAVE outf=$'name'_Va4p0.str
+SAVE spectrum=$'name'_Va4p0_spc.log lmin=0.33 lmax=0.38 nsamp=100
+
+SOLVE vstep=0.1 vfinal=5.0 name=anode
+SAVE outf=$'name'_Va5p0.str
+
+SOLVE vstep=0.1 vfinal=6.0 name=anode
+SAVE outf=$'name'_Va6p0.str
+
+go victoryextract
+LOAD in="$'name'_Va3p5.str"
+EXTRACT.PROFILE fields="Electron Conc" regions=* x.val=0.5 csvfile="$'name'_Va3p5_Electron"
+EXTRACT.PROFILE fields="Hole Conc" regions=* x.val=0.5 csvfile="$'name'_Va3p5_Hole"
+LOAD in="$'name'_Va4p0.str"
+EXTRACT.PROFILE fields="Electron Conc" regions=* x.val=0.5 csvfile="$'name'_Va4p0_Electron"
+EXTRACT.PROFILE fields="Hole Conc" regions=* x.val=0.5 csvfile="$'name'_Va4p0_Hole"
+LOAD in="$'name'_Va5p0.str"
+EXTRACT.PROFILE fields="Electron Conc" regions=* x.val=0.5 csvfile="$'name'_Va5p0_Electron"
+EXTRACT.PROFILE fields="Hole Conc" regions=* x.val=0.5 csvfile="$'name'_Va5p0_Hole"
+
+victoryvisual $'name'_Va.log \
+ $'name'_Va.log:$'name'_LI.set \
+ $'name'_Va3p5_Hole.csv:$'name'_H.set+$'name'_Va4p0_Hole.csv:$'name'_H.set+$'name'_Va5p0_Hole.csv:$'name'_H.set \
+ $'name'_Va3p5_Electron.csv:$'name'_E.set+$'name'_Va4p0_Electron.csv:$'name'_E.set+$'name'_Va5p0_Electron.csv:$'name'_E.set \
+ $'name'_Va3p5_spc.log:$'name'_spc.set 
+
+
+victoryvisual  $'name'_Va3p5_Hole.csv:$'name'_H.set
+
+QUIT

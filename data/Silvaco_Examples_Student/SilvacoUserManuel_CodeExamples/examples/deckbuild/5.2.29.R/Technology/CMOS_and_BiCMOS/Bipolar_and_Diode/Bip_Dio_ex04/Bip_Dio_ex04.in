@@ -1,0 +1,128 @@
+# (c) Silvaco Inc., 2024
+
+# Full characterisation of bipolar NPN
+
+# -Gummel Plot
+# -Ic/Vce Characterization
+# -BVCEO Breakdown Voltage
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bip_Dio_ex04” 
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH
+X.MESH location=0   spacing=0.15
+X.MESH location=0.8 spacing=0.02
+X.MESH location=1.5 spacing=0.02
+X.MESH location=2.0 spacing=0.15
+
+Y.MESH location=0.0  spacing=0.005
+Y.MESH location=0.05 spacing=0.005
+Y.MESH location=0.15 spacing=0.01
+Y.MESH location=1.0  spacing=0.05
+
+REGION number=1 silicon
+
+ELECTRODE number=1 name=emitter x.max=0.8
+ELECTRODE number=2 name=base x.min=1
+ELECTRODE number=3 name=collector bottom
+
+DOPING region=1 uniform n.type conc=5e15 
+DOPING region=1 gauss   n.type conc=1e18 peak=1.0 char=0.2
+DOPING region=1 gauss   p.type conc=1e18 peak=0.05 junct=0.15 
+DOPING region=1 gauss   n.type conc=5e19 peak=0.0  junct=0.05 x.max=0.8
+DOPING region=1 gauss   p.type conc=5e19 peak=0.0  char=0.08 x.min=1.5
+
+SAVE outf=$'name'_VD.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MODELS conmob fldmob consrh auger print  
+
+CONTACT name=emitter n.poly surf.rec
+
+IMPACT selb
+
+#### NUMERICAL METHODS ####
+METHOD newton trap maxtraps=10 climit=1e-4
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+## Gummel plot ramp conditions
+SOLVE vcollector=0.025
+SOLVE vcollector=0.1
+SOLVE vcollector=0.25 vstep=0.25 vfinal=2 name=collector
+
+SOLVE vbase=0.025
+SOLVE vbase=0.1
+SOLVE vbase=0.2
+
+LOG outf=$'name'_Gum.log
+
+SOLVE vbase=0.3 vstep=0.01 vfinal=1 name=base
+
+LOG off
+
+## IC/VCE with constant IB (two values 1E-6 and 5E-6)
+# no need to set all the models up again, just reset the 
+# simulation with SOLVE INIT
+
+SOLVE init
+SOLVE prev
+
+#ramp Vb
+SOLVE vbase=0.025
+SOLVE vbase=0.05
+SOLVE  vbase=0.1 vstep=0.1 vfinal=0.7 name=base
+
+# switch to current boundary conditions
+CONTACT name=base current
+
+# ramp IB and save solutions at 1e-6  and 5e-6 
+# will re-load them for voltage sweep later on
+SOLVE ibase=1.e-6
+SAVE outf=$'name'_1Em6.str
+
+SOLVE ibase=5.e-6
+SAVE outf=$'name'_5Em6.str
+
+# load in each initial guess file and ramp VCE
+LOAD inf=$'name'_1Em6.str
+LOG outf=$'name'_1Em6.log
+SOLVE vcollector=0.0 vstep=0.1 vfinal=5.0 name=collector
+LOG off
+
+LOAD inf=$'name'_5Em6.str
+LOG outf=$'name'_5Em6.log
+SOLVE vcollector=0.0 vstep=0.1 vfinal=5.0 name=collector
+LOG off
+
+## BV with floating base
+SOLVE init
+SOLVE prev
+
+# float base contact by setting to current boundary
+CONTACT name=base current
+
+LOG outf=$'name'_BV.log
+
+# ramp collector voltage, current compliance set
+SOLVE vstep=0.1 vfinal=1  name=collector 
+SOLVE vstep=0.5 vfinal=15  name=collector compliance=1E-12 cname=collector
+LOG off
+
+victoryvisual $'name'_VD.str:$'name'_MeshDop.set \
+$'name'_Gum.log:$'name'_Gum.set \
+$'name'_1Em6.log+$'name'_5Em6.log \
+$'name'_BV.log:$'name'_BV.set
+
+QUIT

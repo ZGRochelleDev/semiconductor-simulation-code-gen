@@ -1,0 +1,153 @@
+# (c) Silvaco Inc., 2024
+
+# Passivated Device
+
+# Required Modules
+#  Victory Process:
+#   -Core Simulator
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+###### VARIABLES ######
+# Example Name
+SET name="TFT_ex01"
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+## Start with glass substrate
+INIT material=oxide from=0 to=3 depth=0.2 gasheight=5 \
+ resolution="0.2,0.1" meshdepth=3 flow.dim=2d
+
+## Mesh definition
+LINE x location=0 spacing=0.2  
+LINE x location=1 spacing=0.1
+LINE x location=3 spacing=0.25  
+
+LINE z location=0.2 spacing=0.1
+LINE z location=0 spacing=0.1  
+LINE z location=-0.3 spacing=0.01
+LINE z location=-0.5 spac=0.01
+LINE z location=-0.8 spac=0.01
+LINE z location=-0.95 spac=0.01
+LINE z location=-1 spac=0.01
+LINE z location=-1.2 spac=0.05
+LINE z location=-1.4 spac=0.05
+
+## DEPOSIT thin metal as gate
+DEPOSIT material=aluminum thickness=0.3 conformal  
+
+## Gate insulator 
+DEPOSIT material=oxide thickness=0.2 conformal  
+DEPOSIT material=nitride thickness=0.2 conformal   
+
+## Active amorphous silicon layer
+DEPOSIT material=silicon thickness=0.15 conformal \
+ dopants=phosphorus dopingvalues=1e14
+DEPOSIT material=silicon thickness=0.05 conformal \
+ dopants=phosphorus dopingvalues=1e20
+
+## DEPOSIT source/drian metalcontacts
+DEPOSIT material=aluminum thickness=0.2 conformal
+
+## Pattern source/drain contact regions. Recess into active layer.
+DEPOSIT material=photoresist thickness=0.1 conformal
+ETCH material=photoresist thickness=0.1 right.to.x=1 dry
+ETCH material=aluminum thickness=0.2 dry
+ETCH material=silicon thickness=0.1 dry
+STRIP material=photoresist
+
+## Passivation Layer
+DEPOSIT material=oxide thickness=0.2 conformal
+
+## Mirror to get full structure
+MIRROR mirror="+x"
+
+## Define electrodes for device simulation
+ELECTRODE name=source x=0.5 z=-1
+ELECTRODE name=gate x=3 z=-0.2
+ELECTRODE name=drain x=5.5 z=-1
+
+SAVE conformalstr name=${name}
+SAVE name=${name}_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+LOAD in=${name}_VP_sv
+REMESH conformal
+SAVE out=${name}_VM_conf
+
+####### DEVICE SIMULATION ####### 
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####  
+MESH infile=${name}_VM_conf.str
+
+#### MATERIAL/PHYSICAL MODELS ####  
+## Set parameters for amorphous silicon
+MATERIAL material=silicon eg300=1.8 nc300=2.5e20 nv300=2.5e20 \
+ taun0=1e-8 taup0=1e-8 mun=20 mup=1.5 
+
+DEFECTS continuous numa=64 numd=64 \
+ nta=1e21 wta=0.05 \
+ nga=1e16 ega=0.6 wga=0.3 \
+ ngd=1e16 egd=0.6 wgd=0.3 \
+ ntd=1e21 wtd=0.05 \  
+ sigtae=1e-17 sigtah=1e-15 sigtde=1e-15 sigtdh=1e-17 \ 
+ siggae=2e-16 siggah=2e-15 siggde=2e-15 siggdh=2e-16 
+
+INTERFACE charge=3e10 s.i
+
+## Define gate workfunction
+CONTACT name=gate aluminum
+CONTACT name=source 
+CONTACT name=drain 
+
+## Define models, include bbt.kl for reverse leakage effect
+MODELS srh temp=300 print bbt.kl bb.b=8.025e6 bb.a=4e14 bb.gamma=2.5
+
+## Output conduction band, valence band, band parameters, 
+#  E-Field at structure file
+OUTPUT con.band val.band band.param e.field charge qss
+
+#### NUMERICAL METHODS ####  
+METHOD newton    
+
+#### SOLUTION SOLVING #### 
+## First ramp the drain up
+SOLVE initial
+SAVE outfile=${name}_VD_init.str
+
+SOLVE previous vstep=0.1 vfinal=0.5 name=drain
+SOLVE previous vstep=1 vfinal=10 name=drain
+
+## Solve Id versus reverse Vg
+SOLVE vgate=0 vstep=-0.5 vfinal=-10 name=gate 
+SAVE outfile=${name}_VD_vd10vg-10.str
+
+## Solve Id versus Vg curve
+LOG outfile=${name}_VD_idvg.log
+SOLVE previous vgate=-10 vstep=0.5 vfinal=20 name=gate
+SAVE outfile=${name}_VD_vd10vg20.str
+LOG off
+
+## Extract current values, subthreshold slope
+go victoryextract
+LOAD in="${name}_VD_idvg.log"
+CURVE name=vg x="gate voltage" y="drain current"
+EXTRACT.CURVE name="Id_at_Vd10Vg-10" expression=intercept(x=-10, curve.vg)
+EXTRACT.CURVE name="Id_at_Vd10Vg20" expression=intercept(x=20, curve.vg)
+CURVE name=log_vg x="gate voltage" y=log10(abs(drain current))
+CURVE name="log_slope" expression="slope(curve.log_vg)"
+EXTRACT.CURVE name="slope" expression="vcoord(max(curve.log_slope))/ucoord(max(curve.log_slope))" 
+EXTRACT.VDOE name="subthresholdslope" expression=1/$slope
+
+####### VISUALIZATION OF RESULTS #####
+victoryvisual ${name}_VM_conf.str:${name}_VM_conf.set \
+  ${name}_VD_vd10vg20.str:${name}_VD_vd10vg20.set \
+  ${name}_VD_idvg.log:${name}_VD_idvg_lin.set  \
+  ${name}_VD_idvg.log:${name}_VD_idvg_log.set
+
+QUIT

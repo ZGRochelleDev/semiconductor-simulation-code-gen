@@ -1,0 +1,27 @@
+* Analog First Order Delta Sigma Modulator
+
+.verilog "delta_sigma_mod.va"
+
+* Input Waveform
+vin  in  0 sffm (2.5 2.5 44.1k 1000 10 )
+
+* Clock Waveform
+vclk clk 0 pulse(0 5 10n 0.1n 0.1n 10n 20n)
+
+* Instance Delta-Sigma
+YVLG_DeltaSigma in clk out delta_sigma clk_vth=0.1
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 0.1 18.5u
+
+* For Output
+.let in='v(in)+6'
+.let out='v(out)+6'
+
+* Plot Waveforms
+.iplot  v(clk) in out
+
+.end

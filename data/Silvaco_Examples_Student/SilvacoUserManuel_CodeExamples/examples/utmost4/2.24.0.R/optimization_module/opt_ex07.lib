@@ -1,0 +1,36 @@
+.LIB demo
+
+.MODEL npn NPN (
++LEVEL    = 4              TNOM     = 27             RCI      = 46.5798        
++RCX      = 0              VO       = 0              GAMM     = 0              
++HRCF     = 1              RBX      = 0              RBI      = 138.392        
++RE       = 18.0501        RS       = 0              RBP      = 0              
++IS       = 8.51658e-17    NF       = 1              NR       = 1.00148        
++FC       = 0.5            CBEO     = 0              CJE      = 3.59e-14       
++PE       = 0.686403       ME       = 0.313618       AJE      = -0.5           
++CBCO     = 0              CJC      = 5.25e-14       QCO      = 0              
++CJEP     = 0              PC       = 0.551297       MC       = 0.346841       
++AJC      = -0.5           CJCP     = 7.05e-13       PS       = 0.49999        
++MS       = 0.0493008      AJS      = -0.5           IBEI     = 2.30653e-18    
++WBE      = 1              NEI      = 1              IBEN     = 7.73882e-15    
++NEN      = 1.77629        IBCI     = 7.14413e-17    NCI      = 1              
++IBCN     = 5e-13          NCN      = 1.44694        AVC1     = 0.0003         
++AVC2     = 1e-05          ISP      = 0              WSP      = 1              
++NFP      = 1              IBEIP    = 0              IBENP    = 0              
++IBCIP    = 0              NCIP     = 1              IBCNP    = 0              
++NCNP     = 2              VEF      = 82.0378        VER      = 14.8983        
++IKF      = 0.00177231     IKR      = 0.00176481     IKP      = 0              
++TF       = 0              QTF      = 0              XTF      = 0              
++VTF      = 0              ITF      = 0              TR       = 0              
++TD       = 0              KFN      = 0              AFN      = 1              
++BFN      = 1              XRE      = 0              XRB      = 0              
++XRC      = 0              XRS      = 0              XVO      = 0              
++EA       = 1.12           EAIE     = 1.12           EAIC     = 1.12           
++EAIS     = 1.12           EANE     = 1.12           EANC     = 1.12           
++EANS     = 1.12           XIS      = 3              XII      = 3              
++XIN      = 3              TNF      = 0              TAVC     = 0              
++RTH      = 0              CTH      = 0              SELFT    = 0              
++DTMAX    = 0               )
+
+.ENDL demo
+

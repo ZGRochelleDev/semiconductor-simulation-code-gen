@@ -1,0 +1,43 @@
+# (c) Silvaco Inc., 2024
+
+# 2D JOIN
+
+# In this example, the JOIN command functionality is demonstrated using 2D shapes
+
+# Required Modules
+#  VictoryMesh
+#   -2D Meshing
+#   -2D Solid Modeling
+
+# Example Name
+SET name = "VM_Solid_Model_ex03"
+
+GO victorymesh simflags = "-P 4"
+
+# Create circle
+SPHERE center = "0,0" radius = "0.5" height = "0.5" \
+material = "sio2" out = "circle"
+
+ROTATE angle = 180 point.a = "0,0"
+
+# Create cube
+CUBOID from = "-0.5,0.0" to = "0.5,1.5" \
+material = "silicon" out = "cube"
+
+# Using the JOIN command, the circle and cube will be joined together
+JOIN in.a = "cube" in.b = "circle" out = "join"
+
+# Create device mesh
+REMESH delaunay unified out = "join1"
+REFINE max.size = 0.05
+
+# Add constant donor (n-type)
+FIELD constant regions = "silicon" name = "arsenic" \
+value = "1e16"
+
+SAVE out = "$'name'_join"
+
+# VictoryVisual is used to generate the plot
+victoryvisual $'name'_join.str
+
+QUIT

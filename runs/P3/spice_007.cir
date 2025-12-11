@@ -1,0 +1,8 @@
+half_wave_rectifier
+V1 in 10 sin 60
+D1 in out
+Rload out 0 1kn
+.DIODE1 in out
+.transient 0.1 10us
+.print trans V(out)
+.end

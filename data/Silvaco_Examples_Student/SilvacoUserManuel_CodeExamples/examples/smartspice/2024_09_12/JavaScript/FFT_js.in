@@ -1,0 +1,251 @@
+*  benchmark  for  FFT   without  polynomial interpolation(Pashkovich   Andrei 05/02/02)
+*  if  option accurate  is  specified then fft_accurate is  turned ON automatically
+
+.option  reltol=1e-12  abstol=1e-12 hmin=1.1e-12 method =gear
+
+.param  NBPT=1024
+.param  F_IN=148341809
+.param  FS=1566000128
+
+Vin  IN 0 DC  0  AC 0  sin(0 0.375   F_IN)
+R_IN    IN   0   1K
+
+.param  A0=0  A1=1  A2=0.001   A3=0.001
+E_OUT   OUT  0   poly(1)  IN   0  A0  A1  A2  A3
+R_OUT   OUT 0  1K
+
+
+.param  T_DELAY_FFT=0
+.param  T_START=T_DELAY_FFT
+.param  T_STOP='T_START+((NBPT)/FS)'
+.param  T_FS_PERIODE='1/FS'
+
+.tran   T_FS_PERIODE   T_STOP
+
+*.fft  v(out)  v(in)   from=T_START   to=T_STOP  np  = NBPT   FORMAT=NORM  WINDOW=RECT
+*.fft  v(out)  from=T_START   to=T_STOP  np  = NBPT   FORMAT=NORM  WINDOW=PARZEN
+
+.probe   tran  v(OUT)  v(IN)
+*.probe  fft  vdb(out)  vdb(in)
+*.let fft  out_vdb=vdb(out)
+.option accurate 
+
+
+.js_begin
+
+// Computes the discrete Fourier transform (DFT) of the given complex vector (using only real numbers).
+// All the array arguments must be non-NULL and have a length equal to n.
+ 
+
+function DFT(points)
+{
+	var n = points.length;
+	var out = [];
+	for (var k = 0; k < n; k++)
+	{
+		// For each output element
+		var sum_re = 0;
+		var sum_im = 0;
+		for (var t = 0; t < n; t++)
+		{  // For each input element
+			var angle = 2 * Math.PI * t * k / n;
+			sum_re +=  points[t].re * Math.cos(angle) + points[t].im * Math.sin(angle);
+			sum_im += -points[t].re * Math.sin(angle) + points[t].im * Math.cos(angle);
+		}
+		out.push({re:sum_re,im:sum_im});
+		println("DFT[" + k + "] = (" + out[k].re + "," + out[k].im + ")");
+	}
+	return out;
+}
+
+function FFT0(points)
+{
+	for (var i = 0; i < points.length; i++)
+	{
+		println("re=" + points[i].x + ", im=" + points[i].y);
+	}
+	return points;
+}
+
+function swap(x, y) {
+    var t = x;
+    x = y;
+    y = t;
+    return [x, y];
+}
+
+function log2(N)    /*function to calculate the log2(.) of int numbers*/
+{
+	var i = 0;
+	for (var k = N; k != 0; k >>= 1)
+		i++;
+	return i - 1;
+}
+
+function reverse(N, n)    //calculating revers number
+{
+	var p = 0;
+	for (var j = 1; j <= log2(N); j++)
+	{
+		if (n & (1 << (log2(N) - j)))
+			p |= 1 << (j - 1);
+	}
+	return p;
+}
+
+function ordina(f) //using the reverse order in the array
+{
+	var N = f.length;
+	var f2 = [];
+
+	for (var ii = 0; ii < N; ii++)
+		f2[ii] = f[reverse(N, ii)];
+
+	for (var j = 0; j < N; j++)
+		f[j] = f2[j];
+}
+
+function printVector(name, points)
+{
+	for (var i = 0; i < points.length; i++)
+		println(name + "[" + i + "]=(" + points[i].re + "," + points[i].im + ")");
+}
+
+function polar(rho, theta)
+{
+	return {re: rho * Math.cos(theta), im: rho * Math.sin(theta)};
+}
+
+function transform(f)
+{
+	N = f.length;
+
+	println("Performing reverse-binary reindexing ...");
+
+  	ordina(f);    //first: reverse order
+
+	//printVector("vr", f);
+
+	println("Calculating polar coefficients ...");
+
+  	var W = [];
+	W[0] = {re:1,im:1};
+  	W[1] = polar(1.0, -2.0 * Math.PI / N);
+  	for(var i = 2; i < N / 2; i++)
+	{
+    	W[i] = {re:Math.pow(W[1].re, i), im:Math.pow(W[1].im, i)};
+	}
+
+	println("Running Danielson-Lanczos section ...");
+
+  	var n = 1;
+  	var a = N / 2;
+  	for (var j = 0; j < log2(N); j++)
+	{
+    	for(var i = 0; i < N; i++)
+		{
+      		if(!(i & n))
+			{
+        		var t = f[i];
+        		var T = W[(i * a) % (n * a)];
+				T.re *= f[i + n].re;
+				T.im *= f[i + n].im;
+        		
+				f[i] = {re:t.re + T.re, im:t.im + T.im};
+        		f[i + n] = {re:t.re - T.re, im:t.im - T.im};
+      		}
+    	}
+    	n *= 2;
+    	a = a / 2;
+  	}
+}
+
+//d: sampling step (just write 1 in order to have the same results of matlab fft)
+function FFT(vec, d)
+{
+	var N = vec.length;//array dimension (MUST be power of 2)
+
+  	transform(vec);
+
+	if (d != 1.0)
+	{
+		println("Scaling output array ...");
+  		for (var i = 0; i < N; i++)
+    		vec[i] = {re:vec[i].re * d, im:vec[i].im * d}; //multiplying by step
+	}
+  	
+	println("Printing the FFT of the array specified ...");
+  	printVector("out", vec);
+}
+
+
+function check(n)    //checking if the number of element is a power of 2
+{
+	return n > 0 && (n & (n - 1)) == 0;
+}
+
+function MakeVector(pl_name, v_name, N)
+{
+	if (!check(N))
+	{
+		println("Error: array dimension must be power of 2 (n=" + N + ")");
+		return;
+	}
+	
+	println("Acquiring input data ...");
+
+	for (var pl = simulator.plots; pl; pl = pl.next)
+	{
+		if (pl.typename == pl_name)
+		{
+			println("plot found: " + pl.typename);
+			var v_scale = pl.scale;
+			if (v_scale == null)
+				break;
+
+			var v = pl.findVec(v_name);
+			if (v == null)
+				break;
+
+			if (v.length != v_scale.length)
+				break;
+
+			println("vector found: " + v.name + ", length=" + v.length);
+			var points = [];
+
+			from = v_scale.getValue(0);
+			to = v_scale.getValue(v_scale.length-1);
+			step = (to - from) / N
+
+			for (i = 0; i < N; i++)
+			{
+				t = from + i * step;
+				w = pl.interp(v, t);
+				points.push({re:w, im:w});
+			}
+			return points;
+		}
+	}
+
+	return null;
+}
+
+var Vin = MakeVector("tran1", "v(in)", 4096);
+if (Vin != null)
+	FFT(Vin, 1.0);
+
+var Vout = MakeVector("tran1", "v(out)", 4096);
+if (Vout != null)
+	FFT(Vout, 1.0);
+
+//DFT(Vout);
+
+.js_end
+
+
+.control
+run batchprint
+jsexec
+.endc
+
+.end

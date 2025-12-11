@@ -1,0 +1,66 @@
+# (c) Silvaco Inc., 2024
+
+# EXNOR Cell with Physical Geometry
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex07” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2 -V 8.18.0.R"
+
+## Process Description ##
+
+INIT layout=$'name'.lay depth=1 material=silicon rulefile=$'name'.lmp
+
+# Gate Stack
+DEPOSIT material=oxide thickness=0.3 max
+DEPOSIT material=poly  thickness=0.25 max
+ETCH material=polysilicon thickness=0.3 angle=87 mask=POLY max
+ELECTRODES mask=*GATE material=poly
+
+# Contacts
+DEPOSIT material=oxide thickness=0.5 max
+ETCH material=oxide thickness=1.2 angle=87 mask=CONT reverse max
+ELECTRODES mask=*CONT material=silicon
+
+# Metal 1
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.6 angle=87 mask=METAL1 max
+ELECTRODES mask=METAL1 material=aluminum
+
+# Via 1
+DEPOSIT material=oxide thickness=0.5 max
+ETCH material=oxide thickness=0.6 isotropic=87 mask=VIA1 reverse max
+
+# Metal 2
+DEPOSIT material=aluminum thickness=0.5 max
+ETCH material=aluminum thickness=0.6 angle=87 mask=METAL2 max
+ELECTRODES mask=METAL2 material=aluminum
+
+# Via 2
+DEPOSIT material=oxide thickness=1 max
+
+SAVE Name=$'name'_VP_sv
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2 -V 1.2.0.R"
+
+INIT layout="$'name'.lay" map="$'name'.lmp" structure="$'name'_VP_sv.str"
+
+SAVE spice="$'name'.before.net"
+
+MATERIAL poly conductivity=5e4
+MATERIAL aluminum conductivity=1e6
+
+INTERCONNECT adapt=(0.04,0.02) capsolver=1
+
+SAVE spice="$'name'.net"
+
+victoryvisual $'name'_VP_sv.str:$'name'_VP_sv.set
+
+QUIT

@@ -1,0 +1,24 @@
+* D-Flip Flop
+
+.verilog "dff.va"
+
+* Data
+vd   d   0 pulse ( 0 5 4u 1n 1n 4u 8u)
+
+* Clock
+vclk clk 0 pulse (0 5 1u 1n 1n 2u 4u)
+
+* Instance D-FlopFlop
+YVLGa_nd clk d q qb dff
+
+* Output Loading
+CLoadQ  q  0 1n
+CLoadQB qb 0 1n
+
+* Analysis
+.tran 100n 20u
+
+* Plot Waveforms
+.iplot v(clk) v(d) v(q) v(qb)
+
+.end

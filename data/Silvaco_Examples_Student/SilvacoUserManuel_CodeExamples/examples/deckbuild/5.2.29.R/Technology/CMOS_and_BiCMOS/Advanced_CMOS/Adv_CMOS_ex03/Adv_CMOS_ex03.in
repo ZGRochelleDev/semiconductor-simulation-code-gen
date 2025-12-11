@@ -1,0 +1,422 @@
+# (c) Silvaco Inc., 2024
+
+# 180nm 5V CMOS IO Device  Characterization
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=“Adv_CMOS_ex03” 
+
+# Full flow from process to device simulation of CMOS 180nm IO Device
+# Process simulation: 
+# -Various process modules are integrated into a single flow
+# -Calibration steps are included in comments
+# Electrical Simulation:
+# -Transfer Characterization: IdVglin and IdVgsat Simulation
+# -Parameter Extraction: Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/SSsat/DIBL Extraction
+# -Output Characteristics: Breakdown Simulation and Voltage Extraction
+
+ 
+####### PROCESS SIMULATION ####### 
+# Symmetrical 180nm 5V IO device structure. Only half simulated to SAVE time.
+# Mirrored at the end of process simulation.
+
+## ---------------------------------- ##
+## ---------- Initialization -------- ##
+## -----------------------------------##
+
+GO victoryprocess simflags="-P 4"
+
+SET type="NMOS"
+
+SET Lgate = 0.5			# Poly Gate Length 	
+SET Lsd = 0.5			# Source/Drain AA 
+SET Ldomain=$Lgate/2+$Lsd	# Simulation Domain (Half Device Pitch) 
+
+INIT material=silicon orientation=100 sub.rot=45 dopants=boron resistivity=10 \
+       depth=5.0 gasHeight=1.0 from=0.0 to=$Ldomain \
+       resolution=0.01 meshdepth=3  
+
+LINE x location=0		spacing=$Lgate/20 
+LINE x location=$Ldomain	spacing=$Lsd/10 
+
+LINE z location=-0.2		spacing=0.05 
+LINE z location=0.0		spacing=0.002 
+LINE z location=0.01		spacing=0.002 
+LINE z location=0.5		spacing=0.05 
+LINE z location=2.0		spacing=0.1 
+LINE z location=5.0		spacing=0.3 
+
+# Load calibration file: 
+SOURCE $'name'_Calib
+
+# Re-Set Global Model & Parameters:   
+
+## ---------------------------------- ##
+## ------------ Well Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=oxide thickness=0.01 
+
+if cond=($type="PMOS") 
+## NWell  
+IMPLANT phosphorus energy=400 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT phosphorus energy=300 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT phosphorus energy=200 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT phosphorus energy=70  dose=1.5e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+if.end 
+
+if cond=($type="NMOS") 
+## PWell  
+IMPLANT boron energy=200 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=150 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=100 dose=5.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+IMPLANT boron energy=20  dose=3.0e12 tilt=0 rotation=22 bca n.ion=5000 plus.n
+if.end 
+
+## Well RTA 
+DIFFUSE time=10 seconds temperature=600  t.final=1000 
+DIFFUSE time=20 seconds temperature=1000 
+DIFFUSE time=10 seconds temperature=1000 t.final=600 
+
+ETCH dry material=oxide thickness=0.011
+
+SAVE name=$'name'_$'type'_VP_Well conformalstr
+
+## ---------------------------------- ##
+## ------------ GOX Loop ------------ ##
+## -----------------------------------##
+
+# Local Parameters: OED (may adjust for calibration purpose) 
+
+# GOX1: IO thick oxide
+DIFFUSE time=10 minutes temperature=600 t.final=900 f.n2=10 pressure=1
+DIFFUSE time=20 minutes temperature=900 		f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=900 t.final=600 f.n2=10 pressure=1
+
+extract name="TGOx1" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+
+# GOX2: IO thin oxide
+DIFFUSE time=10 minutes temperature=600 t.final=800 f.n2=10 pressure=1
+DIFFUSE time=70 minutes temperature=800 		f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=800 t.final=600 f.n2=10 pressure=1
+
+extract name="TGOx2" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+
+# GOX3: core oxide 
+DIFFUSE time=10 minutes temperature=600 t.final=800 f.n2=10 pressure=1
+DIFFUSE time=50 minutes temperature=800 		f.o2=10 pressure=1
+DIFFUSE time=10 minutes temperature=800 t.final=600 f.n2=10 pressure=1
+
+extract name="TGOx3" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+STRIP material=oxide 
+
+# precisely control the Oxide thickness 
+DEPOSIT min material=oxide thickness=0.0130  
+
+## ---------------------------------- ##
+## ------------ Poly Loop ----------- ##
+## -----------------------------------##
+
+# Mesh Adjustment: 
+LINE x location=$Lgate/2 spacing=0.01 
+
+# Poly 
+DEPOSIT conformal material=polySilicon thickness=0.2
+ETCH dry material="polySilicon,oxide" thickness=0.223 right.to.x=$Lgate/2
+
+# PolyReOX
+DIFFUSE time=10 seconds temperature=600  t.final=1000 f.n2=10 pressure=1 
+DIFFUSE time=20 seconds temperature=1000              f.o2=10 pressure=1 
+DIFFUSE time=10 seconds temperature=1000 t.final=600  f.n2=10 pressure=1 
+
+extract name="TpolyReOx" thickness material="SiO~2" mat.occno=1 x.val=$Lgate/4
+extract name="TGOxReOx" thickness material="SiO~2" mat.occno=2 x.val=$Lgate/4
+
+SAVE name=$'name'_$'type'_VP_Poly conformalstr
+
+## ---------------------------------- ##
+## ------------ LDD Loop ------------ ##
+## -----------------------------------##
+
+# Mesh Adjustment: 
+
+LINE x location=$Lgate/2-0.12	spacing=0.01 
+LINE x location=$Lgate/2+0.1	spacing=0.015 
+
+LINE z location=0.04		spacing=0.005 
+LINE z location=0.10		spacing=0.02 
+LINE z location=0.30		spacing=0.01 
+
+# offSET spacer  
+DEPOSIT conformal material=oxide thickness=0.005
+
+if cond=($type="PMOS") 
+# PLDD Implant 
+# Note for tilt IMPLANT: to use "dose=" for beam dose, to use "dose.wafer=" for wafer dose.   
+IMPLANT bf2 energy=80 dose.wafer=3.0e13 tilt=30 rotation=45 n.rot=4 reflective bca n.ion=30000 traj.split plus.n
+if.end 
+
+# LDD RTA 
+DIFFUSE time=10 seconds temperature=600  t.final=1000
+DIFFUSE time=10 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+if cond=($type="NMOS") 
+# NLDD Implant 
+# Note for tilt IMPLANT: to use "dose=" for beam dose, to use "dose.wafer=" for wafer dose.  
+IMPLANT phosphorus energy=60 dose.wafer=3.0e13 tilt=30 rotation=45 n.rot=4 reflective bca n.ion=30000 traj.split plus.n
+if.end 
+
+SAVE name=$'name'_$'type'_VP_LDD conformalstr
+
+## ---------------------------------- ##
+## ----------- Spacer Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=nitride thickness=0.03
+DEPOSIT conformal material=oxide thickness=0.05
+
+DIFFUSE time=100 min temperature=680 
+DIFFUSE time=100 min temperature=700 
+
+ETCH dry materials="oxide,nitride" thickness=0.09 
+
+## ---------------------------------- ##
+## ------------- SD Loop ------------ ##
+## -----------------------------------##
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+DEPOSIT min material=oxide thickness=0.01
+
+if cond=($type="NMOS") 
+# NP Implant 
+IMPLANT arsenic    energy=25 dose=1.0e15 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+IMPLANT phosphorus energy=45 dose=1.0e14 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+if.end 
+
+# NP RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000
+DIFFUSE time=30 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+if cond=($type="PMOS") 
+# PP Implant 
+IMPLANT boron energy=5  dose=1.0e15 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+IMPLANT boron energy=15 dose=5.0e13 tilt=0 rotation=22 reflective bca n.ion=30000 traj.split plus.n
+if.end 
+
+# PP RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=1000
+DIFFUSE time=10 seconds temperature=1000
+DIFFUSE time=10 seconds temperature=1000 t.final=600
+
+# Salicide RTA 
+DIFFUSE time=10 seconds temperature=600 t.final=800
+DIFFUSE time=30 seconds temperature=800
+DIFFUSE time=10 seconds temperature=800 t.final=600
+
+SAVE name=$'name'_$'type'_VP_SD conformalstr
+
+## ---------------------------------- ##
+## ----------- Contact Loop --------- ##
+## -----------------------------------##
+
+ETCH dry materials="oxide,nitride" thickness=0.011 
+DEPOSIT min material= aluminum thickness= 0.02 
+
+MIRROR mirror="-x"
+
+ELECTRODE name=gate	x=0	z=-0.1
+ELECTRODE name=source	x=-$Lgate/2-$Lsd/2 z=0
+ELECTRODE name=drain	x=$Lgate/2+$Lsd/2  z=0
+ELECTRODE name=substrate substrate
+
+SAVE name=$'name'_$'type'_VP_sv conformalstr
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_$'type'_VP_sv
+CROP axis = "z" offset = "1.2"
+REMESH conformal 
+SAVE out=$'name'_$'type'_VM_con.str
+
+####### DEVICE SIMULATION #######
+# -Transfer Characterization: IdVglin and IdVgsat Simulation
+# -Parameter Extraction: Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/SSsat/DIBL Extraction
+
+#### STRUCTURE SPECIFICATION ####
+GO victorydevice simflag="-P 4"
+
+if cond=($type="NMOS") 
+SET sign=1
+SET wf=4.2 
+if.end
+
+if cond=($type="PMOS") 
+SET sign=-1
+SET wf=5.1 
+if.end
+
+SET Vdd=5.0
+
+# Device Calibration Parameters: 
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_$'type'_VM_con.str width=1
+CONTACT name=gate workfunction=$wf 
+INTERFACE qf=2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=silicon taun0=1.0e-7*1e-2 taup0=1.0e-7*1e-2 
+MODELS fermi srh cvt fldmob print
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap=10 
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility
+
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SOLVE previous
+
+SOLVE vdrain=0.001*$sign
+SOLVE vdrain=0.01*$sign
+SOLVE vstep=0.01*$sign vfinal=0.1*$sign name=drain 
+SAVE outfile=temp_lowD
+SOLVE vstep=$Vdd/10*$sign vfinal=$Vdd*$sign name=drain 
+SAVE outfile=temp_highD
+
+# Transfer Characteristics: IdVg_lin 
+LOAD infile=temp_lowD
+LOG outfile=$'name'_$'type'_VD_IdVg_lin.log
+SOLVE vgate=0.0
+SOLVE vgate=0.001*$sign
+SOLVE vgate=0.01*$sign
+SOLVE vstep=$Vdd/50*$sign vfinal=$Vdd*$sign name=gate 
+LOG off
+SAVE outfile=$'name'_$'type'_VD_IdVg_lin.str 
+
+# Transfer Characteristics: IdVg_sat 
+LOAD infile=temp_highD
+LOG outfile=$'name'_$'type'_VD_IdVg_sat.log
+SOLVE vgate=0.0
+SOLVE vgate=0.001*$sign
+SOLVE vgate=0.01*$sign
+SOLVE vstep=$Vdd/50*$sign vfinal=$Vdd*$sign name=gate 
+LOG off
+SAVE outfile=$'name'_$'type'_VD_IdVg_sat.str 
+
+
+#### DEVICE EXTRACTION ####
+GO victoryextract
+
+OPTION datafile = $'name'_vdoe.result
+# Transfer Characteristics: IdVg_lin 
+LOAD in = $'name'_$'type'_VD_IdVg_lin.log
+
+SET X = "gate Voltage" 
+SET Y = "drain Current"
+CURVE name = VD_IdVg_lin x = "abs($X)" y = "abs($Y)"
+
+SET Io=1e-7
+
+# Vtgm 
+EXTRACT.LOG name=Vdrain_[V] expression="abs(median(Drain Voltage))" no.write
+EXTRACT.MAXSLOPE.XINTERCEPT name = Vtx no.write
+EXTRACT.VDOE name=Vtgm_[V] expression = "$Vtx - $'Vdrain_[V]'/2"
+# Vtlin
+EXTRACT.CURVE name = Vtlin_[V] expression = "intercept(y = $Io/$Lgate, abs(curve.VD_IdVg_lin))"
+# Idlin
+EXTRACT.CURVE name = Idlin_[uA/um] expression = "1e6*intercept(x = $Vdd, abs(curve.VD_IdVg_lin))"
+
+# Transfer Characteristics: IdVg_sat 
+LOAD in = $'name'_$'type'_VD_IdVg_sat.log
+
+SET X = "gate Voltage" 
+SET Y = "drain Current"
+CURVE name = idvg_sat x = "abs($X)" y = "abs($Y)"
+
+# Vtsat 
+EXTRACT.CURVE name=Vtsat_[V] expression = "intercept(y=$Io/$Lgate, abs(curve.idvg_sat))"
+# Idsat
+EXTRACT.CURVE name = Idsat_[uA/um] expression = "1e6*intercept(x = $Vdd, abs(curve.idvg_sat))"
+# Ioff
+EXTRACT.CURVE name = Idoff_[pA/um] expression = "1e12*intercept(x = 0.0, abs(curve.idvg_sat))"
+# SSsat
+EXTRACT.CURVE name=Vtmin_[V] expression = "intercept(y=$Io/$Lgate/10, abs(curve.idvg_sat))" no.write 
+EXTRACT.VDOE name=SSsat_[mV/dec] expression = "1e3*($'Vtsat_[V]'-$'Vtmin_[V]')"
+# DIBL
+SET dibl = $'Vtlin_[V]' - $'Vtsat_[V]'
+EXTRACT.VDOE name=DIBL_[mV] expression=$dibl*1000
+
+####### DEVICE SIMULATION #######
+# -Output Characteristics: Breakdown Simulation and Voltage Extraction
+
+GO victorydevice simflag="-P 4 -80"
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_$'type'_VM_con.str width=1
+CONTACT name=gate workfunction=$wf 
+INTERFACE qf=2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=Silicon taun0=1.0e-7*1e-2 taup0=1.0e-7*1e-2 
+MODELS fermi srh cvt fldmob print
+MODELS bbt.schenk 
+IMPACT selb  
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap=10 climit=1e-4 
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility
+
+#### SOLUTION SOLVING #### 
+# Output Characteristics: BVdss 
+
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_$'type'_VD_BVds.log
+SOLVE vdrain=0.0
+SOLVE vdrain=0.001*$sign
+SOLVE vdrain=0.01*$sign
+SOLVE vstep=0.02*$sign vfinal=0.1*$sign name=drain 
+SOLVE vstep=0.1*$sign vfinal=0.5*$sign  name=drain
+SOLVE vstep=0.2*$sign vfinal=20.0*$sign name=drain compl=1.0e-6*$sign cname=drain 
+
+LOG off
+
+SAVE outfile=$'name'_$'type'_VD_BVds.str
+
+#### DEVICE EXTRACTION ####
+GO victoryextract
+
+OPTION datafile = vdoe.result
+LOAD in = $'name'_$'type'_VD_BVds.log
+
+SET X = "drain Voltage" 
+SET Y = "drain Current"
+CURVE name = BV x = "abs($X)" y = "abs($Y)"
+
+# BVds
+EXTRACT.CURVE name = BVds_[V] expression = "intercept(y=1.0e-7, curve.BV)"
+# Idoff_BV
+EXTRACT.CURVE name = Idoff_BV_[A/um] expression = "intercept(x=1.1*$Vdd, curve.BV)"
+
+victoryvisual \
+$'name'_$'type'_VM_con.str \
+$'name'_$'type'_VD_IdVg_lin.log:$'name'_IV.set+\
+$'name'_$'type'_VD_IdVg_sat.log:$'name'_IV.set \
+$'name'_$'type'_VD_BVds.log:$'name'_BV.set
+
+QUIT 
+
+
+ 

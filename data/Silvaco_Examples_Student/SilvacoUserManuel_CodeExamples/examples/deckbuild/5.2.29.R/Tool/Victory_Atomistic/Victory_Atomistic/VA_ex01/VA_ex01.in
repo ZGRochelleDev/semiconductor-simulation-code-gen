@@ -1,0 +1,150 @@
+# (c) Silvaco Inc., 2024
+
+# Bandstructure
+
+# SUMMARY: Solve the bandstructure (BS) of one monolayer of h-MoS2 on a path in K-space that crosses the symmetry points.
+
+# Required Modules
+#  -Victory Atomistic
+
+#####   DEVICE SIMULATION   #####
+GO victoryatomistic simflags="-P 1"
+
+
+//////   STRUCTURE SPECIFICATION   //////
+Structure
+{
+// Material definition: h-MoS2 with dichalcogenide symmetry
+  Material
+  {
+    name = MoS2
+    crystal_structure = dichalcogenide 
+
+    // We identify this material with region (1) and tag 'substrate'
+    tag = substrate
+    regions = (1)
+
+    // TB parameters from material database all.mat: inherited from DFT/GGA calculations
+    Bands:TB:MoS2:param_set = param_YaohuaTan_GGA
+
+    // Lattice parameter: has some influence on the direct/indirect band-gap
+    Lattice:a_dichalcogenide = 0.316 // 0.318
+   
+    // Valence and Conduction band edges: not mandatory, indeed they can be extracted accurately 
+    // from the BS calculation, useful for a quantum transport simulation.
+    //Bands:BandEdge:Ev = -0.58
+    //Bands:BandEdge:Ec = 1.1
+    
+    // Dielectric constant (in-plane, out-of-plane): not mandatory, only if one might want to use a Poisson solver
+    //Lattice:epsilon_dc = 4.2
+    //Lattice:epsilon_dc_c = 2.8
+    //Lattice:epsilon_dc_a = 4.2
+  }
+
+// Domain definition is based on crystallographic rules and pseudomorphic growth: hexagonal MoS2 unit cell
+  Domain
+  {
+    name = MoS2_1L
+    type = pseudomorphic // default type
+
+    base_material = substrate // refer to material region (1)
+    regions = (1)
+
+    // We define three Miller indices of hexagonal unit cell
+    miller_index_basis = primitive
+    crystal_direction1 = (1, 0, 0)
+    crystal_direction2 = (0, 1, 0)
+    crystal_direction3 = (0, 0, 1)
+
+    // The space orientation follows the hexagonal unit cell
+    space_orientation_dir1 = (0.866025403784,-0.5, 0)
+    space_orientation_dir2 = (0.866025403784, 0.5, 0)
+
+    // One unit cell 2D periodic, no passivation
+    geometry_description = simple_shapes
+    dimension = (1, 1, 1)
+    periodic = (true, true, false)
+    passivate = false
+  }
+
+// Geometry: Domain and Region intersection defines the 'device' one wants to simulate
+// A large Region (1) includes the unit cell in X/Y directions, but cut the MoS2 unit cell in half along Z to get one monolayer.
+  Geometry
+  {
+    Region
+    {
+      shape         = cuboid
+      region_number = 1
+      priority      = 1
+      min           = (-2,-2, 0.000) // dimensions in nm
+      max           = ( 2, 2, 0.613)
+      tag = substrate
+    }
+  }
+}
+
+
+//////   SOLVERS DEFINITION   //////
+Solvers
+{
+// Schroedinger solver: band structure calculation
+  solver
+  {
+    name           = MoS2_1L_BS
+    type           = Schroedinger
+
+    // Domain and Region to use
+    domain         = MoS2_1L 
+    active_regions = (1)
+
+    // Schroedinger solver is used for the band structure
+    job_list       = (calculate_band_structure)
+
+    // We output the eigenvalues, the K points, and the band structure
+    output         = (energies, k-points, k-points_energies)
+    output_precision = 7 // higher precision makes it platform-dependent
+
+    // One can play with several TB parametrizations
+    tb_basis = MoS2
+
+    // Gamma -> L -> K -> M -> Gamma
+    k_space_basis   = reciprocal
+    k_points = [(0,0), (0.33333333,0.16666667), (.66666667,0.33333333), (0.5,0.5), (0,0)]
+    k_points_labels = (G, L, K, M, G)
+    number_of_nodes = (20, 20, 20, 20)
+    output_format   = SDB // BS Output is readable with Victory Visual
+  }
+
+// Show the device structure in VTK format
+  solver
+  {
+    name           = show_device
+    type           = Structure
+    domain         = MoS2_1L
+    active_atoms_only = true
+    output_format  = vtk
+    structure_file = MoS2_1L.vtk
+  }
+}
+
+
+//////   GLOBAL SECTION: SOLVERS ARE CALLED   //////
+Global
+{
+  solve    = (show_device, MoS2_1L_BS)
+  messaging_level = 4
+  logfile  = ./VA_ex01.log
+}
+//////   END DEVICE SIMULATION   //////
+GO internal
+
+
+######   VISUALIZATION   ######
+# MoS2 structure with 3 atoms
+victoryvisual MoS2_1L.vtk
+
+# Band Structure with high-symmetry points
+victoryvisual MoS2_1L_BS_kpoints_energies.log:MoS2_1L_BS_kpoints_energies.set
+
+QUIT
+

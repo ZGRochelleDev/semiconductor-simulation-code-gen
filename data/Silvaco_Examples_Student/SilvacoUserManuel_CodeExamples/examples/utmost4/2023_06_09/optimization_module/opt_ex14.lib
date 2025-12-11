@@ -1,0 +1,113 @@
+.MODEL HiSIM_HV2 NMOS (
++LEVEL    = 73             VERSION  = 2.1            coovlp   = 1              
++coovlps  = 1              coisub   = 1              coiigs   = 0              
++cogidl   = 0              coisti   = 0              coadov   = 1              
++conqs    = 0              corg     = 0              corbnet  = 0              
++coflick  = 0              cothrml  = 0              coign    = 0              
++coiprv   = 1              copprv   = 1              codfm    = 0              
++coselfheat = 1
++cotemp   = 0              
++cosubnode = 0
++cosym    = 0              cordrift = 1              coqovsm  = 1              
++coerrrep = 1              eg0      = 1.1785         bgtmp1   = 0.000247366    
++bgtmp2   = -3.71827e-07   muetmp   = 1.73405        tnom     = 27             
++vtmp     = 0.323045       vmaxt1   = 0.000444372    vmaxt2   = -7.96278e-07   
++ninvdt1  = 0              ninvdt2  = 0              rthtemp1 = 4.53052e-05    
++rthtemp2 = 0              tox      = 6e-08          xl       = 0              
++xw       = 0              xld      = 0              xldld    = 1.23026e-06    
++xwd      = 1.09086e-07    xwdld    = 0              xwdc     = -1e-08         
++tpoly    = 2e-07          ll       = 0              lld      = 0              
++lln      = 0              wl       = 0              wld      = 0              
++wln      = 0              nsubc    = 4.69752e+16    nsubp    = 1e+18          
++nsubsub  = 1e+15          lp       = 0              npext    = 5e+17          
++lpext    = 1e-50          vfbc     = -1.12589       vbi      = 1.1            
++kappa    = 3.9            ldrift1  = 1.27682e-07    ldrift2  = 1.30081e-07    
++ldrift1s = 0              ldrift2s = 1e-06          ddrift   = 1e-06          
++loverld  = 4.82849e-06    lovers   = 5e-08          vbsmin   = -10.5          
++vgsmin   = -100           muecb0   = 100            muecb1   = 3645.09        
++mueph0   = 0.25           mueph1   = 30000          muephl   = 0              
++mueplp   = 1              muesr0   = 2              muesr1   = 8e+15          
++muesrl   = 0              mueslp   = 1              ndep     = 0.560727       
++ndepl    = 0              ndeplp   = 1              ninv     = 0.00976814     
++ninvd    = 0              ninvdw   = 0              ninvdwp  = 1              
++bb       = 1.82222        vmax     = 1.00668e+07    vover    = 0.302982       
++voverp   = 0.3            rsh      = 0              rshg     = 0              
++rbpb     = 50             rbpd     = 50             rbps     = 50             
++rbdb     = 50             rbsb     = 50             rdrdl1   = 1.9985e-06     
++rdrdl2   = 0              rdrcx    = 0.283434       rdrcar   = 5.37034e-09    
++rdrdjunc = 5.44849e-07    rdrmue   = 100            rdrvmax  = 3.18072e+07    
++rdrvmaxl = 0              
++rdrvmaxlp = 1
++rdrvmaxw = 0              
++rdrvmaxwp = 1
++rdrmuel  = 0              rdrmuelp = 1              rdrbb    = 0.957247       
++rdrqover = 2804.71        rdrvtmp  = -0.218072      
++rdrmuetmp = 1.60286
++gbmin    = 1e-12          rth0     = 0.303333       cth0     = 1e-07          
++rth0w    = 0              rth0wp   = 1              rth0nf   = 0              
++powrat   = 1              
++prattemp1 = 0
++prattemp2 = 0
++shemax   = 500            nfalp    = 1e-19          nftrp    = 1e+10          
++cit      = 0              falph    = 1              sub1     = 0.001          
++sub1l    = 0.0025         sub1lp   = 1              sub2     = 250            
++sub2l    = 2e-06          svds     = 0.2            slg      = 3e-08          
++slgl     = 0              slglp    = 1              svbs     = 0.5            
++svbsl    = 0              svbslp   = 1              svgs     = 0.7            
++svgsl    = 0              svgslp   = 1              svgsw    = 0              
++svgswp   = 1              ibpc1    = 0              ibpc2    = 0              
++ibpc1l   = 0              ibpc1lp  = -1             subld1   = 9.51834e-06    
++subld2   = 2.91716e-09    subld1l  = 0              subld1lp = 1              
++xpdv     = 0              xpvdth   = 0              xpvdthg  = 0              
++mphdfm   = -0.3           parl2    = 1e-08          sc1      = 0              
++sc2      = 0              sc3      = 0              sc4      = 0              
++scp1     = 0              scp2     = 0              scp3     = 0              
++scp21    = 0              bs1      = 0              bs2      = 0.9            
++clm1     = 0.0100504      clm2     = 3.99949        clm3     = 4.99987        
++clm5     = 1              clm6     = 0              wfc      = 0              
++wvth0    = 0              nsubcw   = 0              nsubcwp  = 1              
++nsubp0   = 0              nsubwp   = 1              muephw   = 0              
++muepwp   = 1              muesrw   = 0              mueswp   = 1              
++vthsti   = 0              vdsti    = 0              scsti1   = 0              
++scsti2   = 0              nsti     = 1e+16          wsti     = 0              
++wstil    = 0              wstilp   = 1              wstiw    = 0              
++wstiwp   = 1              wl1      = 0              wl1p     = 1              
++nsubpsti1 = 0
++nsubpsti2 = 0
++nsubpsti3 = 1
++muesti1  = 0              muesti2  = 0              muesti3  = 1              
++saref    = 1e-06          sbref    = 1e-06          wl2      = 0              
++wl2p     = 1              muephs   = 0              muepsp   = 1              
++vovers   = 0              voversp  = 0              qme1     = 0              
++qme2     = 2              qme3     = 0              pgd1     = 0              
++pgd2     = 1              pgd4     = 0              gleak1   = 50             
++gleak2   = 1e+07          gleak3   = 0.06           gleak4   = 4              
++gleak5   = 7500           gleak6   = 0.25           gleak7   = 1e-06          
++egig     = 0              igtemp2  = 0              igtemp3  = 0              
++glksd1   = 1e-15          glksd2   = 1000           glksd3   = -1000          
++glkb1    = 5e-16          glkb2    = 1              glkb3    = 0              
++glpart1  = 0.5            fn1      = 50             fn2      = 0.00017        
++fn3      = 0              fvbs     = 0.012          gidl1    = 2              
++gidl2    = 3e+07          gidl3    = 0.9            gidl4    = 0              
++gidl5    = 0.2            vzadd0   = 0.01           pzadd0   = 0.005          
++ddltmax  = 10             ddltslp  = 0              ddltict  = 10             
++js0      = 5e-07          js0sw    = 0              nj       = 1              
++njsw     = 1              xti      = 2              xti2     = 0              
++divx     = 0              ctemp    = 0              cisb     = 0              
++cisbk    = 0              cvb      = 0              cj       = 0.0005         
++cjsw     = 5e-10          cjswg    = 5e-10          mj       = 0.5            
++mjsw     = 0.33           mjswg    = 0.33           pb       = 1              
++pbsw     = 1              pbswg    = 1              vdiffj   = 0.0006         
++tcjbd    = 0              tcjbdsw  = 0              tcjbdswg = 0              
++tcjbs    = 0              tcjbssw  = 0              tcjbsswg = 0              
++xqy      = 0              xqy1     = 0              xqy2     = 2              
++nover    = 1.95762e+16    vfbover  = -0.993669      qovadd   = 0              
++novers   = 1e+16          ovslp    = 2.1e-07        ovmag    = 0.6            
++cgso     = 2.34797e-11    cgdo     = 1.8984e-11     cgbo     = 0              
++cvdsover = 0.0475194      dly1     = 1e-10          dly2     = 0.7            
++dly3     = 8e-07          pt2      = 0              pt4      = 0              
++pt4p     = 1              ptl      = 0              ptlp     = 1              
++ptp      = 3.5            gdl      = 0              gdld     = 0              
++gdlp     = 0              gdsleak  = 0              lbinn    = 1              
++wbinn    = 1              lmax     = 1              lmin     = 0              
++wmax     = 1              wmin     = 0 )

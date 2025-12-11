@@ -1,0 +1,10 @@
+*
+* Ring Oscillator
+*
+
+.include inv.in
+
+* Analysis
+.tran 1n 170ns
+
+.end

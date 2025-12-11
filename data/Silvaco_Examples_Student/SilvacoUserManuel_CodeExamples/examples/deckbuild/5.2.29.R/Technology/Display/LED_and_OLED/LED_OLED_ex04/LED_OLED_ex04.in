@@ -1,0 +1,88 @@
+# (c) Silvaco Inc., 2024
+
+# Device Characteristics of MEH-PPV Polymer LED
+
+# Required Modules:
+#  Victory Device:
+#   -2D Simulator
+#   -2D Organic
+
+###### VARIABLES ######
+# Example Name
+SET name="LED_OLED_ex04"
+
+###### DEVICE SIMULATION ######
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+X.MESH location=0      spacing=1
+X.MESH location=10     spacing=1
+
+Y.MESH location=-0.05  spacing=0.005
+Y.MESH location=0.00   spacing=0.005
+Y.MESH location=0.0475 spacing=0.005
+Y.MESH location=0.0975 spacing=0.005
+
+REGION num=1 material=PPV x.minimum=0  x.maximum=10 y.minimum=0 y.maximum=0.0475
+
+ELECTRODE num=1 name=anode material=ITO \
+   x.minimum=0 x.maximum=10 y.minimum=-0.05 y.maximum=0 
+ELECTRODE num=2 name=cathode material=Aluminum \
+   x.minimum=0 x.maximum=10 y.minimum=0.0475 y.maximum=0.0975 
+
+DOPING uniform region=1 concentration=1e15 p.type
+
+#### MATERIAL/PHYSICAL MODELS ####
+# Set parameters for ITO
+MATERIAL material=ITO real.index=1.83
+
+# Set parameters for MEH-PPV
+MATERIAL material=PPV \
+         eg300=2.1 nc300=2.5e19 nv300=2.5e19 permittivity=3.0 \
+	 taun0=1e-9 taup0=1e-9 affinity=2.8 arichn=120  \
+	 rst.exciton=0.25 tau.s=1e-9 ld.s=0.01 \
+	 real.index=1.67 
+
+# Defining mobility parameters for MEH-PPV
+MOBILITY material=PPV  deltaen.pfmob=0.48 deltaep.pfmob=0.48 betan.pfmob=3.7e-4 betap.pfmob=3.7e-4 mun=0.5e-5 mup=0.5e-4
+
+# Calcium (Cathode)
+CONTACT name=cathode workfunc=2.9 
+# ITO (Anode)
+CONTACT name=anode workfunc=4.7 
+
+MODELS singlet langevin pfmob print
+
+#### ADDITIONAL OUTPUT INFORMATION ####
+PROBE field v.mag max name="Electric Field"
+OUTPUT u.langevin u.radiative con.band val.band 
+
+#### SOLUTION SOLVING ####
+# Initial Solve - Equilibrium
+SOLVE initial
+
+# Ramping Vanode to 10V to plot the I-V Characteristics 
+LOG outfile=${name}_IaVa.log
+SOLVE vanode=0 vstep=0.05 vfinal=10 name=anode l.wave=0.59
+SAVE outfile=${name}_Va10.str
+
+# Extracting Current Density versus Voltage and Electric Field Data
+# OLED Surface Area = 10um * 1um = 10 um^2 = 1e-5 mm^2
+go victoryextract
+LOAD in=${name}_IaVa.log
+# Current Density (in mA/mm^2) = (Simulated current*1e3 mA) / (1e-5mm^2) = 1e8 * Simulated Current
+CURVE x="Anode Voltage" y="1e8*(Anode Current)" name="Currentdensity_vs_voltage"
+EXTRACT.CSV csvfile="${name}_JV"
+# Electric field (in V/m) = 1e2 * Electric field (in V/cm)
+CURVE x="1e2*(Electric Field)" y="1e8*(Anode Current)" name="Currentdensity_vs_Efield"
+EXTRACT.CSV csvfile="${name}_JE"
+
+###### VISUALIZATION ######
+# Plotting Current Density versus Voltage and Electric Field Curves; Plotting Luminescent Power Curve; Plotting Langevin Recombination Contour Plot at 10V
+victoryvisual ${name}_JV.csv \
+ ${name}_JE.csv: \
+ ${name}_IaVa.log:${name}_IaVa.set \
+ ${name}_Va10.str:${name}_Va10.set
+
+QUIT

@@ -1,0 +1,21 @@
+*BJT Differential Oscillator - HNOISE Analysis
+
+.options nomod
+
+.include 'DifOsc_Resonator.inc'
+.include 'DifOsc_circuit.inc'
+
+X1   VoL  VoR  Resonator
+
+.HNOISE v(VoL, VoR)
++ DEC   10    10kHz   100MegHz                 ; Frequency sweep for Single Sideband
++ nharm=15
++ Ftype=REL Relharm=1 Faxis=REL 
++ METHOD=SHOOTING
++ Tstab=350n Tstep=1p
++ SAVEINIT SAVEITER
++ waves
+
+.PROBE v(VoL, VoR)
+
+.END 

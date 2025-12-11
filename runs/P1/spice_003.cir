@@ -1,0 +1,11 @@
+**TITLE: Series RLC Circuit Analysis
+**NETLIST:
+R1 = 10 ohm
+L1 = 10 mH
+C1 = 1 uF
+V1 = SIN(0 1 k)
+n1 = IN
+n2 = OUT
+**ANALYSIS:
+.TRAN 10 ms
+.END

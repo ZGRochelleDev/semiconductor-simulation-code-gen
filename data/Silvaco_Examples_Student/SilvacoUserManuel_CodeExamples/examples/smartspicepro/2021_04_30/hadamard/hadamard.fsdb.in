@@ -1,0 +1,43 @@
+* hadamard - integrated circuit
+
+*.TEMP 85
+
+.INCLUDE prol013.mod
+
+*.INCLUDE params.spi
+.PAR HIGH=1.2 LOW=0.0
+*.PAR SIM_STEP=0.1N SIM_WIN=10us
+.PAR SIM_STEP=0.1N SIM_WIN=2us
+
+.INCLUDE hadamard.spi
+
+xhadamard ck data[0] data[1] data[2] data[3] data[4] data[5] 
++ data[6] data[7] empty full hadout[0] hadout[1] hadout[2] hadout[3] hadout[4] 
++ hadout[5] hadout[6] hadout[7] hadout[8] hadout[9] hadout[10] hadout[11] 
++ hadout[12] hadout[13] reset s_read s_write vdd vss 
++ hadamard
+
+Vdd  vdd 0  DC HIGH
+Vss  vss 0  DC LOW
+
+.INCLUDE pattern.spi
+
+.OPTIONS
++ probe
++ dontprintop
++ nomod
++ nodeck
++ method=gear
++ post=20
+
+.TRAN SIM_STEP SIM_WIN
+
+.PROBE TRAN
++ v(xhadamard.xe_ram.memory_idx_0_0*)
++ v(xhadamard.xe_calcul.accu_0_*)
++ v(xhadamard.e_sequenceur.current_state_0) v(xhadamard.e_sequenceur.clraccu) v(xhadamard.e_sequenceur.vaccu_ins*) 
++ v(xhadamard.xe_sequenceur.hph_*) 
++ v(xhadamard.xe_sequenceur.s_*)
+
+.END
+

@@ -1,0 +1,15 @@
+Answer:
+**Required.**
+
+We need to write a <span style="color:#4257B2">**ngspice netlist**</span> that will perform an AC analysis on the given circuit.
+
+Let's recall that <span style="color: #4257B3">**RC circuits**</span> are used to design filters. They consist of two resistors $R$ and one capacitor $C$. The voltage across the resistor is proportional to the current through it, while the voltage across the capacitor is inversely proportional to the rate of change of charge on its plates. 
+
+<span style="color: #965501"></span>
+ 
+To solve this task, we will also use the following formula:
+
+$$\begin{align}
+V_{out}&=\frac{1}{1+j\omega CR}.
+ \end{align}$$
+ Formula given by Eq. ($1$) represents the transfer function of the RC circuit

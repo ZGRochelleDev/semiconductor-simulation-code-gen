@@ -1,0 +1,246 @@
+# (c) Silvaco Inc., 2024
+
+# Vertical Alignment Liquid Crystal Display - Simulation versus Measurement
+
+# Required Modules
+#  Victory Process
+#   -3D Structure Editor
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex25” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+#IPS-VA
+# Liquid Crystal, Vol. 38, No. 4, April 2011, 507-510
+# Fast-response vertical alignment liquid crystal display 
+# driven by in-plane switching
+
+SET spacing=2
+SET g=9
+SET w=1
+SET lc_thick=4
+
+SET xmin=0
+SET xmax=3*$w+2*$g
+
+SET ymin=0
+SET ymax=1
+
+INIT material="oxide" gasheight=$lc_thick+2 Depth=1 \
+     from="$xmin,$ymin" to="$xmax,$ymax"
+
+##################################################
+# pixel electrode
+
+# +V
+SPECIFYMASKPOLY maskname=pixel p1="0,$ymin" p2="$w,$ymin" p3="$w,$ymax"  p4="0,$ymax" electrode="pix1"
+
+# -V
+SET x1=$w+$g
+SET x2=$w+$g+$w
+SpecifyMaskPoly maskname=pixel p1="$x1,$ymin" p2="$x2,$ymin" p3="$x2,$ymax"  p4="$x1,$ymax" electrode="pix2" add 
+
+# +V
+SET x1=2*$w+2*$g
+SET x2=3*$w+2*$g
+SPECIFYMASKPOLY maskname=pixel p1="$x1,$ymin" p2="$x2,$ymin" p3="$x2,$ymax"  p4="$x1,$ymax" electrode="pix3" add 
+
+SET x1=$w+$g/2-$w/2
+SET x2=$x1+$w
+
+# common
+SPECIFYMASKPOLY maskname=common p1="$x1,$ymin" p2="$x2,$ymin" p3="$x2,$ymax"  p4="$x1,$ymax" electrode="com1" 
+
+SET x1=2*$w+$g+$g/2-$w/2
+SET x2=$x1+$w
+
+# com2
+SPECIFYMASKPOLY maskname=common p1="$x1,$ymin" p2="$x2,$ymin" p3="$x2,$ymax"  p4="$x1,$ymax" electrode="com2" add 
+
+###################################################
+
+
+LINE x position=0 spac=0.25
+LINE x position=$w  s=0.25
+LINE x position=$w+$g/2 s=0.5
+LINE x position=$w +$g s=0.25
+LINE x position=$w+$g + $w s=0.25
+LINE x position=$w+$g + $w + $g/2 s=0.5
+LINE x position=$w+$g + $w + $g s=0.25
+LINE x position=$xmax s=0.25
+
+LINE y position=$ymin s=0.5
+LINE y position=$ymax s=0.5
+
+LINE z position=0 spacing=0.1
+LINE z position=1 spacing=0.5
+
+# VA-IPS
+# pixel electrode 
+DEPOSIT material="ITO" thick=0.05 max
+MASK "pixel" 
+ETCH material="ITO" thick=0.05 min 
+STRIP
+ELECTRODES material="ITO"  mask="pixel"
+
+# LC; cell gap 4um
+DEPOSIT material="LC" thick=$lc_thick-0.05 min
+# deposit material="LC" thick=$lc_thick min
+
+# top common electrode 
+DEPOSIT material="ITO" thick=0.05 max
+MASK "common"
+ETCH material="ITO" thick=0.05 max
+STRIP
+ELECTRODES material="ITO" mask="common" 
+# electrodes material="ITO" name=com x=6 y=6 z=-4.025
+
+DEPOSIT material="LC" thick=0.05 min
+
+# sub
+DEPOSIT oxide thick=1 max
+
+LINE z loc=-5.0 s=0.5
+LINE z loc=-$lc_thick  s=0.1
+LINE z loc=-$lc_thick+0.05 s=0.05
+LINE z loc=-$lc_thick/2 s=0.5
+LINE z loc=-0.05 s=0.05
+LINE z loc=-0.0 s=0.1
+
+SAVE name=$'name'_VP_sv 
+
+## Create a Conformal Mesh Structure File ##
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+REMESH conformal
+SAVE out=$'name'_VM
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+# read simulatioin structure
+INIT structure="$'name'_VM.str"
+
+# ITO metal conductivity
+MATERIAL ITO conductivity=1000
+
+# LC properties
+SETLC epsparadir=13.66 epsVertDir=3.66 splay=10.9e-12 twist=9.5e-12 bend=15.4e-12  \
+	cPenalty=1000 gama=0.1
+
+# Specify the rubbing angle and the pre-tilt angle on the top and at the bottom of the LC region.
+LCBNDARYB partition(0 $xmax) rubangle(0) tiltangle(90)
+LCBNDARYT partition(0 $xmax) rubangle(0) tiltangle(90)    
+
+# numeric option
+SOLVER linearsolver=pam pamsolver=gmres ddprecond=RAS preconditioner=amp multilevel=0 \
+       fillratio=1e-4 lsmaxiter=100 lstolerance=1.0e-11 nlsmaxiter=100 nlstolerance=1.0e-8
+
+OPTION lsconvergeinfo=1 nlsconvergeinfo
+
+SETFIXEDBIAS "com1"=0 "com2"=0 numinitramp=5
+SETPIXELBIAS("pix1", 0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8) vmaxtrap=5
+SETPIXELBIAS("pix2", 0,-0.5,-1,-1.5,-2,-2.5,-3,-3.5,-4,-4.5,-5,-5.5,-6,-6.5,-7,-7.5,-8) vmaxtrap=5
+SETPIXELBIAS("pix3", 0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8) vmaxtrap=5
+
+# solve DC solution for plotting voltage versus transmittance
+INTERCONNECT capacitance structure="$'name'_dc" domainboundarycondition=cyclic  skipcap
+
+# Solve Transient
+# loads pulse table
+SETDYNAMICPIXBIAS pixelfile ="$'name'_0.dat" vmaxtrap=5
+INTERCONNECT capacitance structure="$'name'_tran" domainboundarycondition=cyclic skipcap
+
+# setdynamic waveform sinusoid elecname="pix1" tamplitude=6 \
+# tfrequency=$freq tphase=0 tdecay=0.0
+
+# Optical analysis 
+GO victoryrcx simflags="-P 2"
+
+INIT structure = "$'name'_VM.str"
+
+SYSTEM rm $'name'_2.dat
+SYSTEM echo "VT data : Voltage versus Transmission" >> $'name'_2.dat
+SYSTEM echo "17 2 2" >> $'name'_2.dat
+SYSTEM echo "Voltage" >> $'name'_2.dat
+SYSTEM echo "Average transmittance" >> $'name'_2.dat
+
+SET V=0
+LOOP steps=17
+OPTICS structure="$'name'_dc.V$'V'.str" indexfile="$'name'_LC_index.txt"  pixelvolt=$'V' \
+    wavelength=0.55 angle=0 theta=0 lightorient=frombot dx=0.125 dy=0.125 dzmax=0.025 \
+    topview="$'name'_dc.V$'V'_linear" \
+    startendlayers(220, 45, 1.5, 1.5, 0.0044, 0; 220, -45, 1.5, 1.5, 0.0044, 0) 
+	
+### average transmittance
+EXTRACT init infile="$'name'_dc.V$'V'_linear.str"
+EXTRACT name="trans" 2d.area x.step=0.125 impurity="Transmittance" \
+  material="SiO2" y.min=$ymin y.max=$ymax x.min=0 x.max=$xmax
+
+SET ymax=abs($ymax-$ymin)
+SET ave_trans=$trans/($xmax*1e-4*$ymax*1e-4*1e-4)
+
+# write to vt.dat file 
+SYSTEM echo $'V'  $'ave_trans' >> $'name'_2.dat
+
+SET V=$V+0.5
+
+L.END
+
+## for Transient ###
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VM.str"
+
+SYSTEM rm $'name'_3.dat
+SYSTEM echo "VT data : Time versus Transmission" >> $'name'_3.dat
+SYSTEM echo "41 2 2" >> $'name'_3.dat
+SYSTEM echo "Time" >> $'name'_3.dat
+SYSTEM echo "Average transmittance" >> $'name'_3.dat
+
+SET Time=0
+LOOP steps=41
+OPTICS structure="$'name'_tran.T$'Time'.str" indexfile="$'name'_LC_index.txt"  \
+    wavelength=0.55 angle=0 theta=0 lightorient=frombot  \
+    dx=0.125 dy=0.125 dzmax=0.025  topview="$'name'_tran.T$'Time'_linear" \
+	startendlayers(220, 45, 1.5, 1.5, 0.0044, 0; 220, -45, 1.5, 1.5, 0.0044, 0) 
+
+
+### average transmittance
+EXTRACT init infile="$'name'_tran.T$'Time'_linear.str"
+EXTRACT name="trans" 2d.area x.step=0.125 impurity="Transmittance" \
+  material="SiO2" y.min=$ymin y.max=$ymax x.min=0 x.max=$xmax
+
+SET ymax=abs($ymax-$ymin)
+SET ave_trans=$trans/($xmax*1e-4*$ymax*1e-4*1e-4)
+
+#write to vt.dat file 
+SYSTEM echo $'Time'  $'ave_trans' >> $'name'_3.dat
+
+SET Time=$time+0.002
+
+L.END
+
+victoryvisual \
+$'name'_VP_sv.str:$'name'_VP.set \
+$'name'_2.dat+$'name'_2_exp.dat \
+$'name'_3.dat:$'name'_Tran.set
+
+victoryvisual \
+$'name'_dc.V1_linear.str:$'name'_DC_Trans.set \
+$'name'_dc.V3_linear.str:$'name'_DC_Trans.set \
+$'name'_dc.V5_linear.str:$'name'_DC_Trans.set \
+$'name'_dc.V7_linear.str:$'name'_DC_Trans.set 
+
+victoryvisual \
+$'name'_tran.T0.01_linear.str:$'name'_DC_Trans.set \
+$'name'_tran.T0.016_linear.str:$'name'_DC_Trans.set \
+$'name'_tran.T0.02_linear.str:$'name'_DC_Trans.set \
+$'name'_tran.T0.03_linear.str:$'name'_DC_Trans.set
+
+QUIT

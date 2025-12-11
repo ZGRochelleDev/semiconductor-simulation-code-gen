@@ -1,0 +1,171 @@
+# (c) Silvaco Inc., 2024
+
+# AMOLED Pixel Simulation
+
+# Required Modules
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+#   -2D MixedMode
+#   -2D Organic
+
+###### VARIABLES ######
+# Example Name
+SET name=TFT_ex15
+
+###### DEVICE SIMULATION 1 ######
+# Make a-Si TFT Structure
+GO victorydevice simflags="-P 4"
+
+MESH
+X.MESH location=-4 spacing=0.5
+X.MESH location=-2.5 spacing=0.05
+X.MESH location=0 spacing=0.2
+X.MESH location=2.5 spacing=0.05
+X.MESH location=4 spacing=0.5
+X.MESH location=1 spacing=0.5
+Y.MESH location=0 spacing=0.2
+Y.MESH location=-0.35 spacing=0.2
+Y.MESH location=-0.7 spacing=0.005
+Y.MESH location=-0.75 spacing=0.005
+Y.MESH location=-0.85 spacing=0.005
+Y.MESH location=-1.15 spacing=0.1
+Y.MESH location=-1.55 spacing=0.2
+
+REGION number=1 material=sio2 \
+ x.minimum=-4 x.maximum=4 y.minimum=0 y.maximum=1
+REGION number=2 material=si3n4 \
+ x.minimum=-4 x.maximum=4 y.minimum=-1.55 y.maximum=0
+REGION number=3 material=silicon \
+ x.minimum=-4 x.maximum=-2.5 y.minimum=-0.85 y.maximum=-0.7
+REGION number=3 material=silicon \
+ x.minimum=-2.5 x.maximum=2.5 y.minimum=-0.75 y.maximum=-0.7
+REGION number=3 material=silicon \
+ x.minimum=2.5 x.maximum=4 y.minimum=-0.85 y.maximum=-0.7
+
+ELECTRODE number=1 material=aluminum name=gate \
+ x.minimum=-4 x.maximum=4 y.minimum=-0.35 y.maximum=0
+ELECTRODE number=2 material=aluminum name=source \
+ x.minimum=-4 x.maximum=-2.5 y.minimum=-1.15 y.maximum=-0.85
+ELECTRODE number=3 material=aluminum name=drain \
+ x.minimum=2.5 x.maximum=4 y.minimum=-1.15 y.maximum=-0.85
+
+DOPING material=silicon n.type uniform concentration=2e16
+DOPING material=silicon n.type uniform concentration=1e21 \
+ x.minimum=-4 x.maximum=-2.5 y.minimum=-0.85 y.maximum=-0.8
+DOPING material=silicon n.type uniform concentration=1e21 \
+ x.minimum=2.5 x.maximum=4 y.minimum=-0.85 y.maximum=-0.8
+
+SAVE outfile=${name}_TFT.str
+
+###### DEVICE SIMULATION 2 ######
+# Make OLED Structure
+GO victorydevice simflags="-P 4"
+
+MESH
+X.MESH location=0 spacing=1
+X.MESH location=1 spacing=1
+Y.MESH location=0 spacing=0.005
+Y.MESH location=0.06 spacing=0.001
+Y.MESH location=0.1 spacing=0.005
+
+REGION number=1 material=TPD \
+ x.minimum=0 x.maximum=1 y.minimum=0 y.maximum=0.06
+REGION number=2 material=Alq3 \
+ x.minimum=0 x.maximum=1 y.minimum=0.06 y.maximum=0.1
+
+ELECTRODE number=1 name=anode top
+ELECTRODE number=2 name=cathode bottom
+
+SAVE outfile=${name}_OLED.str
+
+###### DEVICE SIMULATION 3 ######
+# AMOLED pixel simulation by using MixedMode
+# Inveted structure with n-channel TFTs
+# Vdata sweep with constant Vselect and Vdd
+GO victorydevice simflags="-P 4"
+
+#### CIRCUIT SIMULATION COMMANDS ####
+.BEGIN
+# Define pixel circuit
+# atft1 and atft2 are a switching TFT and a driving TFT, respectively.
+vdata 1 0 0
+vselect 2 0 15
+vdd 3 0 20
+cs 4 0 1pf
+atft1 2=gate 1=drain 4=source infile=${name}_TFT.str width=10
+atft2 4=gate 0=source  5=drain infile=${name}_TFT.str width=150
+aoled 3=anode 5=cathode infile=${name}_OLED.str width=200000
+# Initial nodal values
+.NODESET v(1)=0 v(2)=15 v(3)=20 v(4)=0 v(5)=0
+# Numerical control parameters
+.NUMERIC imaxdc=100
+.OPTIONS m2ln
+# Simulation content and file output
+.LOG outfile=${name}_VdataSweep_Vselect15
+.DC lin vdata 0 15 76
+.END
+
+#### PHYSICAL/MATERIAL MODELS for the OLED (aoled) ####
+# Set transport models at semiconductor-semiconductor interface.
+INTERFACE device=aoled s.s thermionic tunnel
+# Set workfuncttions on the anode and cathode
+CONTACT device=aoled name=anode workfunction=5.08
+CONTACT device=aoled name=cathode workfunction=3.1
+# Material parameters for TPD
+SET homo_tpd=5.31
+SET lumo_tpd=2.31
+SET gap_tpd=$homo_tpd-$lumo_tpd
+MATERIAL device=aoled material=TPD eg300=$gap_tpd affinity=$lumo_tpd \
+ nv300=2e20 nc300=2e20 permittivity=3.1
+MOBILITY device=aoled material=TPD mun0=1.1e-6 e0n.pfmob=5e4 \
+ mup0=3.53e-4 e0p.pfmob=5e4
+# Material parameters for Alq3
+SET homo_alq3=5.68
+SET lumo_alq3=2.98
+SET gap_alq3=$homo_alq3-$lumo_alq3
+MATERIAL device=aoled material=Alq3 eg300=$gap_alq3 affinity=$lumo_alq3 \
+ nv300=2e20 nc300=2e20 permittivity=2.9
+MOBILITY device=aoled material=Alq3 mun0=1.1e-05 e0n.pfmob=1.5e6 \
+ mup0=7.36e-7 e0p.pfmob=1.5e6
+# pfmob - Pool-Frenkel mobility enhances mobility in electirc fields
+# langevin - Langevin recombination can generate excitons from holes and electrons
+MODELS device=aoled pfmob langevin
+
+#### PHYSICAL/MATERIAL MODELS for the switching TFT (atft1) ####
+# Set workfunction on the gate
+CONTACT device=atft1 name=gate workfunction=4.3
+# Change parameters from defaults of Silicon to a-Si
+MATERIAL device=atft1 material=silicon eg300=1.8 nc300=1e20 nv300=1e20 \
+ permittivity=11.8 mun=1 mup=0.01
+# Bulk DOS in a-Si
+DEFECTS device=atft1 numa=24 numd=24 \
+ nta=1e20 wta=0.065 sigtae=1e-16 sigtah=1e-14 \
+ nga=2e16 ega=0.3 wga=0.15 siggae=1e-16 siggah=1e-14 \
+ ntd=1e20 wtd=0.1 sigtde=1e-14 sigtdh=1e-16 \
+ ngd=2e16 egd=0.3 wgd=0.15 siggde=1e-14 siggdh=1e-16
+# bbt.kl - Band to band tunneling model which uses Klassen's values.
+MODELS device=atft1 bbt.kla
+
+#### PHYSICAL/MATERIAL MODELS for the driving TFT (atft2) ####
+# The same parameters are used as the swithing TFT (atft1)
+CONTACT device=atft2 name=gate workfunction=4.3
+MATERIAL device=atft2 material=silicon eg300=1.8 nc300=1e20 nv300=1e20 \
+ permittivity=11.8 mun=1 mup=0.01
+DEFECTS device=atft2 numa=24 numd=24 \
+ nta=1e20 wta=0.065 sigtae=1e-16 sigtah=1e-14 \
+ nga=2e16 ega=0.3 wga=0.15 siggae=1e-16 siggah=1e-14 \
+ ntd=1e20 wtd=0.1 sigtde=1e-14 sigtdh=1e-16 \
+ ngd=2e16 egd=0.3 wgd=0.15 siggde=1e-14 siggdh=1e-16
+MODELS device=atft2 bbt.kla
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-12 norm.scaling.local weak=1
+
+# To clarify the end of MixedMode commands, GO or QUIT statements is needed.
+GO internal
+
+# Display the anode current of OLED v.s. the data voltage.
+victoryvisual ${name}_VdataSweep_Vselect15_dc_1.log:${name}.set
+
+QUIT

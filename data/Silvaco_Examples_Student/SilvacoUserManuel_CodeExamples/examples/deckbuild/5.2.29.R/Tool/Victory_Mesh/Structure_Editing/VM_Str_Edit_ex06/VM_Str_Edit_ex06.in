@@ -1,0 +1,90 @@
+# (c) Silvaco Inc., 2024
+
+# 2D Cutplane from a 3D structure (CUTPLANE)
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#   -3D Meshing
+
+# Example Name
+Set name=“VM_Str_Edit_ex06” 
+
+####### PROCESS SIMULATION ####### 
+# Structure with planar MOS gate.
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=1.5,1.5 to=2,2 depth=2 \
+resolution=0.01 meshdepth=2 gasheight=0.5 \
+c.phosphorus=1E14 flow.dim=3D
+
+DOPING boron conc=1e20 gauss.sigma=0.05 peak=2
+
+# Mask for the MOS gate. Mask extends slightly outside the 
+# simulation domain - good practice to not align with domain
+# unless needed
+SPECIFYMASKPOLY rect lb="1.8,0" rt="2.2,1.7" mask=gate
+DEPOSIT max material=oxide thickness=0.01 mask=gate
+DEPOSIT max material=polysilicon thickness=0.05 mask=gate
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_3D_sv conformalstr
+
+# Delaunay remesh on 3D structure using
+# interface and junction refinement
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_3D_sv"
+
+REMESH delaunay axis.aligned
+
+# Base mesh
+REFINE max.size=0.05 regions="material:silicon" 
+REFINE max.size=0.01 regions="material:polysilicon" 
+REFINE max.size=0.005 regions="material:oxide" 
+REFINE max.distance=0.0001 
+
+# Interface refinement
+REFINE max.interface.size=0.005 max.interface.distance=0.25 \
+ max.interface.distance.size=0.05 grading="linear" 
+
+# Junction refinement
+REFINE max.junction.size=0.02 max.junction.distance.size=0.05 \
+ grading="linear"
+
+SAVE out="$'name'_VM_3D" 
+
+# Take 2D plane from 3D structure.
+# Remesh structure in the same way.
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_3D_sv"
+
+# Cut out 2D plane (xz plane) at y=1.1
+CUTPLANE axis="y" offset="1.6"
+
+REMESH delaunay
+
+# Base mesh
+REFINE max.size=0.05 regions="material:silicon" 
+REFINE max.size=0.01 regions="material:polysilicon" 
+REFINE max.size=0.005 regions="material:oxide" 
+REFINE max.distance=0.0001 
+
+# Interface refinement
+REFINE max.interface.size=0.005 max.interface.distance=0.25 \
+ max.interface.distance.size=0.05 grading="linear" 
+
+# Junction refinement
+REFINE max.junction.size=0.02 max.junction.distance.size=0.05 \
+ grading="linear"
+
+SAVE out="$'name'_VM_2D"
+
+victoryvisual \
+ $'name'_VM_3D.str:$'name'_VM_3D_Mesh.set \
+ $'name'_VM_2D.str:$'name'_VM_2D_Mesh.set
+
+QUIT

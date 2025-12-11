@@ -1,0 +1,128 @@
+# (c) Silvaco Inc., 2024
+
+# Insulator Trap Induced Measurement Sweep Hysterisis
+
+# Required Modules
+#  Victory Process:
+#   -2D Core Simulator
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+#   -2D TFT
+
+###### VARIABLES ######
+# Example Name
+SET name="TFT_ex06"
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 2"
+
+INIT meshdepth=2 material=oxide from=0 to=19 depth=2.5 gasheight=2.27 \
+ resolution=1
+LINE x location=0 spacing=1
+LINE x location=6 spacing=0.8
+LINE x location=7 spacing=0.05
+LINE x location=12 spacing=0.05
+LINE x location=13 spacing=0.8
+LINE x location=19 spacing=1
+
+LINE z location=-0.05 spacing=0.1
+LINE z location=-0.04 spacing=0.01
+LINE z location=-0.02 spacing=0.005
+LINE z location=0 spacing=0.002
+LINE z location=0.01 spacing=2.5
+LINE z location=2.5 spacing=2.5
+
+DEPOSIT max material=aluminum thickness=0.05 outside.x="6.5,12.5"
+ELECTRODE name=source x=1
+ELECTRODE name=drain  x=18
+
+DEPOSIT conformal material=IGZO thickness=0.02 dz=0.002 
+ETCH material=IGZO left.to.x=2 dry thickness=2.27
+ETCH material=IGZO right.to.x=17 dry thickness=2.27
+
+DEPOSIT conformal material=oxide thickness=0.1 
+
+DEPOSIT conformal material=titanium thickness=0.1 
+ETCH material=titanium left.to.x=6 dry thickness=2.27
+ETCH material=titanium right.to.x=12.5 dry thickness=2.27
+ETCH above=-0.15
+ELECTRODE name=gate x=9.5
+SAVE name=$'name'_VP
+#SAVE name=$'name'_VP conformalstr
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP
+REMESH conformal
+REFINE max.obtuseness=0.25
+SAVE out=$'name'_VM_con.str
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 2 -80"
+
+#### STRUCTURE SPECIFICATION ####
+MESH inf=$'name'_VM_con.str width=140
+
+#### MATERIALS/PHYSICAL MODELS ####
+DOPING material=IGZO donor concentration=1e18 uniform
+
+MATERIAL material=IGZO nc300=5e18 nv300=5e18 eg300=3.1 mun0=15 mup0=0.1 \
+         affinity=4.16 permittivity=10 me.tunnel=0.01
+MATERIAL material=oxide permittivity=3.9
+
+MODELS srh fldmob print trap.tunnel ^trap.coulombic mass.tunnel=0.1 bbt.std
+
+CONTACT name=gate   workfunc=4.8
+CONTACT name=source workfunc=4.2
+CONTACT name=drain  workfunc=4.2
+
+DEFECTS material=IGZO tfile=$'name'_defect.dat \
+ ntd=1.55e20 wtd=0.12 nta=2e18 wta=0.085 \
+ ngd=6.5e16 nga=4e15 ega=1 wga=0.5 wgd=0.4 egd=2.9 \
+ sigtde=1e-12 sigtdh=1e-12 sigtae=1e-12 sigtah=1e-12 \
+ siggde=1e-12 siggdh=1e-12 siggae=1e-12 siggah=1e-10 continuous
+
+INTTRAP intregion="IGZO/sio2" e.level=0.4 acceptor density=1.0e12 s.i degen=4 \
+ sign=1.0e-13 sigp=1.0e-14 heiman depth=0.001 
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4
+OUTPUT con.band val.band
+
+#### SOLUTION SOLVING ####
+SOLVE initial
+SOLVE previous
+SAVE outf=init.str
+
+LOG outfile=$'name'_sat.log
+SOLVE vdrain=0 vstep=0.1 vfinal=1 name=drain
+SOLVE vstep=0.5 vfinal=5 name=drain
+
+set measurementtime=0.0001
+SOLVE vfinal=-2 vstep=-0.2 name=gate
+LOG outfile=$'name'_forward.log
+SOLVE vfinal=15 vstep=0.2 name=gate timespan=$measurementtime
+SAVE outfile=$'name'_forward.str
+log off
+
+LOG outfile=$'name'_reverse.log
+SOLVE vgate=15 vfinal=-2 vstep=-0.2 name=gate timespan=$measurementtime
+LOG off
+
+go victoryextract
+LOAD in=$'name'_forward.log
+CURVE name=ivf x="gate voltage" y="drain current"
+EXTRACT.CURVE name="Vth_forward" expression=intercept(y=1e-5, curve.ivf)
+EXTRACT.CURVE name="Ion_forward" expression=intercept(x=15, curve.ivf)
+LOAD in=$'name'_reverse.log
+CURVE name=ivb x="gate voltage" y="drain current"
+EXTRACT.CURVE name="Vth_reverse" expression=intercept(y=1e-5, curve.ivb)
+EXTRACT.CURVE name="Ion_reverse" expression=intercept(x=10, curve.ivb)
+
+####### RESULTS DISPLAY #######
+victoryvisual '($'name'_forward.log+$'name'_reverse.log)':$'name'.set
+
+QUIT

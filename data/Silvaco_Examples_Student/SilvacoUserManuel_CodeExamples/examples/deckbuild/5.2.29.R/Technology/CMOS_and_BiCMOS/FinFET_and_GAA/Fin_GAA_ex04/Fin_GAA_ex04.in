@@ -1,0 +1,136 @@
+# (c) Silvaco Inc., 2024
+
+# Comparison of transport models for a Double gate MOSFET including quantum effects.
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Quantum
+
+# Example Name
+Set name=“Fin_GAA_ex04” 
+
+# Double gate Mosfet, comparison between Drift-Diffusion and Energy-Balance 
+# models. Calculation with Bohm Quantum potential and field dependent 
+# mobilities. Energy Balance case first.
+
+####### DEVICE SIMULATION #######
+# Energy Balance
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.0 spacing=0.001
+X.MESH location=0.03 spacing=0.001
+	
+Y.MESH location=-0.0015 spacing=0.0001
+Y.MESH location=0.0 spacing=0.00005
+Y.MESH location=0.0015 spacing=0.0001
+Y.MESH location=0.0030 spacing=0.00005
+Y.MESH location=0.0045 spacing=0.0001
+
+REGION number=1 y.min=0 y.max=0.0030 silicon
+REGION number=2 y.max=0 sio2
+REGION number=3 y.min=0.0030 sio2
+
+ELECTRODE number=1 name=gate top x.min=0.01 x.max=0.02 
+ELECTRODE number=2 name= drain x.max=0 y.min=0.0 y.max=0.003
+ELECTRODE number=3 name=source x.min=0.03 y.min=0.0 y.max=0.003
+ELECTRODE number=4 name=gate2 bottom x.min=0.01 x.max=0.02
+
+DOPING region=1 p.type uniform conc=1.0E18
+DOPING region=1 x.max=0.01 n.type uniform conc=1.0E20
+DOPING region=1 x.min=0.02 n.type uniform conc=1.0E20
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate aluminum
+CONTACT name=gate2 aluminum common=gate
+
+MATERIAL region=2 eg300=8.05 affinity=1.0 nc300=2.8e19 nv300=1.04e19
+MATERIAL region=3 eg300=8.05 affinity=1.0 nc300=2.8e19 nv300=1.04e19
+
+MODELS bqp.n bqp.ngamma=1.2 bqp.nalpha=0.5 srh fermi ni.fermi fldmob hcte.el evsatmod=0
+
+#### NUMERICAL METHODS #### 
+METHOD climit=1.0e-4 block clim.eb=1.0E7 meinr
+
+OUTPUT band.par con.band val.band t.quantum
+
+#### SOLUTION SOLVING ####
+SOLVE init 
+
+SOLVE vgate=-0.5 nocurrent
+
+SOLVE name=drain vdrain=0 vstep=0.005 vfinal=0.05 
+
+LOG outfile=$'name'_VD_eb.log
+SOLVE name=gate vgate=-0.5 vstep=0.02 vfinal=0.5
+LOG off
+
+SAVE outfile=$'name'_VD_eb.str
+
+####### DEVICE SIMULATION #######
+# Drift Diffusion
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=0.0 spacing=0.001
+X.MESH location=0.03 spacing=0.001
+	
+Y.MESH location=-0.0015 spacing=0.0001
+Y.MESH location=0.0 spacing=0.00005
+Y.MESH location=0.0015 spacing=0.0001
+Y.MESH location=0.0030 spacing=0.00005
+Y.MESH location=0.0045 spacing=0.0001
+
+REGION number=1 y.min=0 y.max=0.0030 silicon
+REGION number=2 y.max=0 sio2
+REGION number=3 y.min=0.0030 sio2
+
+ELECTRODE number=1 name=gate top x.min=0.01 x.max=0.02 
+ELECTRODE number=2 name= drain x.max=0 y.min=0.0 y.max=0.003
+ELECTRODE number=3 name=source x.min=0.03 y.min=0.0 y.max=0.003
+ELECTRODE number=4 name=gate2 bottom x.min=0.01 x.max=0.02
+
+DOPING region=1 p.type uniform conc=1.0E18
+DOPING region=1 x.max=0.01 n.type uniform conc=1.0E20
+DOPING region=1 x.min=0.02 n.type uniform conc=1.0E20
+
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate aluminum
+CONTACT name=gate2 aluminum common=gate
+
+MATERIAL region=2 eg300=8.05 affinity=1.0 nc300=2.8e19 nv300=1.04e19
+MATERIAL region=3 eg300=8.05 affinity=1.0 nc300=2.8e19 nv300=1.04e19
+
+MODELS bqp.n bqp.ngamma=1.2 bqp.nalpha=0.5 cvt srh fermi ni.fermi
+
+#### NUMERICAL METHODS #### 
+METHOD block climit=1.0e-4 
+
+OUTPUT band.par con.band val.band t.quantum
+
+#### SOLUTION SOLVING ####
+SOLVE init 
+
+SOLVE vgate=-0.5 nocurrent
+
+SOLVE name=drain vdrain=0 vstep=0.005 vfinal=0.05 
+
+LOG outfile=$'name'_VD_dd.log
+SOLVE name=gate vgate=-0.5 vstep=0.025 vfinal=0.5 
+LOG off
+
+SAVE outfile=$'name'_VD_dd.str
+
+victoryvisual $'name'_VD_eb.log+$'name'_VD_dd.log \
+ $'name'_VD_eb.str:$'name'.set \
+ $'name'_VD_dd.str:$'name'.set 
+
+QUIT
+
+
+

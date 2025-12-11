@@ -1,0 +1,46 @@
+## Setup ##
+
+Step 1: download the data
+
+    Download final_project_data.zip
+        link: https://rongyulin3.com/qu_genai/assignments/final_project/final_project_data.zip
+    place the "data" folder at the root directory
+
+
+Step 2: Setup your environment
+
+    ## setup instructions - linux:
+        # python -m venv gen-ai-final-proj
+        # source gen-ai-final-proj/bin/activate
+        # pip install -r requirements.txt
+
+    ## setup instructions - windows:
+        # python -m venv gen-ai-final-proj
+        # Set-ExecutionPolicy RemoteSigned -Scope Process
+        # .\gen-ai-final-proj\Scripts\activate
+        # pip install -r requirements.txt
+
+    ## if having issues installing the modules, try only installing this:
+        # pip install -U "transformers>=4.51.0" accelerate safetensors
+
+
+Step 3: Run the code
+
+    ## first run the baseline ##
+    1-run_baseline.py
+
+    ## then the benchmarks ##
+    2-run_benckmark_p0.py
+    2-run_benckmark_p1.py
+    2-run_benckmark_p2.py
+    2-run_benckmark_p3.py
+
+    ## lastly the evaluations ##
+    3-evaluate_score_and_quantify_p0.py
+    3-evaluate_score_and_quantify_p1.py
+    3-evaluate_score_and_quantify_p2.py
+    3-evaluate_score_and_quantify_p3.py
+
+
+Step 4: Examine results
+    Results are stored in the results folder

@@ -1,0 +1,257 @@
+# (c) Silvaco Inc., 2024
+
+# 20nm Undoped Channel, Ultra-Thin Body and Buried Oxide Fully Depleted SOI NMOSFET in 3D
+
+# Required Modules
+#  Victory Process
+#   -3D Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+#   -3D Giga
+
+# Example Name
+Set name=“SOI_ex09” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+INIT layout=SOI_ex09.lay material=silicon depth=0.06 gasheight=4 \
+     resolution=0.0015 meshdepth=2
+
+LINE x location=0.01 spacing=0.002
+LINE x location=0.03 spacing=0.002
+LINE x location=0.05 spacing=0.001
+LINE x location=0.07 spacing=0.001
+LINE x location=0.09 spacing=0.002
+LINE x location=0.11 spacing=0.002
+
+LINE y location=0 spacing=0.001
+LINE y location=0.02 spacing=0.005
+LINE y location=0.04 spacing=0.001
+
+LINE z location=-0.037 spacing=0.001
+LINE z location=-0.027 spacing=0.005
+LINE z location=-0.017 spacing=0.001
+LINE z location=-0.015 spacing=0.00025
+LINE z location=-0.01 spacing=0.001
+LINE z location=0  spacing=0.002
+LINE z location=0.02 spacing=0.005
+LINE z location=0.04 spacing=0.001
+
+# SOI Waffer
+DEPOSIT material=oxide  thick=0.01 max
+DEPOSIT material=silicon  thick=0.005 max
+
+# Trench
+ETCH dry thick=0.052 mask=TRENCH reverse angle=86 deltacd=-0.003
+ETCH wet thick=0.003 mask=TRENCH reverse deltacd=-0.003
+MATERIAL material=oxynitride inherit=oxide
+DEPOSIT material=oxynitride thick=0 max
+
+
+# Gate Stack
+DEPOSIT material=oxide  thick=0.002 max
+DEPOSIT material=polysilicon thick=0.02 max
+
+# Gate
+ETCH material=polysilicon thick=0.021 mask=GATE max
+ETCH material=oxide thick=0.003 dry
+
+# Spacer
+DEPOSIT material=nitride thick=0 max
+ETCH material=nitride dry angle=82 thick=0.022 mask=GATE 
+DEPOSIT material=nitride thick=0.002 conformal curved
+ETCH material=nitride dry thickness=0.0023
+
+DOPING arsenic=1e15 silicon
+MASK mask=ACTIVE reverse
+MATERIAL name=oxynitride inherit=nitride
+IMPLANT arsenic energy=1 dose=1e13 tilt=7 rotation=27
+STRIP barrier
+
+DEPOSIT material=aluminum thick=0.002 min
+ETCH material=aluminum dry thick=0.003 mask=SD
+
+ELECTRODES mask=GATE material=polysilicon
+ELECTRODES mask=SD material=aluminum
+ELECTRODES substrate
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH conformal
+
+SAVE out=$'name'_VM_conf.str
+
+####### DEVICE SIMULATION #######
+# Drift Diffusion (DD) - VGID and VDID
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+
+MESH infile=$'name'_VM_conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE qf=3e10 z.max=-0.0125
+INTERFACE qf=1e11 z.min=-0.0125
+CONTACT name=gate workfunc=4.5
+MODELS cvt srh auger bgn print 
+
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres norm.scaling.local dvmax=1.0 climit=1.0e-4
+
+#### SOLUTION SOLVING #### 
+# VGID
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vdrain=0.10
+
+LOG outfile=$'name'_VGID_DD.log
+SOLVE vgate=0.0 vstep=0.05 vfinal=1 name=gate
+LOG off
+
+# VDID
+SOLVE vstep=-0.025 vfinal=0 name=drain
+
+LOG outfile=$'name'_VDID_DD.log
+SOLVE vdrain=0.0 vstep=0.05 vfinal=1 name=drain prev
+LOG off
+
+
+####### DEVICE SIMULATION #######
+# Energy Balance (EB) - VGID and VDID
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+
+MESH infile=$'name'_VM_conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE qf=3e10 z.max=-0.0125
+INTERFACE qf=1e11 z.min=-0.0125
+CONTACT name=gate workfunc=4.5
+MODELS cvt srh auger bgn hcte.el evsatmod=0 print
+
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres block meinr norm.scaling.local dvmax=1.0 climit=1.0e-4 
+
+
+#### SOLUTION SOLVING #### 
+# VGID
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vdrain=0.10
+
+LOG outfile=$'name'_VGID_EB.log
+SOLVE vgate=0.0 vstep=0.05 vfinal=1 name=gate
+LOG off
+
+# VDID
+SOLVE vstep=-0.025 vfinal=0 name=drain
+
+LOG outfile=$'name'_VDID_EB.log
+SOLVE vdrain=0.0 vstep=0.05 vfinal=1 name=drain prev
+LOG off
+
+####### DEVICE SIMULATION #######
+# Energy Balance and Bohm Quantum Potential (EB+BQP) - VGID and VDID
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+
+MESH infile=$'name'_VM_conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE qf=3e10 z.max=-0.0125
+INTERFACE qf=1e11 z.min=-0.0125
+CONTACT name=gate workfunc=4.5
+MODELS cvt srh auger bgn hcte.el evsatmod=0 print 
+MODELS bqp.n bqp.qdir=z 
+
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres block meinr norm.scaling.local dvmax=1.0 climit=1.0e-4 
+
+#### SOLUTION SOLVING #### 
+# VGID
+SOLVE init bqp.sc
+SOLVE previous
+
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vdrain=0.10
+
+LOG outfile=$'name'_VGID_EB_BQP.log
+SOLVE vgate=0.0 vstep=0.05 vfinal=1 name=gate
+LOG off
+
+# VDID
+SOLVE vstep=-0.025 vfinal=0 name=drain
+
+LOG outfile=$'name'_VDID_EB_BQP.log
+SOLVE vdrain=0.0 vstep=0.05 vfinal=1 name=drain prev
+LOG off
+
+
+####### DEVICE SIMULATION #######
+# Energy Balance, Bohm Quantum Potential and Lattice Heating (EB+BQP+LAT) - VGID and VDID
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+
+MESH infile=$'name'_VM_conf.str
+
+#### MATERIAL/PHYSICAL MODELS #### 
+INTERFACE qf=3e10 z.max=-0.0125
+INTERFACE qf=1e11 z.min=-0.0125
+CONTACT name=gate workfunc=4.5
+MODELS cvt srh auger bgn hcte.el evsatmod=0 print 
+MODELS bqp.n bqp.qdir=z 
+MODELS lat.temp
+
+THERMCONTACT name=substrate ext.temp=300 alpha=1000
+
+#### NUMERICAL METHODS #### 
+METHOD pam.gmres block meinr norm.scaling.local dvmax=1.0 climit=1.0e-4 
+
+#### SOLUTION SOLVING #### 
+# VGID
+SOLVE init bqp.sc
+SOLVE previous
+
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+SOLVE vdrain=0.10
+
+LOG outfile=$'name'_VGID_EB_BQP_LAT.log
+SOLVE vgate=0.0 vstep=0.05 vfinal=1 name=gate
+LOG off
+
+# VDID
+SOLVE vstep=-0.025 vfinal=0 name=drain
+
+LOG outfile=$'name'_VDID_EB_BQP_LAT.log
+SOLVE vdrain=0.0 vstep=0.05 vfinal=1 name=drain prev
+LOG off
+
+victoryvisual \
+ $'name'_VM_conf.str \
+ $'name'_VGID_DD.log+$'name'_VGID_EB.log+$'name'_VGID_EB_BQP.log+$'name'_VGID_EB_BQP_LAT.log \
+ $'name'_VDID_DD.log+$'name'_VDID_EB.log+$'name'_VDID_EB_BQP.log+$'name'_VDID_EB_BQP_LAT.log
+
+quit

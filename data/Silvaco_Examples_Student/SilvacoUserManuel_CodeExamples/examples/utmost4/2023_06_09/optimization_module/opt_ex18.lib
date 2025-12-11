@@ -1,0 +1,73 @@
+.PARAM RC       = 0
+.MODEL mvsghv NMOS (
++level    = 91             version  = 1              tnom     = 26.85          
++cg       = 0.004264       cofsm    = 1.6e-09        cofdm    = 1e-19          
++cofdsm   = 8e-10          cofdsubm = 0              cofssubm = 0              
++cofgsubm = 3e-10          rsh      = 651.218        rcs      = RC             
++rcd      = RC             vx0      = 499981         mu0      = 0.0396636      
++beta     = 3.7045         vto      = -6.15029       ss       = 0.0797273      
++delta1   = 0.0172486      delta2   = 0              dibsat   = 10             
++nd       = 0              alpha    = 3.5            lambda   = 9.99983e-05    
++vtheta   = 0              mtheta   = 0              vzeta    = 0.004          
++vtzeta   = -0.000550215   epsilon  = 2.74741        rct1     = 0.0121881      
++rct2     = 0              flagres  = 1              lgs      = 3e-06          
++vtors    = -650           cgrs     = 0.0008         vx0rs    = 100000         
++mu0rs    = 0.1            betars   = 1.1            delta1rs = 0.0004         
++srs      = 0.065          ndrs     = 0              vthetars = 0              
++mthetars = 0              alphars  = 3.5            lgd      = 3e-06          
++vtord    = -650           cgrd     = 0.0007         vx0rd    = 100000         
++mu0rd    = 0.1            betard   = 1.1            delta1rd = 0.0004         
++srd      = 0.08           ndrd     = 0              vthetard = 0              
++mthetard = 0              alphard  = 3.5            flagfp1  = 1              
++lgfp1    = 0              vtofp1   = -44.5          cgfp1    = 0.0002         
++flagfp1s = 1              cfp1s    = 1e-19          ccfp1    = 9e-11          
++cbfp1    = 0              vx0fp1   = 120000         mu0fp1   = 0.2            
++betafp1  = 1.16           
++delta1fp1 = 0
++sfp1     = 3.2            ndfp1    = 0              
++vthetafp1 = 0
++mthetafp1 = 0
++alphafp1 = 0.01           flagfp2  = 0              lgfp2    = 0              
++vtofp2   = -60            cgfp2    = 9e-05          flagfp2s = 0              
++cfp2s    = 0              ccfp2    = 6.5e-11        cbfp2    = 0              
++vx0fp2   = 190000         mu0fp2   = 0.29           betafp2  = 1.16           
++delta1fp2 = 0
++sfp2     = 4.1            ndfp2    = 0              
++vthetafp2 = 0
++mthetafp2 = 0
++alphafp2 = 1300           flagfp3  = 1              lgfp3    = 0              
++vtofp3   = -120           cgfp3    = 0.001          flagfp3s = 0              
++cfp3s    = 0              ccfp3    = 0              cbfp3    = 0              
++vx0fp3   = 100000         mu0fp3   = 0.17           betafp3  = 1              
++delta1fp3 = 0.01
++sfp3     = 0.1            ndfp3    = 0              
++vthetafp3 = 0
++mthetafp3 = 0
++alphafp3 = 3.5            flagfp4  = 1              lgfp4    = 0              
++vtofp4   = -220           cgfp4    = 0.001          flagfp4s = 0              
++cfp4s    = 0              ccfp4    = 0              cbfp4    = 0              
++vx0fp4   = 100000         mu0fp4   = 0.17           betafp4  = 1              
++delta1fp4 = 0.01
++sfp4     = 0.1            ndfp4    = 0              
++vthetafp4 = 0
++mthetafp4 = 0
++alphafp4 = 3.5            rgsp     = 0              igmod    = 0              
++vjg      = 1              
++pg_param1 = 0.45
++pg_params = 0.3
++ijs      = 0              vgsats   = 3              fracs    = 1              
++alphags  = 10             
++pg_paramd = 0.38
++ijd      = 0              vgsatd   = 3              fracd    = 1              
++alphagd  = 10             pgsrecs  = 0.8            irecs    = 0              
++vgsatqs  = 3.4            vbdgs    = 600            pbdgs    = 4              
++kbdgates = 0              betarecs = 0.35           pgsrecd  = 0.957          
++irecd    = 0              vgsatqd  = 0.55           vbdgd    = 600            
++pbdgd    = 4              kbdgated = 0              betarecd = 0.734          
++rth      = 11.0515        cth      = 0.0001         
++trapselect = 0
++vttrap   = 230            taut     = 3e-05          alphat1  = 0.0001         
++alphat2  = 21             tempt    = 0.0001         noisemod = 0              
++shs      = 2              shd      = 2              kf       = 0              
++af       = 1              ffe      = 1              minr     = 0.001          
++minl     = 1e-09          minc     = 1e-15 )

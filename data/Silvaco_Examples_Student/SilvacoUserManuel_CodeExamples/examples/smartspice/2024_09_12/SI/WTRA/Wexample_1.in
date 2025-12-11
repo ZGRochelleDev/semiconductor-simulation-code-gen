@@ -1,0 +1,54 @@
+ Example 1: Three Coupled Lines (Kuznetsov, SC-43)
+* ------------------------------------------------
+* from:
+* D.B. Kuznetsov, J.E. Schutt-Aine,
+* "Optimal transient Simulation of Transmission Lines",
+* IEEE Transactions on Circuits and Systems - I:
+* Fundamental Theory and Applications,
+* vol. 43, No.2, 1996, pp. 110-121.
+* -------------------------------------------------
+
+.tran .01ns 70ns
+.options Nomod
+.options ACCT
+.options NODE
+
+*.Probe v(In) v(1) v(3) v(5)
+
+.measure TRAN Wv3 CROSS v(3)  val=0.25 
+.measure TRAN Wv5 CROSS v(5)  val=0.5
+
+.measure TRAN RSDEL_P DELAY V(3) RISE=1 VAL0=0 VAL1=0.2 TARG=V(4)
+.measure TRAN RSDEL_A DELAY V(1) RISE=1 VAL0=0 VAL1=0.5 TARG=V(2)
+
+VIn In 0 PULSE (0v 1v 5ns 1ns 1ns 20ns 80ns)
+
+r1 In 1 50
+r3 0 3 10meg
+r5 In 5 50
+
+w n=3 1 3 5 0 2 4 6 0 n=3
++     Umodel = IcWire
++     l=0.677
++     prntab=1
+
+r2 2 0 1k
+r4 4 0 10meg
+r6 6 0 1k
+
+
+
+.MODEL IcWire W plev=1 NL=3 ELEV=2 
+*+      RLGCwrite=1 
++      Cr1=94p  C12=22p C13=22p
++               Cr2=94p C23=22p  
++                       Cr3=94p
+
++      L11=418n  L12=125n  L13=125n
++                L22=418n  L23=125n
++                          L33=418n
+
++      R11=15 R22=15 R33=15 
+
+.end
+

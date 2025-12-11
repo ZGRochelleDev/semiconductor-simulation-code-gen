@@ -1,0 +1,64 @@
+# (c) Silvaco Inc., 2024
+
+# Invoking Alternative Linear Solvers 
+ 
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+#   -3D Meshing
+#  Victory RCx
+
+# Example Name
+SET name=“VRCx_ex27” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 2"
+
+INIT layout=$'name'.lay material=silicon depth=1 gasheight=10
+
+ELECTRODES substrate
+DEPOSIT material=oxide thickness=1 max
+DEPOSIT material=aluminum thickness=1 max
+ETCH material=aluminum thickness=1.5 max mask=SNAKE
+ELECTRODES material=aluminum mask=CONT
+DEPOSIT material=oxide thickness=1 max
+DEPOSIT material=aluminum thickness=1 max
+ETCH material=aluminum thickness=1.5 max mask=CAP
+ELECTRODES material=aluminum mask=VIA
+DEPOSIT material=nitride thickness=1 max
+
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LOAD in=$'name'_VP_sv
+SAVE out=$'name'_VM mode=victoryrcx
+
+####### PARASITIC EXTRACTION ####### 
+GO victoryrcx simflags="-P 2"
+
+INIT structure="$'name'_VM.str"
+INTERCONNECT capacitance adaptc=0.005 capsolver=perConductor mincap=1e-20
+INTERCONNECT resistance adaptr=0.01
+SAVE spice="$'name'_gmres.net"
+ 
+GO victoryrcx simflags="-P 2"
+INIT structure="$'name'_VM.str"
+SOLVER linearsolver=pam
+INTERCONNECT capacitance adaptc=0.005 capsolver=perConductor mincap=1e-20
+INTERCONNECT resistance adaptr=0.01
+save spice="$'name'_pam.net"
+
+GO victoryrcx simflags="-P 2"
+INIT structure="$'name'_VM.str"
+SOLVER linearsolver=pas
+INTERCONNECT capacitance adaptc=0.005 capsolver=perConductor mincap=1e-20
+INTERCONNECT resistance adaptr=0.01
+SAVE spice="$'name'_pas.net"
+
+victoryvisual $'name'_VM.str:$'name'_VM.set
+
+QUIT

@@ -1,0 +1,22 @@
+# (c) Silvaco Inc., 2024
+
+# Design of Experiments (DOE) using dbInternal 
+
+# Example Name
+SET name=“Deckbuild_ex02” 
+
+# launch "internal"
+GO internal
+
+# load "secondary" deck
+LOAD inf=$'name'_secondary.in
+
+# enable secondary deck to launch in separate deckbuild window
+# OPTIONS ^ascii
+
+# Sweep in 3 linear steps from 300 to 400K
+SWEEP parameter=Temper type=linear range="300, 400, 3"
+
+victoryvisual '($'name'_VD_300K.log+$'name'_VD_350K.log+$'name'_VD_400K.log)'
+
+QUIT

@@ -1,0 +1,87 @@
+# (c) Silvaco Inc., 2024
+
+# Slicing interfaces for enhanced refinement (OFFSET)
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+
+# Example Name
+Set name=“VM_Meshing_ex05” 
+
+####### PROCESS SIMULATION ####### 
+# Makes simple block of material with a
+# layer of GaN then on top an angled trench in an AlGaN layer
+GO victoryprocess simflags="-P 4"
+
+INIT material=GaN from=0 to=2 depth=0.2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=1.5 
+
+DEPOSIT material="algan" thickness=0.6 max
+
+ETCH material="algan" between.x="0.5,1.5" angle=45 thickness=0.2 max
+
+DEPOSIT material="oxide" max thickness=0.1
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_sv
+
+# Single OFFSET use, creating a single conformal slice along
+# AlGaN surface for refinement
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+OFFSET interface.regions="material:AlGaN" other.interface.regions="material:oxide" delta="0.025"
+
+REMESH delaunay 
+REFINE max.distance=0.001
+
+# Refinement in AlGaN and oxide layers
+# Good practice to apply refinment in decreasing mesh size
+REFINE max.size=0.05 regions="material:AlGaN, oxide"
+
+# Refinement in GaN layer
+REFINE max.size=0.025 regions="material:GaN"
+
+SAVE out="$'name'_VM_Single_Unmerged"
+
+# merge back adjacent materials of the same type (the sliced AlGaN)
+MERGE
+
+SAVE out="$'name'_VM_Single"
+
+# multiple interface slicing, with distance grading away
+# from interface
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+OFFSET interface.regions="material:AlGaN" other.interface.regions="material:oxide" \
+delta="0.00625" multiplier=2 num.intervals=3
+
+REMESH delaunay 
+REFINE max.distance=0.001
+
+# Refinement in AlGaN and oxide layers
+REFINE max.size=0.05 regions="material:AlGaN, oxide"
+
+# Refinement in GaN layer
+REFINE max.size=0.025 regions="material:GaN"
+
+SAVE out="$'name'_VM_Multiple_Unmerged"
+
+# merge back adjacent materials of the same type (the sliced AlGaN)
+MERGE
+
+SAVE out="$'name'_VM_Multiple"
+
+victoryvisual \
+ $'name'_VM_Single_Unmerged.str \
+ $'name'_VM_Single.str:$'name'_Mesh.set \
+ $'name'_VM_Multiple_Unmerged.str \
+ $'name'_VM_Multiple.str:$'name'_Mesh.set
+
+QUIT

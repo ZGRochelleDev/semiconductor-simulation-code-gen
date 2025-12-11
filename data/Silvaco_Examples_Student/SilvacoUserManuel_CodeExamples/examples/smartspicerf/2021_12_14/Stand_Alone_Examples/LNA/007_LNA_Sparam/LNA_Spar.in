@@ -1,0 +1,14 @@
+* S-parameters
+
+.include 'LNAcircuit.inc'
+.param prf=-10_dBm
+.param rpar21=470
+
+Pout 9  0
+Prf  in 0 MTS1=(prf 0 1)
+$ ----------------------
+.HNET Prf Pout LIN 101 100MegHz 1.2GHz
++  FUND=900MegHz
++  annotate=3 waves
+
+.END

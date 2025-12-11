@@ -1,0 +1,151 @@
+# 3D Saddle Fin
+
+# Complex saddle structure with Victory Process advanced etch&deposit features
+# including thickness modulation and etch dry profile
+
+## process mode only
+
+# Required Modules
+#  Victory Process
+#   -3D Etch & Deposit
+
+# Example Name
+Set name=“VP_Etch_Dep_ex11” 
+
+Go victoryprocess simflags="-P 4"
+
+set PAAL=0.213 
+set PAAW=0.043 
+set AAL=0.12 				# AA length
+set AAW=0.02 				# AA width
+set STID=0.25 				# STI depth
+set STIA=88.0 				# STI angle
+set FinH=0.030 				# Fin height
+set FinR=$AAW/2.0	 		# Fin radius
+set Zmin=0.5
+set Zmax=1.0 
+set Xmin=-$PAAL/2
+set Xmax=$PAAL/2
+set Ymin=-$PAAW/2
+set Ymax=$PAAW/2
+
+OPTION run.geometry
+
+INIT material="silicon" gasheight=$Zmin depth=$Zmax \
+from="$Xmin, $Ymin" to="$Xmax, $Ymax" flow.dim=3D \
+dopant=boron dopingvalue=1e15 resolution=0.004
+
+## Define circle mask
+set center1=$AAL/2-$FinR
+set center2=-$AAL/2+$FinR
+
+SPECIFYMASKPOLY maskname="Finround1" circle  \
+npoints=200 center="$center1, 0.00" radius=$FinR
+SPECIFYMASKPOLY maskname="Finround2" circle  \
+npoints=200 center="$center2, 0.00" radius=$FinR
+
+## Define rectangle mask
+set masklb1=-$AAL/2+$FinR
+set masklb2=-$AAW/2
+set maskrt1=$AAL/2-$FinR
+set maskrt2=$AAW/2
+
+SPECIFYMASKPOLY maskname="FinRect" \
+rect lb=" $masklb1, $masklb2" rt=" $maskrt1, $maskrt2"
+
+## Mask Boolean operation
+SPECIFYMASKPOLY newmask="Fin1" mask1="Finround1" or mask2="FinRect" 
+SPECIFYMASKPOLY newmask="Fin2" mask1="Finround2" or mask2="Fin1" 
+
+ETCH dry material=silicon mask="Fin2" thickness=$STID angle=$STIA
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT name=$'name'_Fin.str
+
+material  material="STI"       inherit="SiO2"
+
+DEPOSIT material=STI max thickness=0.002 
+ETCH directional  material=STI thickness=0.002
+EXPORT name=$'name'_Fin2.str
+
+## Parameters for saddle shape
+set WLTop=0.030  # word line top width
+set WLR_x=0.012  # word line radius
+set WLR_y=0.020  # word line radius
+set WLTD=0.140   # total word line trench depth
+set FinL=0.02    # center Fin length in x direction to calculation coordinate
+
+## Define saddel mask
+set center_Px1=$FinL/2.0+$WLTop/2.0     # center position of saddle
+set enlarge_y=0.015 			# enlarge delta y
+set Saddle1_p11=$FinL/2.0
+set Saddle1_p12=-$AAW/2.0-$enlarge_y 	# enlarged because of profile for all mask edges
+set Saddle1_p21=$Saddle1_p11+$WLTop
+set Saddle1_p31=$Saddle1_p21
+set Saddle1_p32=$AAW/2.0+$enlarge_y
+set Saddle1_p41=$Saddle1_p11
+set FinSWA=88.0*3.14159/180 		# fin etch side wall angle
+set Fin_rece=$WLTD/tan($FinSWA)
+
+SPECIFYMASKPOLY maskname="saddle1" \
+p1="$Saddle1_p11,$Saddle1_p12"  p2="$Saddle1_p21, $Saddle1_p12" \
+p3="$Saddle1_p31, $Saddle1_p32"  p4="$Saddle1_p41, $Saddle1_p32"
+
+## Thickness modulation with absolute coordinate both for x and y direction
+#Function:
+#Step1: prepare a function both for x and y direction to make a saddle(two parabolas here)
+#Step2: find the thikcness mudulation range *for y is -0.02~0.02 for x is -0.015~0.015
+#Step3: calculate the function *1/(0.015^2)=4444  
+# word line radius is the maxmum thickness modulation, so $WLR_x*4444*0.015^2=1.0
+
+ETCH dry mask="saddle1" reverse thickness=$WLTD  \
+thickness.modulation="-$WLR_x*4444.0*(x-$center_Px1)^2+$WLR_y*2500*y^2" \
+profile="(0.0, 0.0) ($Fin_rece, $WLTD)"
+EXPORT name=$'name'_saddle1.str
+
+## Saddle2: symmetric points
+set center_Px2=-$FinL/2-$WLTop/2
+set Saddle2_p11=-$FinL/2.0
+set Saddle2_p12=-$AAW/2.0-$enlarge_y 
+set Saddle2_p21=$Saddle2_p11-$WLTop
+set Saddle2_p31=$Saddle2_p21
+set Saddle2_p32=$AAW/2.0+$enlarge_y
+set Saddle2_p41=$Saddle2_p11
+
+SPECIFYMASKPOLY maskname="saddle2" \
+p1= "$Saddle2_p11,$Saddle2_p12"  p2="$Saddle2_p21, $Saddle2_p12" \
+p3="$Saddle2_p31, $Saddle2_p32"  p4="$Saddle2_p41, $Saddle2_p32"
+
+ETCH dry mask="saddle2" reverse thickness=$WLTD  \
+thickness.modulation="-$WLR_x*4444.0*(x-$center_Px2)^2+$WLR_y*2500*y^2" \
+profile="(0.0, 0.0) ($Fin_rece, $WLTD)"
+EXPORT name=$'name'_saddle2.str
+
+
+DEPOSIT oxide thickness=0.008 conformal  
+ETCH above=0.0
+DEPOSIT max thickness=0.0  material=tungsten 
+ETCH dry material="silicon, STI, oxide, tungsten" \
+thickness=0.04 between.x=$center_Px2, $center_Px1
+ETCH max material=tungsten  thickness=0.04 
+EXPORT name=$'name'_WL_etch.str
+DEPOSIT nitride thickness=0.0 max  
+
+## Bit line mask
+set BLmasklb1=-$FinL/2.0
+set BLmasklb2=-$AAW/2.0
+set BLmaskrt1=$FinL/2.0
+set BLmaskrt2=$AAW/2.0
+
+SPECIFYMASKPOLY maskname="BL" \
+rect lb=" $BLmasklb1, $BLmasklb2" rt=" $BLmaskrt1, $BLmaskrt2"
+
+ETCH dry material=nitride mask="BL" thickness=0.05 reverse
+DEPOSIT material=polysilicon max thickness=0.0
+
+EXPORT name=$'name'_Final.str
+
+victoryvisual $'name'_Final.str
+
+QUIT

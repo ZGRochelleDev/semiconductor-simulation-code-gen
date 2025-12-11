@@ -1,0 +1,283 @@
+# (c) Silvaco Inc., 2024
+
+# Full characterisation of a MOS (Part 2)
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bulk_ex05” 
+
+# Full Characterisation of an MOS (Part 2)
+# -DIBL Extraction
+# -Body Effect Extraction 
+# -Breakdown Voltage Extraction
+
+####### PROCESS SIMULATION ####### 
+# Makes simple symmetrical MOS structure. Only half simulated to save time.
+# Mirrored in the remesh stage
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 orientation=100 from=0.0 to=0.5 depth=0.8 gasheight=2.35 resolution=0.01,0.01 material=silicon dopants="phosphorus" dopingvalues="1e14"
+
+LINE x location=0.0 spacing=0.05
+LINE x location=0.2 spacing=0.01 
+LINE x location=0.5 spacing=0.01 
+#
+LINE z location=0.0 spacing=0.01 
+LINE z location=0.5 spacing=0.01
+LINE z location=0.8 spacing=0.05 
+
+#pwell formation including masking off of the nwell
+DIFFUSE time=30 temperature=1000 dryo2 press=1.00 hcl=3
+
+STRIP material=oxide
+
+#P-well Implant
+IMPLANT boron dose=8e12 energy=100  
+
+DIFFUSE temperature=950 time=100 weto2 hcl=3
+
+# welldrive starts here
+DIFFUSE time=50 temperature=1000 t.final=1200 dryo2 press=0.10 hcl=3
+DIFFUSE time=220 temperature=1200 press=1
+DIFFUSE time=90 temperature=1200 t.final=800 press=1
+
+STRIP material=oxide
+
+# sacrificial "cleaning" oxide
+DIFFUSE time=20 temperature=1000 dryo2 press=1 hcl=3
+
+STRIP material=oxide 
+
+# gate oxide grown
+DIFFUSE time=11 temperature=925 dryo2 press=1.00 hcl=3
+
+#vt adjust implant 
+IMPLANT boron dose=9.5e11 energy=10  
+
+DEPOSIT max material=polysilicon thick=0.2 right.to=0.35
+
+DIFFUSE time=3 temperature=900 weto2 press=1.0
+
+IMPLANT phosphor dose=3.0e13 energy=20  
+
+DEPOSIT conformal material=oxide thick=0.120
+
+ETCH material=oxide dry thick=0.120
+
+IMPLANT arsenic dose=5.0e15 energy=50  
+
+DIFFUSE time=1 temperature=900 press=1.0
+
+# pattern s/d contact metal
+ETCH material=oxide left.to=0.2
+
+DEPOSIT left.to=0.18 material=aluminum thick=0.03 min
+
+# Save simulation status for mirror and remesh
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+# mirror about the x axis
+MIRROR axes="+1x"
+
+# build the conformal mesh on the mirrored structure
+REMESH conformal 
+
+SAVE out="$'name'_VM"
+
+GO victoryextract
+LOAD in="$'name'_VM.str"
+# Extract a design parameter - gate oxide thickness 
+EXTRACT.THICKNESS name="gateox" region="SiO2" nth=1 x.val=0.05 
+# extract final S/D Xj
+EXTRACT.DEPTH name=nxj x.val=0.1 field=net value=0 region=silicon
+# extract the N++ regions sheet resistance
+EXTRACT.SHEET.RESISTANCE name="n++ sheet rho" x.val=0.05
+# extract the sheet rho under the spacer, of the LDD region
+EXTRACT.SHEET.RESISTANCE name="ldd sheet rho" x.val=0.30
+# extract the surface conc under the channel.
+EXTRACT.SURFACE.CONCENTRATION name="chan surf conc" region=silicon other.region=oxide x.val=0.45 field="Net Doping"
+
+
+####### DEVICE SIMULATION ####### 
+# DIBL Extraction
+GO victoryd simflags="-P 2"
+
+#### STRUCTURE SPECIFICATION ####
+# as electrodes were mirrored and not labelled previously
+# use no.contact to specify electrode labels will be 
+# assigned in Victory Device
+MESH inf=$'name'_VM.str no.contact
+
+# Specify co-ordinates in the electrode regions and electrode names
+ELECTRODE coord.region="0.1,0.2" name=source
+ELECTRODE coord.region="0.6,0.2" name=gate
+ELECTRODE coord.region="1.0,0.2" name=drain
+ELECTRODE substrate
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODEL cvt srh print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE prev
+
+# Bias the drain to 0.1V
+SOLVE vdrain=0.01 vstep=0.01 vfinal=0.1 name=drain
+
+# Start logging electrode IV data
+LOG outf=$'name'_VD_DIBL_0p1.log
+
+# Ramp the gate to 1.5V
+SOLVE vgate=0 vstep=0.01 vfinal=1.5 name=gate compl=1.1e-7 cname=drain
+
+# extract device parameters at 0.1V
+EXTRACT init inf="$'name'_VD_DIBL_0p1.log"
+EXTRACT name="nvt1_d" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val=0.1e-6
+
+# Stop logging data, ready for new sweep
+LOG off
+
+# Repeat but solve the drain to 3V
+SOLVE init
+SOLVE prev
+
+# Bias the drain to 3 volts. Small steps initially
+SOLVE vdrain=0.02 vstep=0.02 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.2 vfinal=3 name=drain
+
+# Start logging electrod IV data
+LOG outf=$'name'_VD_DIBL_3p0.log
+
+SOLVE vgate=0 vstep=0.01 vfinal=1.5 name=gate compliance=1.1e-7 cname=drain
+
+
+# extract device parameters at 0.1V
+EXTRACT init inf="$'name'_VD_DIBL_3p0.log"
+EXTRACT name="nvt2_d" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val=0.1e-6
+
+# Calculate DIBL parameter
+EXTRACT name="ndibl" ($"nvt1_d"-$"nvt2_d")/(3.0-0.1)
+
+
+####### DEVICE SIMULATION ####### 
+# Body Effect Extraction
+# Same initial configuration as previously
+# Just change bias conditions
+GO victoryd simflags="-P 2"
+
+MESH inf=$'name'_VM.str no.contact
+
+ELECTRODE coord.region="0.1,0.2" name=source
+ELECTRODE coord.region="0.6,0.2" name=gate
+ELECTRODE coord.region="1.0,0.2" name=drain
+ELECTRODE substrate
+
+MODEL cvt srh print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+SOLVE init
+SOLVE prev
+
+# Bias the drain to 0.1V
+SOLVE vdrain=0.01 vstep=0.01 vfinal=0.1 name=drain
+
+# Start logging electrode IV data
+LOG outf=$'name'_VD_Body_0p1_0p0.log
+
+# Ramp the gate
+SOLVE vgate=0 vstep=0.01 vfinal=2 name=gate \
+ compliance=1.0e-7 cname=drain
+
+# extract device parameters
+EXTRACT init inf="$'name'_VD_Body_0p1_0p0.log"
+EXTRACT name="nvt1_g" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val=0.1e-6
+
+LOG off
+
+# Now start again but with a substrate back-bias of -1V
+SOLVE init
+SOLVE prev
+
+# Bias the drain to 0.1V
+SOLVE vdrain=0.01 vstep=0.01 vfinal=0.1 name=drain
+
+# substrate back-bias of -1V
+SOLVE vsubstrate=-0.01 vstep=-0.01 vfinal=-1 name=substrate
+
+# Start logging electrode IV data
+LOG outf=$'name'_VD_Body_0p1_m1p0.log
+
+SOLVE vgate=0 vstep=0.01 \ 
+ vfinal=2 name=gate compliance=1.0e-7 cname=drain
+
+
+EXTRACT init inf="$'name'_VD_Body_0p1_m1p0.log"
+EXTRACT name="nvt2_g" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val=0.1e-6
+
+# Calculate Gamma with phi = 0.6 eV....
+EXTRACT name="ngamma" ($"nvt2_g"-$"nvt1_g")/((sqrt(1+0.6))-sqrt(0.6))
+
+####### DEVICE SIMULATION ####### 
+# Breakdown Voltage Extraction 
+# Same initial configuration as previously
+# Just change bias conditions
+GO victoryd simflags="-P 2"
+
+MESH inf=$'name'_VM.str no.contact
+
+ELECTRODE coord.region="0.1,0.2" name=source
+ELECTRODE coord.region="0.6,0.2" name=gate
+ELECTRODE coord.region="1.0,0.2" name=drain
+ELECTRODE substrate
+
+MODEL cvt srh print 
+
+CONTACT name=gate n.poly
+
+INTERFACE qf=3e10
+
+# Needed for any breakdown simulation
+IMPACT selb
+
+METHOD climit=1e-4
+
+# Start logging electrode IV data
+LOG outf=$'name'_VD_BV.log
+
+SOLVE vdrain=0.025
+SOLVE vdrain=0.05
+SOLVE vdrain=0.1
+SOLVE vdrain=0.5
+
+SOLVE vstep=0.25 vfinal=12 name=drain compl=1e-7 cname=drain
+SAVE outfile=$'name'_VD_BV.str
+
+# Extract the design parameter, Vbd
+EXTRACT name="NVbd" x.val from curve(abs(v."drain"),abs(i."drain")) where y.val=1e-8
+
+victoryvisual $'name'_VM.str:$'name'.set \
+ $'name'_VD_DIBL_0p1.log+$'name'_VD_DIBL_3p0.log \
+ $'name'_VD_Body_0p1_0p0.log+$'name'_VD_Body_0p1_m1p0.log \
+ $'name'_VD_BV.log:$'name'_VD_BV.set
+
+QUIT

@@ -1,0 +1,204 @@
+# (c) Silvaco Inc., 2024
+
+# Effect of Poly DOPING on Threshold Voltage 
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set name=“Bulk_ex08” 
+
+####### DEVICE SIMULATION ####### 
+# First simulation
+# P+ poly gate doped to a concentration of 1e19/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.20 spacing=0.025
+X.MESH location=-0.15 spacing=0.025
+X.MESH location=-0.05 spacing=0.010
+X.MESH location=0.05 spacing=0.010
+X.MESH location=0.15 spacing=0.025
+X.MESH location=0.20 spacing=0.025
+
+Y.MESH location=-0.04 spacing=0.005
+Y.MESH location=-0.03 spacing=0.005
+Y.MESH location=-0.005 spacing=0.0025
+Y.MESH location=0.0 spacing=0.0005
+Y.MESH location=0.01 spacing=0.002
+Y.MESH location=0.10 spacing=0.02
+
+REGION number=1 x.min=-0.20 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=oxide
+REGION number=2 x.min=-0.20 x.max=0.20 y.min=0.0 y.max=0.10 \
+ material=silicon
+REGION number=3 x.min=-0.05 x.max=0.05 y.min=-0.03 y.max=-0.005 \
+ material=poly
+REGION number=4 x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 \
+ material=aluminum
+REGION number=5 x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+REGION number=5 x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+
+ELECTRODE x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 name=source
+ELECTRODE x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 name=drain
+ELECTRODE bottom name=substrate
+
+DOPING REGION=2 p.type concentration=1e18 uniform
+DOPING REGION=3 n.type concentration=1e19 uniform
+DOPING x.min=-0.2 x.max=-0.05 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform
+DOPING x.min=0.05 x.max=0.2 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform 
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vdrain=0.005
+SOLVE vdrain=0.05
+
+LOG outfile=$'name'_VD_CV19.log
+
+SOLVE vgate=0.0 vstep=0.02 vfinal=1.0 name=gate
+extract name="$'name'_nVt_19" x.val from curve(v."gate",i."drain") where y.val=0.5e-8/0.1 
+
+SAVE outfile=$'name'_VD_CV19.str
+
+####### DEVICE SIMULATION ####### 
+# Second simulation
+# P+ poly gate doped to a concentration of 1e20/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.20 spacing=0.025
+X.MESH location=-0.15 spacing=0.025
+X.MESH location=-0.05 spacing=0.010
+X.MESH location=0.05 spacing=0.010
+X.MESH location=0.15 spacing=0.025
+X.MESH location=0.20 spacing=0.025
+
+Y.MESH location=-0.04 spacing=0.005
+Y.MESH location=-0.03 spacing=0.005
+Y.MESH location=-0.005 spacing=0.0025
+Y.MESH location=0.0 spacing=0.0005
+Y.MESH location=0.01 spacing=0.002
+Y.MESH location=0.10 spacing=0.02
+
+REGION number=1 x.min=-0.20 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=oxide
+REGION number=2 x.min=-0.20 x.max=0.20 y.min=0.0 y.max=0.10 \
+ material=silicon
+REGION number=3 x.min=-0.05 x.max=0.05 y.min=-0.03 y.max=-0.005 \
+ material=poly
+REGION number=4 x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 \
+ material=aluminum
+REGION number=5 x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+REGION number=5 x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+
+ELECTRODE x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 name=source
+ELECTRODE x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 name=drain
+ELECTRODE bottom name=substrate
+
+DOPING REGION=2 p.type concentration=1e18 uniform
+DOPING REGION=3 n.type concentration=1e20 uniform
+DOPING x.min=-0.2 x.max=-0.05 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform
+DOPING x.min=0.05 x.max=0.2 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform 
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vdrain=0.005
+SOLVE vdrain=0.05
+
+LOG outfile=$'name'_VD_CV20.log
+
+SOLVE vgate=0.0 vstep=0.02 vfinal=1.0 name=gate
+extract name="$'name'_nVt_20" x.val from curve(v."gate",i."drain") where y.val=0.5e-8/0.1 
+
+SAVE outfile=$'name'_VD_CV20.str
+
+
+####### DEVICE SIMULATION ####### 
+# Third simulation
+# P+ poly gate doped to a concentration of 1e21/cm3
+GO victorydevice simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH
+
+X.MESH location=-0.20 spacing=0.025
+X.MESH location=-0.15 spacing=0.025
+X.MESH location=-0.05 spacing=0.010
+X.MESH location=0.05 spacing=0.010
+X.MESH location=0.15 spacing=0.025
+X.MESH location=0.20 spacing=0.025
+
+Y.MESH location=-0.04 spacing=0.005
+Y.MESH location=-0.03 spacing=0.005
+Y.MESH location=-0.005 spacing=0.0025
+Y.MESH location=0.0 spacing=0.0005
+Y.MESH location=0.01 spacing=0.002
+Y.MESH location=0.10 spacing=0.02
+
+REGION number=1 x.min=-0.20 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=oxide
+REGION number=2 x.min=-0.20 x.max=0.20 y.min=0.0 y.max=0.10 \
+ material=silicon
+REGION number=3 x.min=-0.05 x.max=0.05 y.min=-0.03 y.max=-0.005 \
+ material=poly
+REGION number=4 x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 \
+ material=aluminum
+REGION number=5 x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+REGION number=5 x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 \
+ material=aluminum
+
+ELECTRODE x.min=-0.20 x.max=-0.15 y.min=-0.04 y.max=0.0 name=source
+ELECTRODE x.min=-0.05 x.max=0.05 y.min=-0.04 y.max=-0.03 name=gate
+ELECTRODE x.min=0.15 x.max=0.20 y.min=-0.04 y.max=0.0 name=drain
+ELECTRODE bottom name=substrate
+
+DOPING REGION=2 p.type concentration=1e18 uniform
+DOPING REGION=3 n.type concentration=1e21 uniform
+DOPING x.min=-0.2 x.max=-0.05 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform
+DOPING x.min=0.05 x.max=0.2 y.min=0.0 y.max=0.01 concentration=1e20 \
+ n.type uniform 
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MODELS cvt srh
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+
+SOLVE vdrain=0.005
+SOLVE vdrain=0.05
+
+LOG outfile=$'name'_VD_CV21.log
+
+SOLVE vgate=0.0 vstep=0.02 vfinal=1.0 name=gate
+extract name="$'name'_nVt_21" x.val from curve(v."gate",i."drain") where y.val=0.5e-8/0.1 
+
+SAVE outfile=$'name'_VD_CV21.str
+
+victoryvisual '($'name'_VD_CV19.log+$'name'_VD_CV20.log+$'name'_VD_CV21.log)'
+
+QUIT

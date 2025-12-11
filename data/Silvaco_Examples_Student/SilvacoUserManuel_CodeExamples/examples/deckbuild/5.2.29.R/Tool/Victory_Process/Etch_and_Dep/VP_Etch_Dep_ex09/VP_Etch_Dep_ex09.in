@@ -1,0 +1,90 @@
+# (c) Silvaco Inc., 2024
+
+# Introduction to geometric etching models
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator
+
+# Example Name
+Set name="VP_Etch_Dep_ex09" 
+
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon orientation=100 \
+ from=0.00 to=3 depth=1 gasheight=2.2 resolution=0.075,0.0375
+# 
+DEPOSIT outside="1,2" max material=polysilicon thick=0.3 
+DEPOSIT conformal material=nitride thick=0.2
+
+# Save initial condition structure for later re-load
+save name=$'name'_Init_sv
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Init.str"
+
+### Max etch
+# Etch distance measured from the HIGHEST point
+# in the structure. 
+ETCH nitride thickness=0.15 max 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Max.str"
+
+# Load in starting structure
+LOAD name=$'name'_Init_sv
+
+### Min etch
+# Etch distance measured from the LOWEST point
+# in the structure. 
+ETCH nitride thickness=0.15 min 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Min.str"
+
+# Load in starting structure
+LOAD name=$'name'_Init_sv
+
+### Dry etch
+# Horizontal surface lowered by value given by THICKNESS
+ETCH nitride thickness=0.15 dry 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Dry.str"
+
+# Load in starting structure
+LOAD name=$'name'_Init_sv
+
+### Wet etch
+# Isotropic etching. Etch in all directions by value given by THICKNESS
+ETCH nitride thickness=0.15 wet 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Wet.str"
+
+# Load in starting structure
+LOAD name=$'name'_Init_sv
+
+### Strip etch
+# removes all material specified 
+
+STRIP nitride 
+
+# EXPORT - structures generated using the EXPORT statement are for 
+# visualization only
+EXPORT structure="$'name'_Strip.str"
+
+victoryvisual \
+$'name'_Init.str \
+$'name'_Max.str \
+$'name'_Min.str \
+$'name'_Dry.str \
+$'name'_Wet.str \
+$'name'_Strip.str 
+
+QUIT

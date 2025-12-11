@@ -1,0 +1,193 @@
+# (c) Silvaco Inc., 2024
+
+# Modelling for Deep Submicron - Process to Device 
+
+# Required Modules
+#  Victory Process
+#   -2D Implantation & Diffusion
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+Set  name=“SOI_ex13” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon depth=0.8 gasheight=5 resolution=0.01 \
+  dopants=phosphorus dopingvalues=1e14 from=0 to=2.5 
+ 
+LINE x location=0 spacing=0.09
+LINE x location=2.5 spacing=0.09
+
+
+LINE z location=-1.4038 spacing=0.01
+LINE z location=-1.3838 spacing=0.01
+LINE z location=-1.2938 spacing=0.02
+LINE z location=-1.2038 spacing=0.00095
+LINE z location=-1.2 spacing=0.00095
+LINE z location=-1.18 spacing=0.005
+LINE z location=-1.15 spacing=0.01
+LINE z location=-1 spacing=0.01
+LINE z location=0 spacing=0.01
+LINE z location=0.2  spacing=0.05
+LINE z location=2 spacing=0.5
+
+# Create Buried Oxide
+DEPOSIT material=oxide thickness=1 max
+
+# Create Active Silicon Film
+DEPOSIT material=silicon thickness=0.2 max c.boron=1e16
+
+# PAD oxide and PAD nitride
+DEPOSIT material=oxide thickness=0.02 max
+DEPOSIT material=nitride thickness=0.1 max
+
+# Hardmask etch
+ETCH material=nitride thickness=0.11 max left.to.x=0.5
+ETCH material=oxide thickness=0.021 max left.to.x=0.5
+
+#LOCOS formation
+NITRIDE MODEL=viscous
+DIFFUSE time=90 temp=1000 weto2 press=1.00 hcl.pc=0
+STRIP MATERIAL=nitride
+SAVE name=locos
+
+# P-well Implant 
+IMPLANT boron dose=8e12 energy=100 pearson 
+
+# welldrive starts here
+DIFFUSE time=310 temp=1200 
+ETCH material=oxide thickness=0.025 wet
+
+# gate oxide grown here:-
+DIFFUSE time=13 temp=925 dryo2 press=1.00 hcl=3
+# extract a design parameter.....
+extract name="gateox" thickness oxide mat.occno=1 x.val=2.5
+SAVE name=gateoxide
+
+# VT implant
+IMPLANT boron dose=9.5e11 energy=10 pearson 
+
+# polysilicon gate formation
+DEPOSIT material=poly thickness=0.2 conformal c.phosphor=2e20
+ETCH material=poly dry thickness=0.3 left.to.x=2
+
+# Poly reox
+DIFFUSE time=3 temp=900 weto2 press=1.0
+SAVE name=polyox
+
+#NLDD IMP
+IMPLANT phosphor dose=3.0e13 energy=20 pearson 
+# create sidewalls
+DEPOSIT material=oxide thickness=0.12 conformal
+ETCH material=oxide dry thick=0.18 
+
+# S/D implant
+IMPLANT arsenic dose=5.0e15 energy=50 pearson 
+DIFFUSE time=20/60 temp=1025 
+
+#Metal dep
+DEPOSIT aluminum between.x="1,1.8" thickness=0.05 conformal
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# LOAD simulation status
+LOAD in=$'name'_VP_sv
+
+# Mirror the structure
+MIRROR axes="+x"
+Set  MaxSIZE=0.1
+Set  MaxMOSSIZE=0.005
+Set  MaxJuncSIZE=0.01
+Set  MaxIntSIZE=0.01
+remesh delaunay
+#refine max.obtuseness=0.1
+REFINE max.size=$MaxSIZE regions="*"
+REFINE max.size=0.4*$MaxSIZE regions="material:aluminum"
+REFINE max.size=0.4*$MaxSIZE regions="material:polysilicon"
+REFINE max.size=0.2*$MaxSIZE regions="material:silicon"
+
+REFINE max.interface.size=$MaxMOSSIZE grading="quadratic"
+REFINE max.junction.size=$MaxJuncSIZE grading="quadratic"
+REFINE regions="material:sio2" max.interface.size=$MaxIntSIZE grading="quadratic" \
+interface.regions="material:sio2" other.interface.regions="material:polysilicon,silicon"
+SAVE out=$'name'_VD.str
+
+GO victoryd simflags="-80 -P 4"
+
+# LOAD structure and define electrode.
+MESH infile=$'name'_VD.str 
+ELECTRODE name=gate region=3
+ELECTRODE name=source region=1
+ELECTRODE name=drain region=2
+ELECTRODE substrate
+
+# Define Gate workfunction and Gate Qss
+CONTACT name=gate n.poly
+INTERFACE qf=3e10
+
+# Use the cvt mobility model for MOS....
+MODELS cvt srh  hcte.el lat.temp
+THERMCONTACT name=substrate ext.temp=300
+
+# initial solution to get it started.....
+METHOD newton maxtrap=25 
+SOLVE init
+SAVE outf=$'name'_0V.str
+#
+OUTPUT  e.field j.electron j.hole j.conduc j.total \
+ flowlines e.mobility h.mobility qss e.temp h.temp val.band con.band \
+ qfn qfp j.disp photogen impact
+
+# SOLVE for Vg=1,3,5V
+SOLVE vfinal=1 vstep=0.25 name=gate
+SAVE outf=$'name'_1.str
+
+SOLVE vfinal=3 vstep=0.25 name=gate
+SAVE outf=$'name'_3.str
+
+SOLVE vfinal=5 vstep=0.25 name=gate
+SAVE outf=$'name'_5.str
+
+
+
+# obtain Id-Vd curve for Vg=1V
+LOAD infile=$'name'_1.str master
+SOLVE prev
+LOG outf=$'name'_1.log
+SOLVE vfinal=5 vstep=0.25 name=drain
+SAVE outf=$'name'_1a.str
+
+LOG outf=tmp
+
+# obtain Id-Vd curve for Vg=3V
+LOAD infile=$'name'_3.str master
+SOLVE prev
+LOG outf=$'name'_3.log
+SOLVE vfinal=5 vstep=0.25 name=drain
+SAVE outf=$'name'_3a.str
+
+LOG outf=tmp
+
+# obtain Id-Vd curve for Vg=5V
+LOAD infile=$'name'_5.str master
+SOLVE prev 
+LOG outf=$'name'_5.log
+SOLVE vfinal=5 vstep=0.25 name=drain
+SAVE outf=$'name'_5a.str
+
+victoryvisual \
+$'name'_VD.str \
+$'name'_1.log+\
+$'name'_3.log+\
+$'name'_5.log
+
+quit

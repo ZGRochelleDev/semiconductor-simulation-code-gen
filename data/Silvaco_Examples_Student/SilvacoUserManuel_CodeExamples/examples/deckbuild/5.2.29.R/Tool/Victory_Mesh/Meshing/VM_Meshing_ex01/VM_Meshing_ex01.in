@@ -1,0 +1,88 @@
+# (c) Silvaco Inc., 2024
+
+# Interface refinement - default and custom interfaces
+
+# Required Modules
+#  Victory Process
+#   -Core Simulator 
+#  Victory Mesh
+#   -2D Meshing
+
+# Example Name
+Set name=“VM_Meshing_ex01” 
+
+####### PROCESS SIMULATION ####### 
+# Makes two simple stacks, Poly/Oxide/Si and Alu/Oxide/Si
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=1 \
+resolution=0.05,0.05 meshdepth=2 gasheight=1 
+
+DEPOSIT oxide upto=-0.1 between="0.3,0.7" 
+DEPOSIT polysilicon upto=-0.3 between="0.3,0.7" 
+
+DEPOSIT oxide upto=-0.1 between="1.3,1.7" 
+DEPOSIT aluminum upto=-0.3 between="1.3,1.7"
+
+# Save simulation status for remeshing
+SAVE name=$'name'_VP_sv
+
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+SAVE out="$'name'_VM_Base_Del"
+
+# default interface refinement - find polysilicon interfaces,
+# add refinment in semiconductor material only. Grading starts
+# at the polysilicon/oxide interface, growing to the base
+# mesh size of a distance of 3*base mesh
+REFINE max.interface.size=0.01 
+
+SAVE out="$'name'_VM_DefaultInterface_Del"
+
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Change interface for "Aluminum". Refinment still applied to
+# semiconductor region but relative to Alu interface.
+REFINE max.interface.size=0.01 interface.regions="material:aluminum" 
+
+SAVE out="$'name'_VM_AluInterface_Del"
+
+GO victorymesh simflags="-P 4"
+
+LOAD in="$'name'_VP_sv"
+
+REMESH delaunay 
+
+# base mesh
+REFINE max.distance=0.001 regions="*"
+REFINE max.size=0.1 regions="*"
+
+# Change interface to both "Polysilicon" and "Aluminum". 
+REFINE max.interface.size=0.01 interface.regions="material:aluminum, polysilicon" 
+
+SAVE out="$'name'_VM_BothInterface_Del"
+
+victoryvisual \
+$'name'_VM_Base_Del.str:$'name'_Mesh.set \
+$'name'_VM_DefaultInterface_Del.str:$'name'_Mesh.set \
+$'name'_VM_AluInterface_Del.str:$'name'_Mesh.set \
+$'name'_VM_BothInterface_Del.str:$'name'_Mesh.set
+
+
+QUIT

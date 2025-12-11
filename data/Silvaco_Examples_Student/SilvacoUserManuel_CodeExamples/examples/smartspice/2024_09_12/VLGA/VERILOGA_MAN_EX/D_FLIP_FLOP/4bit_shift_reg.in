@@ -1,0 +1,30 @@
+* 4 Bit Shift Register
+
+.verilog "dff.va"
+
+* Input Waveforms
+*    Data
+vdata din  0 pwl(0 0 0.999u 0 1u 5 1.999u 5 2u 0 20u 0 R 0n)
+*    Clock
+vclk  clk  0 pulse(0 5 1u 1n 1n 2u 4u)
+
+* Instance Shift Register
+YVLG_dff1 clk din q1 q1b dff
+YVLG_dff2 clk q1  q2 q2b dff
+YVLG_dff3 clk q2  q3 q3b dff
+YVLG_dff4 clk q3  q4 q4b dff
+
+* Output Loading
+RLoadQ1b q1b 0 1MEG
+RLoadQ2b q2b 0 1MEG
+RLoadQ3b q3b 0 1MEG
+RLoadQ4  q4  0 1MEG
+RLoadQ4B q4b 0 1MEG
+
+* Analysis
+.tran 200n 20u
+
+* Plot Waveforms
+.iplot v(clk) v(din) v(q1) v(q2) v(q3) v(q4) 
+
+.end

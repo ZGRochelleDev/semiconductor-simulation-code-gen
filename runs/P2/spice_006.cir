@@ -1,0 +1,8 @@
+*Rlc_bandpass
+V1 in 1 AC
+R1 in n1 50
+L1 n1 out 10mH
+C1 out 10n
+.sweep dec 200 1MHz
+.print sweep V(out)
+.end

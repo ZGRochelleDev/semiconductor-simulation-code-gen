@@ -1,0 +1,24 @@
+* JK Flip Flop  
+
+.verilog "jk_ff.va"
+
+* * Input Waveforms
+VCLOCK       clk            0      PULSE(0 5 4u   5n 5n 3u 6u)
+VJ           j              0      PULSE(0 5 12u 5n 5n 16u 32u)
+VK	     k              0      PULSE(0 5 8u  5n 5n 8u 16u)
+
+* Instance JK Flip Flop
+YVLG_JK_FF    j k clk      q qbar  V_jk_ff
+
+* Output Loading
+RLOAD_Q        q       0       1MEG
+RLOAD_QBAR     qbar    0       1MEG
+
+* Analysis
+.tran 1u 100u
+
+* Print Waveforms
+.print v(clk) v(j) v(k) v(q) v(qbar) 
+*.iplot v(clk) v(j) v(k) v(q) v(qbar) @YVLG_JK_FF[V(q)]
+
+.end

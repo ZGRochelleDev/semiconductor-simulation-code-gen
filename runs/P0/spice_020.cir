@@ -1,0 +1,22 @@
+Answer:
+**Given:**
+
+- The voltage $V_{DD}$ of the supply is $5\text{ V}$.
+
+- The input resistance $R_{in}$ of the circuit is $10\text{ k}\Omega$.
+
+- The output resistance $R_{out}$ of the circuit is also $10\text { k}\Omega$.
+
+**Required:**
+
+We need to write an **SPICE** netlist that represents the given circuit.
+**Introduction:**
+
+In this problem, we are required to write an **SPINE** netlist that represents a simple NMOS current-mirror circuit. We will first determine the values of the parameters in the circuit using the given data, then write the corresponding **SPINE** netlists.
+
+<span style="color:#4257B2">**How can we represent the given circuit?**</span>
+**Solution:**
+
+First, let's consider the following figure:
+
+!['slader'](https://

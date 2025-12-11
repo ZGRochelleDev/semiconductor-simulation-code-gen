@@ -1,0 +1,71 @@
+* D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA
+* Gateway 2.12.7.R Spice Netlist Generator
+* Workspace name:       D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA.workspace
+* Simulation name:      D:\dzmitrk\work\2010\examples flow\examples\Full_Flow_RF_PDK\LNA\LNA.schlr
+* Simulation timestamp: 06-May-2010 11:01:18
+
+* Schematic name: LNA
+XM3 NET7 NET7 GND GND rfnmos2v LR=240N WR=5U NR=8 M=1
+C5 NET8 Vin 200p
+Pout Vout GND R=50
+Prf Vin GND ACMAG=prf ACPHASE=0 R=50 MAG1=prf PHASE1=0
+V1 VDD2 GND DC 2
+XC2 NET3 Vout mimcap LT=6.5728U M=5
+XL1 VDD2 NET3 ind WIDTH=10u RAD=60u SPACE=2u NR=6.5 M=1
+XL2 NET8 NET4 ind WIDTH=10u RAD=60u SPACE=2u NR=6.5 M=1
+XL4 NET1 GND ind WIDTH=10u RAD=60u SPACE=2u NR=2.5 M=1
+XM1 NET3 VDD2 NET5 NET5 rfnmos2v LR=240N WR=5U NR=40 M=1
+XM2 NET5 NET4 NET1 NET1 rfnmos2v LR=240N WR=5U NR=64 M=1
+XR1 VDD2 NET7 rpoly W=2U L=65.007U nc=3 M=1
+XR2 NET7 NET4 rpoly_rf L=30U W=2U NC=2 M=1
+
+* Global Nodes Declarations
+.GLOBAL GND VDD VDD2
+
+* End of the netlist
+
+*
+* Markers to save
+*
+.SAVE V(Vout)
+
+* Schematic Netlist rebuilt at runtime
+
+*
+.inc ..\libraries\models\sbcd_rf.lib
+.OP
+*
+.PARAM PRF=-40_dBm
+.OPTIONS EXPERT=777
+
+*#com
+********************************
+* SIMULATION 1 (HNET) *
+********************************
+.HNET PRF POUT 
++  LIN 600 10MegHz 6GHz
++  FUND=10GHz
++  ANNOTATE = 4 
++  WAVES
++  NOISE
++  LOAD_STAB_CIRCLES 
++  SOURCE_STAB_CIRCLES
++  GAIN_CIRCLES
++  POWER_GAIN_CIRCLES
+*#endcom
+
+#com
+************************************************************
+* SIMULATION 2 (P1db) (PARAMETRIC SWEEP)*
+************************************************************
+.HARM
++ FUND=2400MegHz 
++ NHARM=10
++ ANNOTATE = 3 
++ WAVES
++ SWEEP prf LIN 11 -50 0
+.MEASURE HARM_SP dbOUT EXPR VAL='@Pout[pout1]' ; at 2400MegHz
+.MEASURE MEAS r_1dbCompression COMPR1DB dbOUT EP=-45
+#endcom
+
+.END

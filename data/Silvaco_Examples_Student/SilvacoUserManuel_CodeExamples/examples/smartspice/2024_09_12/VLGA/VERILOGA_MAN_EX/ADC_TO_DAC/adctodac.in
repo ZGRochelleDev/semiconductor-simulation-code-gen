@@ -1,0 +1,38 @@
+* 5bit ADC to 5bit DAC 
+
+.verilog "dac.va"
+.verilog "adc.va"
+
+* Option
+.options iplot_one
+
+* Signals 
+* Input Waveform
+vvin       vin  0  sin (2.5 2.5 0.1meg 0 0 -90 )
+* Clock Signal
+vvclk      vclk 0 PULSE (0 5 10n 1n 1n 100n 200n)
+
+* Instantiate the Verilog-A DAC & ADC modules.
+YVLGdac 	5	4	3 	2 	1 	out 	dac 	bit=5
+YVLGadc  	vin 	vclk    5	4	3 	2 	1 	adc	bit=5
+
+* OLD:YVLGadc  	vin 	5	4	3 	2 	1 	vclk	adc	bit=5
+
+* Output Loading
+RLoad  out 0 1MEG
+
+* Analysis
+.tran 1n 20u
+
+* For plotting only
+.let 	MSB='0.2*v(5)+4'
++	4bit='0.2*v(4)+6'
++	3bit='0.2*v(3)+8'
++	2bit='0.2*v(2)+10'
++	LSB='0.2*v(1)+12'
+
+* Plot Waveforms
+.iplot 	v(vin) v(out) LSB 2bit 3bit 4bit MSB
+
+.end
+

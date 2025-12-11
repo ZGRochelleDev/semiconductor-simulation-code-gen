@@ -1,0 +1,253 @@
+# (c) Silvaco Inc., 2024
+
+# Silicon Carbide (SiC) Hybrid Junction Termination Extension (HJTE)
+
+# Required Modules
+#  Victory Process:
+#   -2D Diffusion & Implantation
+#  Victory Mesh:
+#   -2D Meshing
+#  Victory Device:
+#   -2D Simulator
+
+# Example Name
+SET name=SiC_Power_ex01
+
+####### PROCESS SIMULATION #######
+# 1D MC implantation for p- multi float zones (MFZ)
+GO victoryprocess simflags="-P 4"
+
+INIT material=sic-4h depth=3 gasheight=3.5 resolution=0.05 meshdepth=3 \
+  sub.ori="0001" rot.sub=0 sub.miscut.theta=4 \
+  dopants="nitrogen" dopingvalues="1e17"
+
+Line z location=0 spacing=0.005
+Line z location=3 spacing=0.1
+
+# add screen ox
+DEPOSIT material=sio2 thick=0.0500 max
+ 
+IMPLANT aluminum dose=3e12 energy=110 rotation=0 bca n.ion=5000 traj.split
+IMPLANT aluminum dose=5e12 energy=200 rotation=0 bca n.ion=5000 traj.split
+IMPLANT aluminum dose=5e12 energy=290 rotation=0 bca n.ion=5000 traj.split
+IMPLANT aluminum dose=5e12 energy=400 rotation=0 bca n.ion=7500 traj.split
+
+EXPORT structure=$'name'_mfz.str
+
+GO victoryextract
+LOAD in=$"name"_mfz.str
+OPTION STRIP.HEADER 
+OPTION DELIM=" "
+EXTRACT.PROFILE csvfile="$"name"_VP_mfz.dat" regions="4h-sic" field="Aluminum"
+
+
+####### PROCESS SIMULATION #######
+# 1D MC implantation for P-plus rings and main well
+GO victoryprocess simflags="-P 4"
+
+INIT material=sic-4h depth=3 gasheight=3.5 resolution=0.05 meshdepth=3 \
+  sub.ori="0001" rot.sub=0 sub.miscut.theta=4 \
+  dopants="nitrogen" dopingvalues="1e17"
+
+Line z location=0 spacing=0.005
+Line z location=3 spacing=0.1
+
+# add screen ox
+DEPOSIT material=sio2 thick=0.0500 max
+
+# Implant: P+ rings and p+ main well (Anode) 
+IMPLANT aluminum dose=1.0e14 energy=35 rotation=0 bca n.ion=5000 traj.split
+IMPLANT aluminum dose=1.0e14 energy=50 rotation=0 bca n.ion=10000 traj.split
+IMPLANT aluminum dose=3.0e14 energy=90 rotation=0 bca n.ion=20000 traj.split
+IMPLANT aluminum dose=5.0e14 energy=150 rotation=0 bca n.ion=30000 traj.split
+
+EXPORT structure=$'name'_pPlus.str
+ 
+GO victoryextract
+LOAD in=$"name"_pPlus.str
+OPTION STRIP.HEADER 
+OPTION DELIM=" "
+EXTRACT.PROFILE csvfile="$"name"_VP_pPlus.dat" regions="4h-sic" field="Aluminum" 
+
+
+####### PROCESS SIMULATION #######
+# Single zone JTE with floating field rings = Ring-Assisted JTE
+# RA-JTE + multiple-floating zone (MFZ-JTE) = hybrid JTE.
+GO victoryprocess simflags="-P 4"
+
+INIT material=sic-4h depth=4 gasheight=60 from=0 to=200 at=0.5 \
+  resolution=1 meshdepth=3 \
+  sub.ori="0001" rot.sub=0 sub.miscut.theta=4 \
+  dopants="nitrogen" dopingvalues="1e17"
+
+# Mask for P+rings (main ANODE + RA-JTE)
+SPECIFYMASKPOLY	mask=pplus p="0,0" p="4,0" p="4,1" p="0,1" electrode="anode"
+LOOP steps=6
+ ASSIGN name=ws n.value=(7, 14, 22, 31, 41, 52) delta=3
+ SET wp=$'ws'+3
+
+ SPECIFYMASKPOLY mask=pplus p="$ws,0" p="$wp,0" p="$wp,1" p="$ws,1"  add
+L.END
+
+# Mask for P- Single zone + MF zones
+SPECIFYMASKPOLY mask=pminus p="4,0" p="94,0" p="94,1" p="4,1"
+LOOP steps=10
+ ASSIGN name=x1 n.value=96 delta=9
+ ASSIGN name=n n.value=1 delta=1
+ SET x2=$'x1'+7.0/(pow(1.07,($'n'-1)))
+
+ SPECIFYMASKPOLY mask=pminus p="$x1,0" p="$x2,0" p="$x2,1" p="$x1,1" add
+L.END
+
+LINE x location=0 spacing=0.5
+LINE x location=200 spacing=0.5
+
+LINE z location=-2 spacing=1
+LINE z location=0 spacing=1
+LINE z location=-30 spacing=5
+LINE z location=-35 spacing=2
+LINE z location=-37 spacing=0.03
+LINE z location=-38.5 spacing=0.25
+LINE z location=-39 spacing=0.02
+LINE z location=-40 spacing=0.01
+
+DEPOSIT material=sic-4h thickness=40 max c.phosphorus=2e15
+DEPOSIT material=oxide thick=0.05 max
+
+# Floating zone implant
+MASK mask="pminus" reverse thickness=2
+
+# Profile statement used to input the 1D profile created above. 
+PROFILE infile="$'name'_VP_mfz.dat" aluminum lstddev=0.25
+
+STRIP barrier
+
+# P+ well implants + Ring implants
+MASK mask="pplus" reverse thickness=2
+
+PROFILE infile="$'name'_VP_pPlus.dat" aluminum lstddev=0.3
+
+STRIP barrier
+
+# Dopant (Al) activation 
+DEPOSIT material=carbon thickness=2 max
+
+MATERIAL material=sic-4h dif.parameter="streamfermiwithoutfield/Al_A/D" \
+  dif.parametervalue="0.0"
+# 75% activation. Change dif.parameterValue to change activation%.
+MATERIAL material=sic-4h dif.parameter="activation/Al/cact" \
+  dif.parameterValue="2.8e17" dif.parameterUnit="1/cm3"
+
+DIFFUSE time=10 minutes temperature=1650
+
+ETCH material=carbon max
+ETCH material=oxide max
+
+# Anode metal formation
+DEPOSIT material=oxide thickness=1 max
+ETCH material=oxide left.to.x=4 dry thickness=1
+
+DEPOSIT material=nickel conformal thickness=1
+ETCH material=nickel right.to.x=4.5 thickness=1 dry
+
+ELECTRODES mask=pplus material=nickel
+ELECTRODES name=cathode substrate 
+
+SAVE name=$'name'_VP_sv conformalstr
+
+
+####### STRUCTURE REMESHING #######
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_VP_sv
+
+REMESH delaunay
+
+REFINE max.size=0.75 regions="material:nickel"
+REFINE max.size=0.75 regions="material:SiO2"
+REFINE max.size=2 regions="material:4h-sic"
+
+REFINE max.junction.size=0.1 max.junction.distance=1.5 \
+  max.junction.distance.size=0.5 grading="quadratic"
+REFINE impurity="donor" max.impurity.factor=1 min.impurity.size=0.4 \
+   grading="quadratic"
+
+REFINE interface.regions="material:oxide, material:4h-sic" \
+  max.interface.size=0.2 grading="quadratic"
+REFINE interface.regions="material:nickel, material:4h-sic" \
+  max.interface.size=0.22 grading="quadratic"
+
+SAVE out=$'name'_VM_del.str
+
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-128 -P 4"
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_VM_del.str cylindrical
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL material=4H-SiC taun0=5e-9 taup0=1e-10 
+MODELS print srh incomplete bound.trap
+IMPACT selberherr e.side betan=1 betap=1 an1=4.0e4 an2=4.0e4 \
+  ap1=1.63e7 ap2=1.63e7 bn1=1.67E7 bn2=1.67E7 bp1=1.67E7 bp2=1.67E7
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 itlimit=30 weak=1 cx.tol=1e-15 cr.tol=1e-25 dvmax=100
+# Monitor the surface potential at each p-type ring position during a bias 
+# sweep.
+PROBE name="Pot_x010" potential x=10 y=-40
+PROBE name="Pot_x090" potential x=90 y=-40
+PROBE name="Pot_x100" potential x=100 y=-40
+PROBE name="Pot_x108" potential x=108 y=-40
+PROBE name="Pot_x117" potential x=118 y=-40
+PROBE name="Pot_x126" potential x=126 y=-40
+PROBE name="Pot_x135" potential x=135 y=-40
+PROBE name="Pot_x144" potential x=144 y=-40
+PROBE name="Pot_x153" potential x=153 y=-40
+PROBE name="Pot_x161" potential x=161 y=-40
+PROBE name="Pot_x170" potential x=170 y=-40
+PROBE name="Pot_x179" potential x=179 y=-40
+
+#### SOLUTION SOLVING ####
+SOLVE init
+SOLVE prev
+Save outfile=$'name'_VD_init.str
+
+LOG outfile=$'name'_VD_BV.log
+SOLVE vcathode=0.01 previous
+SOLVE vcathode=0.1 previous
+SOLVE vcathode=1 vstep=1 vfinal=10 name=cathode previous
+SOLVE vstep=2.5 vfinal=20 name=cathode previous
+SOLVE vstep=5 vfinal=50 name=cathode previous
+SOLVE vstep=10 vfinal=250 name=cathode previous
+SOLVE vstep=25 vfinal=500 name=cathode previous
+SOLVE vstep=50 vfinal=6000 name=cathode previous \
+  compliance=1e-20 cname=cathode
+
+CONTACT name=cathode current
+
+SOLVE mult istep=2 ifinal=1e-5 name=cathode previous
+
+LOG off
+
+SAVE outfile=$'name'_VD_BV_10uA.str
+
+go victoryextract
+LOAD in="$'name'_VD_BV.log"
+CURVE name=icvc x="Cathode Current" y="Cathode Voltage"
+EXTRACT.CURVE name=BV expression="maxxy(curve.icvc)"
+
+####### VISUALIZATION OF RESULTS #######
+victoryvisual \
+$'name'_VP_mfz.dat:$'name'_AlProfile.set+\
+$'name'_VP_pPlus.dat:$'name'_AlProfile.set \
+$'name'_VM_del.str:$'name'_STR.set \
+$'name'_VD_BV.log \
+$'name'_VD_BV.log:$'name'_BV.set
+
+victoryvisual \
+$'name'_VD_BV_10uA.str:$'name'_EField.set \
+$'name'_VD_BV_10uA.str:$'name'_II.set
+
+QUIT

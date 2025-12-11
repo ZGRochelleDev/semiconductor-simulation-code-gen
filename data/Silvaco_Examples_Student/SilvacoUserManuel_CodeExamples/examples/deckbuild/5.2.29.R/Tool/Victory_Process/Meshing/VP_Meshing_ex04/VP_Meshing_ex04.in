@@ -1,0 +1,58 @@
+# (c) Silvaco Inc., 2024
+
+# Adding and removing volume mesh mid-simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+
+# Example Name
+Set name=“VP_Meshing_ex04” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT material=silicon from=0 to=2 depth=2 \
+resolution=0.01,0.01 meshdepth=2 gasheight=2.5 \
+flow.dim=2D_xz c.phosphorus=1E14
+
+# define medium fine mesh - sufficient for a diffused profile
+LINE x location=0 spacing=0.1
+LINE x location=2 spacing=0.1
+
+LINE z location=0 spacing=0.1
+LINE z location=2 spacing=0.1
+
+# mask an area for the implant
+DEPOSIT barrier thick=0.2 max outside.x="0.5,1.5"
+
+# EXPORT structures are for visualization only
+# Export to view original mesh
+EXPORT name=$'name'_VP_Orig
+
+# Add extra volume mesh refinement to resolve the implant
+LINE z location=0.01 spacing=0.01
+LINE z location=0.29 spacing=0.01
+
+IMPLANT boron dose=8e12 energy=50
+
+# EXPORT structures are for visualization only
+# Export to view additional mesh
+EXPORT name=$'name'_VP_Add
+
+DIFFUSE time=60 temp=1000
+
+# Remove extra mesh after dopants are diffused 
+LINE z location=0.01 spacing=0.01 remove
+LINE z location=0.29 spacing=0.01 remove
+
+# EXPORT structures are for visualization only
+# Export to view additional mesh removed
+EXPORT name=$'name'_VP_Remove
+
+victoryvisual \
+$'name'_VP_Orig.str:$'name'_Mesh.set \
+$'name'_VP_Add.str:$'name'_MeshBor.set \
+$'name'_VP_Remove.str:$'name'_MeshActBor.set
+
+QUIT

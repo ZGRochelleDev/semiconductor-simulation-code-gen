@@ -1,0 +1,180 @@
+# (c) Silvaco Inc., 2024
+
+# Reverse I-V of SiC Schottky and Junction Barrier Schottky (JBS) Diodes
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=“SiC_Power_ex06” 
+
+####### DEVICE SIMULATION ####### 
+# 4H-SiC Schottky barrier Diode (SBD)
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+# Width/area multiplier
+MESH width=9.5e+6
+
+X.MESH location=0 spacing=0.5
+X.MESH location=3 spacing=0.5
+X.MESH location=5.25 spacing=0.5
+
+Y.MESH location=-0.05 spacing=0.05
+Y.MESH location=0.0 spacing=0.005
+Y.MESH location=6.1 spacing=1
+Y.MESH location=12.2 spacing=0.25
+Y.MESH location=17 spacing=0.5
+
+REGION number=1 material=4H-SiC y.minimum=0
+REGION number=2 material=air y.maximum=0 
+ 
+ELECTRODE number=1 name=anode material=titanium y.minimum=-0.05 y.maximum=0 
+ELECTRODE number=2 name=cathode bottom 
+
+DOPING uniform n.type concentration=9.1e15
+DOPING uniform n.type concentration=1e18 y.minimum=12.2
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL material=4H-SiC affinity=3.13 \
+  taun0=5.0e-10 taup0=1.0e-10 arichn=146 \
+  me.tunnel=0.3 mh.tunnel=0.3 d.tunnel=1.0e-6
+
+MOBILITY material=4H-SiC mu2p.caug=124 ncritp.caug=1.76e19 \ 
+  alphap.caug=0 deltap.caug=0.34 gammap.caug=0 
+
+# Schottky contact:
+CONTACT name=anode workfunction=4.7 surf.rec barrier \
+  me.tunnel=0.3 mh.tunnel=0.3
+
+MODELS temperature=300 bgn analytic srh fldmob auger ust print \
+  bbt.std bb.a=8e7 bb.b=9e6 bb.gamma=2.6 incomplete inc.ion
+
+IMPACT anisotropic e.side be0001=2.18e7 bh0001=2.03e7 \
+  ae0001=3.82e8 ah0001=3.10e8 
+
+#### NUMERICAL METHODS ####  
+METHOD climit=1e-4
+OUTPUT band.param
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_SBD_init.str
+
+LOG outfile=$'name'_VD_SBD_BV.log
+
+SOLVE vcathode=0.1 
+SOLVE vcathode=1 
+SOLVE vstep=1 vfinal=10 name=cathode
+SOLVE vstep=5 vfinal=50 name=cathode
+SOLVE vstep=10 vfinal=200 name=cathode
+SOLVE vstep=20 vfinal=400 name=cathode
+SOLVE vstep=50 vfinal=1000 name=cathode
+SOLVE vstep=20 vfinal=1600 name=cathode
+
+LOG off
+
+SAVE outfile=$'name'_VD_SBD_BV.str
+
+
+####### DEVICE SIMULATION ####### 
+# 4H-SiC Junction Barrier Schottky (JBS)
+GO victorydevice simflags="-P 4 -80"
+
+#### STRUCTURE SPECIFICATION ####
+# Width/area multiplier
+MESH width=9.5e+6
+
+X.MESH location=0 spacing=0.5
+X.MESH location=3 spacing=0.1
+X.MESH location=5.25 spacing=0.5
+
+Y.MESH location=-0.05 spacing=0.05
+Y.MESH location=0.0 spacing=0.005
+Y.MESH location=6.1 spacing=1
+Y.MESH location=12.2 spacing=0.25
+Y.MESH location=17 spacing=0.5
+
+REGION number=1 material=4H-SiC y.minimum=0
+REGION number=2 material=air y.maximum=0 
+ 
+ELECTRODE number=1 name=anode1 material=Titanium \
+  x.minimum=3.5 y.minimum=-0.05 y.maximum=0 
+ELECTRODE number=3 name=anode2 material=Titanium \
+  x.maximum=3.0 y.minimum=-0.05 y.maximum=0 
+ELECTRODE number=2 name=cathode bottom 
+
+DOPING uniform n.type concentration=9.1e15
+DOPING uniform n.type concentration=1e18 y.minimum=12.2
+# P+ doping for JBS:
+DOPING gaussian x.characteristic=0.1 y.characteristic=0.2 concentration=1e19 \
+  p.type x.minimum=0 x.maximum=3 y.minimum=0 y.maximum=0.4 
+
+#### MATERIAL/PHYSICAL MODELS ####  
+MATERIAL material=4H-SiC affinity=3.13 \
+  taun0=5.0e-10 taup0=1.0e-10 arichn=146 \
+  me.tunnel=0.3 mh.tunnel=0.3 d.tunnel=1.0e-6
+
+MOBILITY material=4H-SiC mu2p.caug=124 ncritp.caug=1.76e19 \ 
+  alphap.caug=0 deltap.caug=0.34 gammap.caug=0 
+
+# Schottky contact:
+CONTACT name=anode1 workfunction=4.7 surf.rec barrier \
+  me.tunnel=0.3 mh.tunnel=0.3 
+
+# P+ ohmic contact:
+CONTACT name=anode2 common=anode1 
+
+MODELS temperature=300 bgn analytic srh fldmob auger ust print \
+  bbt.std bbt.a=6e7 bbt.b=10e6 bbt.gamma=2.5 incomplete inc.ion
+
+IMPACT anisotropic e.side be0001=2.92e7 bh0001=2.2e7 \
+  ae0001=2.5e8 ah0001=3.30e8 
+
+#### NUMERICAL METHODS ####  
+METHOD climit=1e-4
+OUTPUT band.param
+
+#### SOLUTION SOLVING #### 
+SOLVE init
+SOLVE previous
+SAVE outfile=$'name'_VD_JBS_init.str
+
+LOG outfile=$'name'_VD_JBS_BV.log
+
+SOLVE vcathode=0.1 
+SOLVE vcathode=1 
+SOLVE vstep=1 vfinal=50 name=cathode
+SOLVE vstep=5 vfinal=200 name=cathode
+SOLVE vstep=20 vfinal=400 name=cathode
+SOLVE vstep=50 vfinal=1000 name=cathode
+SOLVE vstep=20 vfinal=1600 name=cathode
+
+LOG off
+
+SAVE outfile=$'name'_VD_JBS_BV.str
+
+
+####### VISUALIZATION OF RESULTS #######
+# Extract the cathode I-V in the same format as the experimental data files.
+GO victoryextract
+LOAD in="$'name'_VD_SBD_BV.log"
+CURVE name=IV x="Cathode Voltage" y="Cathode Current"
+EXTRACT.CSV csvfile=$'name'_VD_SBD_BV_cathode.csv
+LOAD in="$'name'_VD_JBS_BV.log"
+CURVE name=IV x="Cathode Voltage" y="Cathode Current"
+EXTRACT.CSV csvfile=$'name'_VD_JBS_BV_cathode.csv
+
+# Plot the results in Victory Visual
+victoryvisual \
+$'name'_VD_SBD_init.str:$'name'_SBD_struc.set \
+$'name'_VD_JBS_init.str:$'name'_JBS_struc.set \
+$'name'_Measured_SBD.dat:$'name'_bv.set+\
+$'name'_Measured_JBS.dat:$'name'_bv.set+\
+$'name'_VD_SBD_BV_cathode.csv+\
+$'name'_VD_JBS_BV_cathode.csv
+
+QUIT
+

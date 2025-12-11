@@ -1,0 +1,82 @@
+# (c) Silvaco Inc., 2024
+
+# Simple Nanosheet FET using Expression Intersection 
+
+# Required Modules
+#  Victory Mesh
+#   -3D Meshing
+
+# Example Name
+SET name=“Fin_GAA_ex06” 
+
+####### STRUCTURE MESHING ####### 
+GO victorymesh simflags="-P 2"
+
+LAYERS point="0, 0, -0.3" cuboid.width=0.2 num.edges=40 \
+       axis.deltas="0.3, 0.2" axis.num.edges="60, 1" \
+       layer.offset=0 layer.deltas="0.1, 0.3, 0.3, 0.3, 0.1" layer.num.edges="1, 10, 10, 10, 1" \
+       materials="(aluminum, silicon), \
+                  (gas, silicon), \
+                  (polysilicon, silicon), \
+                  (gas, silicon), \
+                  (aluminum, silicon)" \
+       out="$'name'_0"
+
+LOOP steps=3
+  ASSIGN name="offset" n.value=(0.05, 0.15, 0.25)
+  INTERSECT implicit expressions="((y - 0.1) / 0.05)^4 + ((z + $offset) / 0.02)^4 - 1, \
+                                  ((y - 0.1) / 0.06)^2 + ((z + $offset) / 0.03)^4 - 1" \
+            materials="silicon, oxide" from="0.1, 0, -0.3" to="1, 0.2, 0"
+L.END
+
+MERGE regions="oxide"
+QUALITY
+
+SKELETON
+QUALITY
+
+SAVE erase.regions="none"
+
+TAG point="0.55,0.1,-0.05" value="add_boron"
+TAG point="0.55,0.1,-0.15" value="add_boron"
+TAG point="0.55,0.1,-0.25" value="add_boron"
+TAG point="0.2,0.1,-0.05" value="add_phosphorus"
+TAG point="0.2,0.1,-0.15" value="add_phosphorus"
+TAG point="0.2,0.1,-0.25" value="add_phosphorus"
+TAG point="0.85,0.1,-0.05" value="add_phosphorus"
+TAG point="0.85,0.1,-0.15" value="add_phosphorus"
+TAG point="0.85,0.1,-0.25" value="add_phosphorus"
+
+TAG point="0.05,0.02,-0.02" value="to_source"
+TAG point="0.55,0.02,-0.02" value="to_gate"
+TAG point="1.05,0.02,-0.02" value="to_drain"
+
+ELECTRODE regions="to_source" name="source"
+ELECTRODE regions="to_gate" name="gate"
+ELECTRODE regions="to_drain" name="drain"
+
+REMESH delaunay out="$'name'_1"
+REFINE max.size=0.05
+REFINE regions="*" max.distance=0.0001
+REFINE regions="add_boron, add_phosphorus" \
+       interface.regions="add_boron" other.interface.regions="add_phosphorus" \
+       max.interface.size=0.0025
+
+FIELD constant region="add_boron" name="boron" value=1e15
+FIELD constant region="add_phosphorus" name="phosphorus" value=1e20
+
+SAVE
+
+REMESH in="$'name'_0" conformal out="$'name'_2"
+
+FIELD constant region="add_boron" name="boron" value=1e15
+FIELD constant region="add_phosphorus" name="phosphorus" value=1e20
+
+SAVE
+
+victoryvisual \
+$'name'_1.str:$'name'_VM.set \
+$'name'_1.str:$'name'_Net.set
+
+QUIT
+

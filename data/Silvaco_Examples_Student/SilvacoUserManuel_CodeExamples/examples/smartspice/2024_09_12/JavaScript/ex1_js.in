@@ -1,0 +1,101 @@
+     DEMO EXAMPLE 1: INPUT FILE
+*
+VIN  1 0  DC 0  SIN(0 0.1 5MEG)  AC 1
+VCC  8 0  DC 10
+VEE  9 0  DC -12
+RS1  1 2  1K
+RS2  5 0  1K
+RC1  3 8  10K
+RC2  4 8  10K
+RBIAS  7 8  20K
+CLOAD  3 4  5PF
+Q1  3 2 6  QNL
+Q2  4 5 6  QNL
+Q3  6 7 9  QNL
+Q4  7 7 9  QNL
+.MODEL QNL NPN(BF=80 RB=100 CCS=2PF TF=0.3NS TR=6NS CJE=3PF CJC=2PF
++   VA=50)
+.TRAN 5NS 500NS  
+.DC VIN -0.25 0.25 0.025
+.AC DEC 10 10KHZ 10GHZ 
+.PRINT TRAN V(3) V(4)
+.PRINT DC V(1) V(3) V(4) 
+.PRINT AC VM(3) VP(3) 
+.ST QNL(BF) 80 100 10
+.OPTIONS ACCT RELTOL=0.001 NOMOD
+
+.JS_BEGIN
+
+//var cube = new Cube();
+//cube.setSide(2);
+//var side = cube.getSide();
+//var vol = cube.Volume();
+//var area = cube.Area();
+
+function mandelbrot(x, y) {
+	var cr = y - 0.5;
+	var ci = x;
+	var zi = 0.0;
+	var zr = 0.0;
+	var i = 0;
+	var BAILOUT = 16;
+	var MAX_ITERATIONS = 1000;
+
+	while(1) {
+		i++;
+		var temp = zr * zi;
+		var zr2 = zr * zr;
+		var zi2 = zi * zi;
+		zr = zr2 - zi2 + cr;
+		zi = temp + temp + ci;
+		if (zi2 + zr2 > BAILOUT) {
+			return i;
+		}
+		if (i > MAX_ITERATIONS) {
+			return 0;
+		}
+	}
+}
+
+function mandelbrot_run() {
+	var x; var y;
+	output = "";
+	
+//var cube = new Cube();
+//cube.setSide(2);
+//var side = cube.getSide();
+//var vol = cube.Volume();
+//var area = cube.Area();
+
+
+	var date = new Date();
+	for (y = -39; y < 39; y++) {
+		println(output);
+		output = "";
+		for (x = -39; x < 39; x++) {
+			var i = mandelbrot(x/40.0, y/40.0);
+			if (i==0) {
+				output += "*";
+			}
+			else {
+				output += " ";
+			}
+		}	
+	}
+	var date2 = new Date();
+	output += "\nJavaScript Elapsed " + (date2.getTime() - date.getTime()) / 1000;
+	println(output);
+	return false;
+}
+
+mandelbrot_run();
+
+.JS_END
+
+.control
+run
+jsexec
+.endc
+
+
+.END

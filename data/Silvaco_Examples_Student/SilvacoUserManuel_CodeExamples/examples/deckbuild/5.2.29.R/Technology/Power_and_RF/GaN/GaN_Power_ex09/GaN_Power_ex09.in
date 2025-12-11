@@ -1,0 +1,311 @@
+# (c) Silvaco Inc., 2024
+
+# Vertical Superjunction GaN HEMT with P+ Gate and P-pillar
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+
+# Reference:
+# [1] L. Zhongda, T.P. Chow, "Design and simulation of 5-20-kV GaN 
+#     enhancement-mode vertical superjunction HEMT", IEEE Trans. 
+#     Electron Dev, vol.60, no.10, 2013, pp.3230-3237.
+
+# Example Name
+SET name=GaN_Power_ex09
+
+#------  PART I: Id-Vg and Id-Vd curves computation   --------------
+
+GO victorydevice simflags="-128 -P 4"
+
+# For currents in mA/mm (as published in [1] for IV curves) 
+# - use width=1e6 *2 because half of device is simulated
+
+MESH width = 2e6
+
+X.MESH location=0.0	spac=0.5 
+X.MESH location=1.0	spac=0.1 
+X.MESH location=1.5 	spac=0.25 
+X.MESH location=2.0	spac=0.1 
+X.MESH location=2.5 	spac=0.25 
+X.MESH location=3.0	spac=0.06 
+X.MESH location=6.0 	spac=0.375 
+
+Y.MESH location=0.000 	spac=0.025
+Y.MESH location=0.025 	spac=0.05
+Y.MESH location=0.225 	spac=0.002
+Y.MESH location=0.250	spac=0.002
+Y.MESH location=0.350	spac=0.01
+Y.MESH location=0.850	spac=0.1
+Y.MESH location=1.350	spac=0.05
+Y.MESH location=31.35 	spac=6 
+Y.MESH location=61.35 	spac=0.25
+Y.MESH location=62.35 	spac=0.1
+
+#-----------------------  Structure Specification  -----------------------------
+
+REGION num=1 material=GaN y.min=0.025 y.max=0.225 x.min=2 x.max=6
+REGION num=2 material=AlGaN y.min=0.225 y.max=0.25 x.min=0 x.max=6 x.composition=0.1
+REGION num=3 material=GaN y.min=0.25 y.max=0.35 x.min=0 x.max=6
+REGION num=4 material=GaN y.min=0.35 y.max=62.35 x.min=0 x.max=6 substrate
+REGION num=5 material=Si3N4 y.min=0 y.max=0.225 x.min=1 x.max=2
+
+# ELECTRODES specification
+ELECTRODE num=1 name=source y.min=0 y.max=0.35 x.min=0 x.max=1 
+ELECTRODE num=2 name=drain y.min=62.15 y.max=62.35 x.min=0 x.max=6
+ELECTRODE num=3 name=gate x.min=2 x.max=6 y.min=0.0 y.max=0.025
+
+# DOPING
+# n- GaN Epi n-pillar doping
+DOPING uniform y.min=0.35 y.max=62.35 x.min=3 x.max=6 n.type conc=1e16
+# P+ layer (1um) on top of p-pillar
+DOPING uniform y.min=0.35 y.max=1.35 x.min=0 x.max=3 p.type conc=1e18
+# AlGaN
+DOPING uniform y.min=0.225 y.max=0.25 x.min=0 x.max=6 n.type conc=1e15
+# UID GaN channel doping
+DOPING uniform y.min=0.25 y.max=0.35 x.min=0 x.max=6 n.type conc=1e16
+# GaN cap P+ doping
+DOPING uniform y.min=0.025 y.max=0.225 x.min=2 x.max=6 p.type conc=1e18
+
+# N+ doping at the Drain ohmic contact (bottom)
+DOPING uniform y.min=61.35 y.max=62.35 x.min=0 x.max=6 n.type conc=1e18
+
+##### CONTACTS:
+# Metal on P-type GaN:  WORKFUNCTION  = Affinity (4.31eV) + Eg (3.43eV) - Barrier (1eV)
+
+CONTACT name=gate workfun=6.74
+
+#-----------------  Physics Models  -----------------------------------
+# 
+# Material parameters are used from the Silvaco default database
+#  
+MODELS consrh auger temp=300  print
+## POLARIZATION CHARGE:
+MODELS polarization calc.strain  polar.scale=1.0
+
+## MOBILITIES
+# P+ GaN:
+MOBILITY region=1 FMCT.n FMCT.p
+# AlGaN:
+MOBILITY region=2 MUN=300 MUP=10
+# 2DEG channel:
+#MOBILITY region=3 MUN=1500
+MOBILITY region=3 FMCT.n FMCT.p
+# Bulk GaN:
+MOBILITY region=4  FMCT.n FMCT.p
+# FMCT + High-Field Model (GaNsat.n) 
+MOBILITY region=4  FMCT.n FMCT.p  GaNsat.n
+
+### IMPACT IONIZATION 
+#IMPACT SELB 
+
+OUTPUT band.param con.band val.band charge traps qss polar.charge e.mobility h.mobility
+
+METHOD climit=1e-4
+
+#---------------------  RUN SOLUTION ------------------------------
+# solve initial and zero-bias DC solution:
+SOLVE initial
+SOLVE previous
+
+SAVE outfile=$"name"_0V.str
+
+#----------  Id-Vg Calculation  ---------------------
+SOLVE vdrain=0.01 prev
+SOLVE vdrain=0.1 
+
+#---------- transfer curve: Id-Vg  ---------------------
+
+LOG outfile=$"name"_idvg.log
+SOLVE vgate=0 prev 
+SOLVE vstep=0.25 vfinal=1.0 name=gate
+SOLVE vstep=0.2 vfinal=4 name=gate
+LOG off
+
+SAVE outfile=$"name"_Vg_ramped.str  
+ 
+
+#---------- Id-Vd curves, for various Vg:  ---------------------
+
+# obtain bias solutions for Vg=0, 2, 3 & 4V
+LOAD infile=$"name"_0V.str master
+SOLVE previous 
+SAVE outfile=$"name"_0Vg.str
+SOLVE name=gate vstep=0.25 vfinal=2
+SAVE outfile=$"name"_2Vg.str
+SOLVE name=gate vstep=0.25 vfinal=3
+SAVE outfile=$"name"_3Vg.str
+SOLVE name=gate vstep=0.25 vfinal=4
+SAVE outfile=$"name"_4Vg.str
+
+# generate output curves using a loop
+
+LOOP steps=4
+
+ASSIGN name=Vg  n.value=(0, 2, 3, 4)
+
+LOAD infile=$"name"_$"Vg"Vg.str master
+LOG outfile=$"name"_IdVg_$'Vg'Vg.log
+SOLVE previous
+SOLVE name=drain vstep=0.5 vfinal=12
+SOLVE name=drain vstep=1.0 vfinal=25
+LOG off
+
+L.END
+
+GO victoryextract
+# Extract 2DEG surface density [per cm2]:
+LOAD in="$'name'_0V.str"
+EXTRACT.PROFILE name=econc line.pa=1.5,0.225 line.pb=1.5,0.35 field="Electron Conc" regions=*
+EXTRACT.CURVE name="2DEG_density_1" expression="1e-4 * area(curve.econc)"
+
+
+
+#------------------------------------------------------------------------
+#           PART II:  Breakdown I-V curve simulation 
+#                  (described in sec.III of [1])
+#
+# NOTE: the BV structure is different than the one used for Id-Vg, Id-Vd
+#------------------------------------------------------------------------
+
+GO victorydevice simflags="-128 -P 4"
+
+#----------  DEVICE PARAMETERS AND GEOMETRY  ----------------
+
+MESH width = 6250000
+
+X.MESH location=0.0 	spac=1 
+X.MESH location=2 	spac=0.2 
+X.MESH location=3 	spac=0.5 
+X.MESH location=4 	spac=0.2 
+X.MESH location=6 	spac=1 
+X.MESH location=8 	spac=0.16 
+X.MESH location=16 	spac=0.8 
+
+Y.MESH location=0 	spac=0.025
+Y.MESH location=0.025 	spac=0.05
+Y.MESH location=0.225 	spac=0.002
+Y.MESH location=0.25 	spac=0.002
+Y.MESH location=0.3	spac=0.01
+Y.MESH location=0.35 	spac=0.01
+Y.MESH location=0.85	spac=0.1
+Y.MESH location=1.35 	spac=0.05
+Y.MESH location=31.35 	spac=6 
+Y.MESH location=61.35 	spac=0.25
+Y.MESH location=62.35 	spac=0.1
+
+#-----------------------  Structure Specification  -----------------------------
+
+REGION num=1 material=GaN y.min=0.025 y.max=0.225 x.min=4 x.max=16
+REGION num=2 material=AlGaN y.min=0.225 y.max=0.25 x.min=0 x.max=16 x.composition=0.1
+REGION num=3 material=GaN y.min=0.25 y.max=0.35 x.min=0 x.max=16
+REGION num=4 material=GaN y.min=0.35 y.max=62.35 x.min=0 x.max=16 substrate
+REGION num=5 material=SiN y.min=0 y.max=0.225 x.min=2 x.max=4
+
+# ELECTRODES specification
+ELECTRODE num=1 name=source y.min=0 y.max=0.35 x.min=0 x.max=2
+ELECTRODE num=2 name=drain y.min=62.25 y.max=62.35 x.min=0 x.max=16
+ELECTRODE num=3 name=gate x.min=4 x.max=16 y.min=0.0 y.max=0.025
+
+# DOPING
+# n- GaN Epi n-pillar doping
+DOPING uniform y.min=0.35 y.max=62.35 x.min=8 x.max=16 n.type conc=1e16
+# P-type pillar (left half)
+DOPING uniform y.min=1.35 y.max=61.35 x.min=0 x.max=8 p.type conc=1e16
+# P+ layer (1um) on top of p-pillar
+DOPING uniform y.min=0.35 y.max=1.35 x.min=0 x.max=8 p.type conc=1e18
+# AlGaN
+DOPING uniform y.min=0.225 y.max=0.25 x.min=0 x.max=16 n.type conc=1e16
+# UID GaN channel doping
+DOPING uniform y.min=0.25 y.max=0.35 x.min=0 x.max=16 n.type conc=2e16
+# GaN cap P+ doping
+DOPING uniform y.min=0.025 y.max=0.225 x.min=4 x.max=16 p.type conc=1e18
+
+# N+ doping at the Drain ohmic contact (bottom)
+DOPING uniform y.min=61.35 y.max=62.35 x.min=0 x.max=16 n.type conc=1e18
+
+##### CONTACTS:
+# Metal on P-type:  WORKFUNCTION  = Affinity (4.31)+ Eg (3.43)- Barrier (1.0)
+CONTACT name=gate workfun=6.74
+
+#-----------------  Physics Models  -----------------------------------
+# 
+# Material parameters are used from the Silvaco default database
+#  
+
+material material=AlGaN TAUN0=1e-8 TAUP0=1e-8
+
+MODELS conSRH auger temp=300  print
+
+## POLARIZATION CHARGE:
+MODELS polarization calc.strain  polar.scale=1.0
+
+## MOBILITIES
+# P+ GaN:
+MOBILITY region=1 FMCT.n FMCT.p
+# AlGaN:
+MOBILITY region=2 MUN=300 MUP=10
+# 2DEG:
+MOBILITY region=3 FMCT.n FMCT.p
+# Bulk GaN:
+# FMCT + High-Field Model (GaNsat.n) 
+# - FMCT parameters adjusted per [1]:
+MOBILITY region=4 FMCT.n MU2N.FMCT=1000 MU1N.FMCT=55 NCRITN.FMCT=2e17 ALPHAN.FMCT=1.0 \
+ FMCT.p MU2P.FMCT= 170 MU1P.FMCT= 3 NCRITP.FMCT=3e17 ALPHAP.FMCT=2.0 GaNsat.n
+
+### IMPACT IONIZATION 
+# JNY.MIN and JPY.MIN are needed to initiate ii at very low currents (Vg=0)
+#
+IMPACT SELB e.side JNY.MIN=1E-16 JPY.MIN=1E-16 JNX.MIN=1E-16 JPX.MIN=1E-16
+
+method climit=1e-4  maxtraps=10
+
+#---------------------  RUN SOLUTION ------------------------------
+# solve initial and zero-bias DC solution:
+SOLVE initial
+SOLVE previous
+
+SAVE outfile=$"name"_bv_0V.str
+
+# Extract 2DEG surface density [per cm2]:
+EXTRACT init infile="$"name"_bv_0V.str"
+EXTRACT name="2DEG_density_2" 1e-4 * area from curve(depth, impurity="Electron Conc" \
+ material="All" mat.occno=1 x.val=3.5 ) where x.min=0.225 and x.max=0.35 
+
+# -------------  BREAKDOWN I-V CURVE  ------------------------ 
+
+LOAD infile=$"name"_bv_0V.str master
+SOLVE previous 
+
+  # GATE BIAS:
+SOLVE name=gate vstep=0.05 vfinal=1
+
+LOG outfile=$"name"_bv_Vg_1V.log
+SOLVE vdrain=0.1 
+SOLVE vdrain=0.5 
+SOLVE vdrain=1.0 
+SOLVE name=drain vstep=1 vfinal=10
+SOLVE name=drain vstep=5 vfinal=100
+SOLVE name=drain vstep=20 vfinal=500 
+SOLVE name=drain vstep=50 vfinal=1000 
+SOLVE name=drain vstep= 100 vfinal=12500   COMPLIANCE=7e2 CNAME=drain  
+
+LOG off
+
+
+GO victoryextract
+# Extract 2DEG surface density [per cm2]:
+LOAD in="$'name'_bv_0V.str"
+EXTRACT.PROFILE name=econc line.pa=3.5,0.225 line.pb=3.5,0.35 field="Electron Conc" region=*
+EXTRACT.CURVE name="2DEG_density_2" expression="1e-4 * area(curve.econc)"
+
+victoryvisual \
+$"name"_0V.str:$"name"_str.set \
+$"name"_idvg.log \
+$"name"_IdVg_0Vg.log+\
+$"name"_IdVg_2Vg.log+\
+$"name"_IdVg_3Vg.log+\
+$"name"_IdVg_4Vg.log \
+$"name"_bv_Vg_1V.log
+
+QUIT

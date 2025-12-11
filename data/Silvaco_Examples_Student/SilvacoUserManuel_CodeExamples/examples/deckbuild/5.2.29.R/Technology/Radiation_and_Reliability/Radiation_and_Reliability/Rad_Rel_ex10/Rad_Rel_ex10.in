@@ -1,0 +1,144 @@
+# (c) Silvaco Inc., 2024
+
+# Total Dose X-Ray Effects in an n-MOS Gate Oxide 
+
+# Required Modules
+#  Victory Device
+#   -3D Simulator
+#   -3D REM
+
+# Example Name
+Set name=“Rad_Rel_ex10” 
+
+GO victorydevice simflags="-80 -P 4"
+
+#### STRUCTURE SPECIFICATION ####  
+MESH three.d
+
+X.MESH location=-2    spacing=0.25
+X.MESH location=-1.5  spacing=0.25
+X.MESH location=-0.75 spacing=0.02
+X.MESH location=0     spacing=0.2
+X.MESH location=0.75  spacing=0.02
+X.MESH location=1.5   spacing=0.25
+X.MESH location=2     spacing=0.25
+
+Y.MESH location=-0.05  spacing=0.02
+Y.MESH location=-0.013 spacing=0.002
+Y.MESH location=0      spacing=0.001
+Y.MESH location=4      spacing=1
+
+Z.MESH location=0    spacing=0.75
+Z.MESH location=1.5  spacing=0.75
+
+REGION number=1 oxide   y.max=0
+REGION number=2 silicon y.min=0
+
+ELECTRODE name=source x.min=-2    x.max=-1.5 y.min=-0.05 y.max=0
+ELECTRODE name=gate   x.min=-0.75 x.max=0.75 y.min=-0.05 y.max=-0.013
+ELECTRODE name=drain  x.min=1.5   x.max=2    y.min=-0.05 y.max=0
+ELECTRODE name=substrate bottom
+
+DOPING p.type conc=2e17 uniform
+DOPING n.type conc=2e19 gaussian peak=0 charact=0.3 ratio.lateral=1 \
+       x.left=-2 x.right=-1.2
+DOPING n.type conc=2e19 gaussian peak=0 charact=0.3 ratio.lateral=1 \
+       x.left=1.2 x.right=2
+
+#### MATERIAL/PHYSICAL MODELS ####
+
+# Use thermionic interface model at oxide/silicon interface
+INTERFACE thermionic
+
+# Semiconductor properties for oxide
+MATERIAL material=oxide nc300=2e19 nv300=2e19 eg300=9 semiconductor
+MATERIAL material=oxide mun=1 mup=1e-3 
+MATERIAL material=oxide m.vthp=1 
+
+# Conditions for radiation-induced oxide charging
+INTOXIDECHARGING r1material=oxide r2material=silicon \
+    jmodel.p nt.p=3e12 sigmat.p=1.5e-13 sigman.p=1e-30 sigmaph.p=1.5e-13 \
+    jmodel.n nt.n=1e4  sigmat.n=1e-30   sigmap.n=1e-30 sigmaph.n=1e-30 \
+    mfp.phonon=0.013
+
+OXIDECHARGING material=oxide \
+    jmodel.p nt.p=4e18 sigmat.p=1.5e-13 sigman.p=1e-30 sigmaph.p=1.5e-13 \
+    jmodel.n nt.n=1e10 sigmat.n=1e-30   sigmap.n=1e-30 sigmaph.n=1e-30 
+              
+# Radiation environment
+RADIATION doserate=1 XRay
+
+# Other models and MATERIAL properties
+MODELS material=silicon klasrh klassen fldmob shira bound.trap print
+
+CONTACT name=gate n.poly
+
+# Request structure-file output of band parameters and recombination rates
+OUTPUT band.param con.band val.band charge u.trap \
+       e.mobility h.mobility traps traps.ft \
+       e.velocity ex.velocity ey.velocity   \
+       h.velocity hx.velocity hy.velocity
+
+# PROBE conditions near the oxide/silicon interface
+PROBE material=oxide int.donor.traps x=0 y=-1e-6 z=0.75 name="trapped int holes"
+PROBE material=oxide j.hole   v.y    x=0 y=-0.001 z=0.75 name="hole current"
+PROBE material=oxide vel.hole v.y    x=0 y=-0.001 z=0.75 name="hole velocity"
+PROBE material=oxide geminate    x=0 y=-0.001 z=0.75 name="hole yield fraction"
+PROBE material=oxide p.conc          x=0 y=-0.001 z=0.75 name="holes"
+PROBE material=oxide field    v.y    x=0 y=-0.001 z=0.75 name="field"
+
+# PROBE conditions halfway between gate and interface
+PROBE material=oxide donor.traps x=0 y=-0.0065 z=0.75 name="trapped bulk holes"
+PROBE material=oxide p.conc      x=0 y=-0.0065 z=0.75 name="midpoint holes"
+
+#### NUMERICAL METHODS ####
+METHOD pam.gmres climit=1e-6 maxtraps=10 dt.max=0.0501
+
+#### SOLUTION SOLVING #### 
+# Initialize the solution
+SOLVE init
+SOLVE previous
+
+# Put a small bias on the drain
+SOLVE vdrain=0.01 previous
+SOLVE vdrain=0.05
+
+# Ramp up the gate bias
+LOG outfile=$'name'_Vg.log
+SOLVE radiation dt=0.01 tstop=1 vgate=5 ramptime=1 previous
+LOG off
+
+# Irradiate up to 1 MRad
+METHOD climit=1e-4 maxtraps=10 tol.time=1e6 dt.max=10000 tstep.incr=1.1
+LOG outfile=$'name'_Irrad.log
+SOLVE radiation dt=10 tstop=1000000 previous
+SAVE outfile=$'name'_Irrad.str
+LOG off
+
+# Reverse the gate bias to zero the oxide field
+METHOD climit=1e-4 maxtraps=10 tol.time=1e6 dt.max=0.0501 dt.min=0.00001
+LOG outfile=$'name'_Vg0.log
+SOLVE radiation dt=0.01 tstop=1000001 vgate=-0.9 ramptime=1 previous
+LOG off
+
+# Re-Irradiate at Near Zero Oxide Field (Vg=-0.9V) to Release Trapped Oxide Charge
+METHOD climit=1e-4 maxtraps=10 tol.time=1e6 dt.max=10000 tstep.incr=1.1
+LOG outfile=$'name'_Rel.log
+SOLVE radiation dt=0.001 tstop=2000000 previous
+LOG off
+
+# Re-check Recovered Vt
+METHOD climit=1e-4 maxtraps=10 tol.time=1e6 dt.max=0.0501 dt.min=0.00001
+LOG outfile=$'name'_Rec.log
+SOLVE radiation dt=0.01 tstop=2000001 vgate=5 ramptime=1 previous
+
+victoryvisual \
+$'name'_Irrad.str:$'name'_dop.set \
+$'name'_Irrad.log:$'name'_TrapH.set+\
+$'name'_Rel.log:$'name'_TrapH.set \
+$'name'_Rec.log:$'name'_IdVg.set+\
+$'name'_Vg0.log:$'name'_IdVg.set+\
+$'name'_Vg.log:$'name'_IdVg.set
+
+QUIT
+

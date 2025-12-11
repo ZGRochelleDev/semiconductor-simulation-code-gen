@@ -1,0 +1,8 @@
+plaintext
+/* Envelope Detector Netlist */
+.DIODE D1
+.MODEL DENV D1 1 1 1
+.CAPACITOR C1 1 1u
+.RESISTOR R1 1 0 10k
+.VIN in 0 SIN(0 5)
+.END

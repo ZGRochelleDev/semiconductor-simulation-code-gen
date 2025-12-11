@@ -1,0 +1,11 @@
+plaintext
+* TwoStageRCLowPass
+V1 in 1 AC
+R1 in n1 1k
+C1 n1 0 100n
+R2 n1 out 1k
+C2 out 0 0 10pF
+.ac dec 100kHz 1MHz
+.print ac V(out)
+
+.end

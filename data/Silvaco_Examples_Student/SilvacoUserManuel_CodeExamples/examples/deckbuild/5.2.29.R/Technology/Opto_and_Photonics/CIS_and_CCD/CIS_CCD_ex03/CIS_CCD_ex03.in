@@ -1,0 +1,237 @@
+# (c) Silvaco Inc., 2024
+
+# CIS Output Signal Characterization 
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+#   -2D Optical
+
+# Example Name
+Set name=“CIS_CCD_ex03” 
+
+####### PROCESS SIMULATION ####### 
+GO victoryprocess simflags="-P 4"
+
+INIT meshdepth=2 material=silicon orientation=100 from=-8 to=5.5 depth=1 \
+gasheight=4.356 resolution=0.01,0.01 dopants="boron" dopingvalues="1.0e19"
+
+LINE x location=-8  spacing=0.1
+LINE x location=-7.5  spacing=0.1
+LINE x location=-7  spacing=0.02
+LINE x location=-6.5  spacing=0.1
+LINE x location=0 spacing=0.05
+LINE x location=0.7  spacing=0.02
+LINE x location=1.5  spacing=0.05
+LINE x location=3.5  spacing=0.05
+LINE x location=5.5 spacing=0.1
+
+LINE z location=-2.25 spacing=0.01
+LINE z location=-2.03 spacing=0.01
+LINE z location=-2.006 spacing=0.001
+LINE z location=-2.001 spacing=0.001
+LINE z location=-2 spacing=0.01
+LINE z location=-1.5 spacing=0.01
+LINE z location=0 spacing=0.1
+LINE z location=1 spacing=0.1
+
+DEPOSIT silicon thickness=2  \
+ dopants="phosphorus" dopingvalues="1e15" max
+
+DEPOSIT max material=barrier thick=0.1 between="-7,0.7"
+
+IMPLANT boron energy=500 dose=3.1e14 tilt=0 rotation=0 bca n.ion=200000 
+IMPLANT boron energy=145 dose=2.4e14 tilt=0 rotation=0 bca n.ion=200000
+IMPLANT boron energy=15  dose=1.4e14 tilt=0 rotation=0 bca n.ion=200000 
+
+STRIP material=barrier
+
+DEPOSIT material=oxide thick=0.006 max
+
+DIFFUSE time=1 temperature=1050
+
+DEPOSIT conformal material=polysilicon thickness=0.2
+
+DIFFUSE time=0.2 temperature=1050
+
+ETCH material=polysilicon between="-9,0" between="1.5,2.5" between="3.5,6"
+
+DIFFUSE time=7 temperature=1050 dryo2
+DIFFUSE time=3 temperature=1050
+
+DEPOSIT max material=barrier thick=0.1 left.to=0
+
+IMPLANT phosphor energy=20 dose=2e15 tilt=7 rotation=27 bca n.ion=200000 
+
+STRIP material=barrier
+
+DEPOSIT max material=barrier thick=0.1 right.to=-1
+
+IMPLANT bf2 energy=15 dose=1e14 tilt=7 rotation=27 bca  n.ion=200000
+
+STRIP  material=barrier
+DIFFUSE time=0.5 temperature=1050
+
+ETCH material=oxide dry thick=0.05
+ETCH between=-7,0 between=1.5,2.5 between=3.5,4.5 material=oxide 
+
+DEPOSIT conformal material=aluminum thick=0.03
+ETCH between="-7,4.5" material=aluminum max
+
+ELECTRODE name=substrate x=-7.5
+ELECTRODE name=cgate x=0.6 z=-2.1
+ELECTRODE name=ngate x=3 z=-2.1
+ELECTRODE name=drain x=5
+
+DEPOSIT conformal material=oxide thick=0.03 divisions=3
+
+####### STRUCTURE REMESHING ####### 
+SAVE name=$'name'_sv conformalstr
+
+####### DEVICE SIMULATION ####### 
+GO victoryd simflags="-P 4"
+
+#### STRUCTURE SPECIFICATION ####  
+MESH infile=$'name'_sv_exVC.str
+
+#### MATERIAL/PHYSICAL MODELS ####
+MODELS consrh cvt
+
+CONTACT name=ngate common=cgate
+
+#### NUMERICAL METHODS ####
+METHOD climit=1e-4 itlimit=30 maxtraps=30
+
+PROBE n.conc x=1 y=-1.998 name=tg_conc
+PROBE n.conc x=3 y=-1.998 name=rst_conc
+
+#### SOLUTION SOLVING ###
+SOLVE init
+SOLVE previous
+
+SAVE outfile=$'name'_Init.str
+
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+
+LOG outfile=$'name'_Vth.log
+
+SOLVE vcgate=0.05 vstep=0.05 vfinal=3.3 name=cgate
+
+SAVE outfile=$'name'_Vg3p3.str
+
+LOG off
+
+GO victoryd simflags="-P 4"
+
+MESH infile=$'name'_sv_exVC.str
+
+MODELS consrh cvt
+
+METHOD climit=1e-4 itlimit=30 maxtraps=30
+
+PROBE n.conc    x=-3  y=-1.2  name=cis_conc
+PROBE potential x=2   y=-1.998 name=fd_potential
+PROBE potential x=-3  y=-1.2  name=cis_potential
+
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0 vstep=0.01 vfinal=0.1 name=drain
+SOLVE vdrain=0.2 vstep=0.1 vfinal=3.3 name=drain
+
+# Deplete the Image Sensor of Electrons
+LOG outfile=$'name'_DepDark.log
+SOLVE Vcgate=3.3 ramptime=1e-9 dt=1e-11 tstop=1e-9
+SOLVE Vngate=3.3 ramptime=1e-9 dt=1e-11 tstop=1e-8
+SAVE outfile=$'name'_DepDark.str
+
+# Isolate the Image Sensor
+SOLVE Vngate=0 ramptime=1e-9 dt=1e-11 tstop=1.1e-8
+SAVE outfile=$'name'_Iso.str
+
+# Dark Recovery Time
+SOLVE tstop=10
+SAVE outfile=$'name'_Filled_Dark.str
+LOG off
+
+
+# SAME SIMULATION BUT AT SOLAR AM-1.5 ILLUMINATION WITH DIFFERENT INTENSITIES
+
+GO victoryd simflags="-P 4"
+
+system rm $'name'_Opt.dat
+system echo "Voltage vs Optical Intensity" >> $'name'_Opt.dat
+system echo "16 2 2" >> $'name'_Opt.dat
+system echo "Optical Intensity" >> $'name'_Opt.dat
+system echo "CIS Output Voltage">> $'name'_Opt.dat
+
+MESH infile=$'name'_sv_exVC.str
+
+# Maximum Expose Time is 0.1 Seconds
+# Minimum Expose Time is 1e-7 Seconds
+set expose_time=7.5e-5
+set intensity=400*$expose_time
+
+MODELS consrh cvt
+
+METHOD climit=1e-4 itlimit=30 maxtraps=30
+
+BEAM am1.5 angle=90 min.window=-7.9 max.window=5.4 x.origin=0 y.origin=-1 \
+     metal.reflect wavel.num=100 wavel.start=0.281 wavel.end=1.281
+
+PROBE n.conc    x=-3  y=-1.2  name=cis_conc
+PROBE potential x=2   y=-1.998 name=fd_potential
+PROBE potential x=-3  y=-1.2  name=cis_potential
+
+LOOP steps=4
+
+SOLVE init
+SOLVE previous   
+SOLVE previous   b1=1e-5*$intensity
+SOLVE previous   b1=1e-4*$intensity
+SOLVE previous   b1=1e-3*$intensity
+SOLVE previous   b1=0.01*$intensity
+SOLVE previous   b1=$intensity
+
+SOLVE vdrain=0.01 vstep=0.01 vfinal=3.3 name=drain b1=$intensity
+
+# Deplete the Image Sensor of Electrons
+LOG outfile=$'name'_$'intensity'.log
+SOLVE Vcgate=3.3 ramptime=1e-9 dt=1e-11 tstop=1e-9 b1=$intensity
+SOLVE Vngate=3.3 ramptime=1e-9 dt=1e-11 tstop=1e-8 b1=$intensity
+SAVE outfile=$'name'_Depleted_Light.str
+
+# Isolate the Image Sensor
+SOLVE Vngate=0 ramptime=1e-9 dt=1e-11 tstop=1.1e-8 b1=$intensity
+SAVE outfile=$'name'_pre_expose_light.str
+
+# Light Integration Time
+SOLVE tstop=$expose_time b1=$intensity
+SAVE outfile=$'name'_read.str
+
+EXTRACT name="CIS Output Voltage" y.val from \
+        curve(time, probe."fd_potential") where x.val=$expose_time
+
+system echo "$"intensity"  $"CIS Output Voltage"" >> $'name'_Opt.dat
+
+
+SOLVE tstop=10 b1=$intensity
+LOG off
+set intensity=$intensity+(400*$expose_time)
+
+L.END
+
+victoryvisual $'name'_sv_exVC.str:$'name'_Net.set \
+$'name'_Vth.log:$'name'_Vth.set \
+$'name'_DepDark.log:$'name'_DepDark.set \
+$'name'_0.03.log:$'name'_IntEx.set+\
+$'name'_0.06.log:$'name'_IntEx.set+\
+$'name'_0.09.log:$'name'_IntEx.set+\
+$'name'_0.12.log:$'name'_IntEx.set
+
+QUIT

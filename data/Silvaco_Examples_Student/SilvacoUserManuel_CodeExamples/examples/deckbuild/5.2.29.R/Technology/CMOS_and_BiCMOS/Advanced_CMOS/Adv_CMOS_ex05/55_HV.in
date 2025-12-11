@@ -1,0 +1,423 @@
+# (c) Silvaco Inc., 2024
+
+# 55nm HV CMOS Device Characterization
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#   -2D Oxidation
+#  Victory Mesh
+#   -2D Meshing
+#  Victory Device
+#   -2D Simulator
+
+# Example Name
+SET name=“Adv_CMOS_ex05” 
+
+# Full flow from process to device simulation of CMOS 55nm HV Device
+# Process simulation: 
+# -Various process modules are integrated into a single flow
+# -Calibration steps are included in comments
+# Electrical Simulation:
+# -Transfer Characterization: IdVglin and IdVgsat Simulation
+# -Parameter Extraction: Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/DIBL Extraction
+# -Output Characteristics: Breakdown Simulation and Voltage Extraction
+ 
+####### PROCESS SIMULATION ####### 
+# Symmetrical 55nm HV device structure. Only half simulated to save time.
+# Mirrored at the end of process simulation.
+
+## ---------------------------------- ##
+## ---------- Initialization -------- ##
+## -----------------------------------##
+
+GO victoryprocess simflags="-P 4"
+
+SET type="NMOS"
+
+INIT material=Silicon orientation=100 sub.rot=45 dopants=Boron resistivity=10 \
+       depth=10.0 gasHeight=5.0 from=0.0 to=6.0 \
+       resolution=0.04 meshDepth=3 
+
+LINE x location=0		spacing=0.15
+LINE x location=6       	spacing=0.2 
+
+LINE z location=-0.2		spacing=0.02
+LINE z location=0		spacing=0.01
+LINE z location=0.4		spacing=0.02
+LINE z location=0.6		spacing=0.05
+LINE z location=1.0		spacing=0.02
+LINE z location=3		spacing=0.1
+LINE z location=5		spacing=0.3
+LINE z location=10		spacing=0.5
+
+
+## ---------------------------------- ##
+## ----------- HV Well Loop --------- ##
+## -----------------------------------##
+
+DEPOSIT min material=oxide thickness=0.01 
+
+if cond=($Type="PMOS")
+## HVN Well  
+IMPLANT phosphorus energy=2500 dose=2.0e12 tilt=0 rotation=0 bca n.ion=10000 
+IMPLANT phosphorus energy=1500 dose=2.0e12 tilt=0 rotation=0 bca n.ion=10000 
+IMPLANT phosphorus energy=500  dose=2.0e12 tilt=0 rotation=0 bca n.ion=5000 
+if.end 
+
+if cond=($Type="NMOS")
+## HVP Well  
+IMPLANT boron energy=1500 dose=2.0e12 tilt=0 rotation=0 bca n.ion=10000 
+IMPLANT boron energy=800  dose=2.0e12 tilt=0 rotation=0 bca n.ion=10000 
+IMPLANT boron energy=200  dose=3.0e12 tilt=0 rotation=0 bca n.ion=5000 
+if.end 
+
+## HV Anneal   
+DIFFUSE time=500 temperature=1000 
+
+STRIP material=oxide
+
+## ---------------------------------- ##
+## -------------- AA Loop ----------- ##
+## -----------------------------------##
+
+## STI 
+ETCH dry material=silicon between.x="1.5,3" between.x="3.5,5.5" thickness=0.3 angle=85 
+
+DEPOSIT material=oxide upto=-0.01 
+
+DIFFUSE time=30 temperature=1000 
+
+ETCH above=0.0
+
+SAVE name=$'name'_$'type'_VP_AA conformalstr
+
+## ---------------------------------- ##
+## ------------ Drift Loop ---------- ##
+## -----------------------------------##
+
+# Mesh Adjustment 
+LINE x location=1 			spacing=0.03 
+LINE x location=2.25			spacing=0.2 
+LINE x location=4.5	                spacing=0.05 
+
+DEPOSIT min material=oxide thickness=0.01 
+
+if cond=($type="NMOS") 
+DEPOSIT min photoresist thickness=3.0 left.to.x=1 
+DEPOSIT min photoresist thickness=3.0 right.to.x=4.5
+else 
+DEPOSIT min photoresist thickness=3.0 left.to.x=5
+if.end 
+
+## NDrift  
+IMPLANT phosphorus energy=500 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000 traj.split 
+IMPLANT phosphorus energy=150 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000 traj.split 
+
+STRIP photoresist 
+
+if cond=($type="PMOS") 
+DEPOSIT min photoresist thickness=3.0 left.to.x=1 
+DEPOSIT min photoresist thickness=3.0 right.to.x=4.5
+else 
+DEPOSIT min photoresist thickness=3.0 left.to.x=4.5
+if.end 
+
+## PDrift  
+IMPLANT boron energy=200 dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000 traj.split 
+IMPLANT boron energy=50  dose=5.0e12 tilt=0 rotation=22 bca n.ion=20000 traj.split 
+
+STRIP photoresist 
+
+## Drift Anneal 
+DIFFUSE time=60 temperature=600  t.final=1000 
+DIFFUSE time=60 temperature=1000 
+DIFFUSE time=60 temperature=1000 t.final=600 
+
+## Well RTA 
+DIFFUSE time=10 sec temperature=600  t.final=1000 
+DIFFUSE time=20 sec temperature=1000 
+DIFFUSE time=10 sec temperature=1000 t.final=600 
+
+ETCH dry material=oxide thickness=0.011
+
+SAVE name=$'name'_$'type'_VP_Drift conformalstr
+
+## ---------------------------------- ##
+## ----------- HVGOX Loop ----------- ##
+## -----------------------------------##
+
+# Mesh Adjustment 
+LINE z location=0.05		spacing=0.005
+
+## HV GOX  
+DEPOSIT directional material=nitride thickness=0.3 right.to.x=2.25
+
+DIFFUSE time=90 temperature=900 f.n2=1 f.h2o=1  pressure=1
+extract name="Tgox1" thickness material="SiO~2" mat.occno=1 x.val=0.75
+
+STRIP material=nitride
+
+## ---------------------------------- ##
+## ------------ Poly Loop ----------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=PolySilicon thickness=0.1
+ETCH dry material=PolySilicon thickness=0.11 right.to.x=2 
+
+## ---------------------------------- ##
+## ------------ LDD Loop ------------ ##
+## -----------------------------------##
+
+## offset spacer  
+DEPOSIT conformal material=oxide thickness=0.008
+ETCH dry material=oxide thickness=0.006 
+
+## LDD Spike 
+DIFFUSE time=2.0 sec temperature=600  t.final=1000
+DIFFUSE time=1.0 sec temperature=1000
+DIFFUSE time=2.0 sec temperature=1000 t.final=600
+
+SAVE name=$'name'_$'type'_VP_LDD conformalstr
+
+## ---------------------------------- ##
+## ----------- Spacer Loop ---------- ##
+## -----------------------------------##
+
+DEPOSIT conformal material=nitride thickness=0.01
+DEPOSIT conformal material=oxide thickness=0.02
+
+DIFFUSE time=30 temperature=650 
+DIFFUSE time=30 temperature=700 
+
+ETCH dry materials="oxide,nitride" thickness=0.03 
+
+## ---------------------------------- ##
+## ------------- SD Loop ------------ ##
+## -----------------------------------##
+
+if cond=($type="NMOS") 
+DEPOSIT directional photoresist thickness=0.2 right.to.x=4.5
+else 
+DEPOSIT directional photoresist thickness=0.2 left.to.x=4.5
+if.end 
+
+## NP Implant 
+IMPLANT germanium  energy=20 dose=5.0e14 tilt=0 rotation=0 
+IMPLANT phosphorus energy=25 dose=1.0e14 tilt=0 rotation=0 
+IMPLANT arsenic    energy=20 dose=4.0e15 tilt=0 rotation=0 
+
+STRIP photoresist 
+
+if cond=($type="PMOS") 
+DEPOSIT directional photoresist thickness=0.2 right.to.x=4.5
+else 
+DEPOSIT directional photoresist thickness=0.2 left.to.x=4.5
+if.end 
+
+## PP Implant 
+IMPLANT boron     energy=6  dose=5.0e13 tilt=0 rotation=0 
+IMPLANT germanium energy=20 dose=5.0e14 tilt=0 rotation=0 
+IMPLANT bf2       energy=10 dose=2.0e15 tilt=0 rotation=0 
+
+STRIP photoresist 
+
+## SD Spike  
+DIFFUSE time=2.0 sec temperature=600  t.final=1000
+DIFFUSE time=1.5 sec temperature=1000
+DIFFUSE time=2.0 sec temperature=1000 t.final=600
+
+SAVE name=$'name'_$'type'_VP_SD conformalstr
+
+## ---------------------------------- ##
+## ----------- Contact Loop --------- ##
+## -----------------------------------##
+
+ETCH dry materials="oxide,nitride" thickness=0.005 
+
+DEPOSIT min material= Aluminum thickness= 0.02 between.x=3.1,3.4
+DEPOSIT min material= Aluminum thickness= 0.02 right.to.x=5.6 
+
+MIRROR mirror="-x"
+
+ELECTRODE name=gate	x=0	  z=-0.1
+ELECTRODE name=source	x=-3.25   z=-0.01
+ELECTRODE name=drain	x=3.25    z=-0.01
+
+ELECTRODE name=body	x=-5.75   z=-0.01
+ELECTRODE name=body	x=5.75    z=-0.01
+
+SAVE name=$'name'_$'type'_VP_sv conformalstr 
+
+## ---------------------------------- ##
+## ------------ Re-Meshing ---------- ##
+## -----------------------------------##
+
+GO victorymesh simflags="-P 4"
+
+LOAD in=$'name'_$'type'_VP_sv
+
+CROP axis = "z" offset = "5.0"
+
+LINE x location=-6			spacing=0.2 
+LINE x location=-2.25    		spacing=0.1 
+LINE x location=-1			spacing=0.03 
+LINE x location=0			spacing=0.1 
+LINE x location=1			spacing=0.03 
+LINE x location=2.25			spacing=0.05 
+LINE x location=4.5             	spacing=0.05 
+LINE x location=6			spacing=0.1 
+
+LINE z location=-0.2		spacing=0.02
+LINE z location=0		spacing=0.01
+LINE z location=0.4		spacing=0.02
+LINE z location=0.6		spacing=0.05
+LINE z location=1.0		spacing=0.02
+LINE z location=3		spacing=0.2
+LINE z location=5		spacing=0.5
+
+REMESH conformal 
+
+SAVE out=$'name'_$'type'_VM_con.str
+
+####### DEVICE SIMULATION #######
+# -Transfer Characterization: IdVglin and IdVgsat Simulation
+# -Parameter Extraction: Vtgm/Vtlin/Idlin/Vtsat/Idsat/Idoff/SSsat/DIBL Extraction
+
+GO victorydevice simflag="-P 4"
+
+if cond=($type="NMOS") 
+SET sign=1 
+SET WF=4.2
+if.end
+
+if cond=($type="PMOS") 
+SET sign=-1 
+SET WF=5.1 
+if.end
+
+SET Vdd = 30.0
+
+# Device Calibration Parameters: 
+
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_$'type'_VM_con.str width=1
+CONTACT name=gate workfunction=$WF 
+INTERFACE Qf=2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=Silicon taun0=1.0e-7 taup0=1.0e-7 
+MODELS fermi srh cvt fldmob print
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap=10 
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility 
+
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SOLVE previous
+
+SOLVE vdrain=0.001*$sign
+SOLVE vdrain=0.01*$sign
+SOLVE vstep=0.01*$sign vfinal=0.05*$sign name=drain 
+SAVE outfile=temp_lowD
+SOLVE vstep=0.1*$sign vfinal=1.0*$sign name=drain 
+SOLVE vstep=$Vdd/10*$sign vfinal=$Vdd*$sign name=drain 
+SAVE outfile=temp_highD
+
+# Transfer Characteristics: IdVg_lin 
+LOAD infile=temp_lowD
+LOG outfile=$'name'_$'type'_VD_IdVg_lin.log
+SOLVE vgate=0.0
+SOLVE vgate=0.001*$sign
+SOLVE vgate=0.01*$sign
+SOLVE vstep=0.1*$sign vfinal=2.0*$sign name=gate 
+SOLVE vstep=$Vdd/50*$sign vfinal=$Vdd*$sign name=gate 
+LOG off
+SAVE outfile=$'name'_$'type'_VD_IdVg_lin.str 
+
+# Transfer Characteristics: IdVg_sat 
+LOAD infile=temp_highD
+LOG outfile=$'name'_$'type'_VD_IdVg_sat.log
+SOLVE vgate=0.0
+SOLVE vgate=0.001*$sign
+SOLVE vgate=0.01*$sign
+SOLVE vstep=0.1*$sign vfinal=2.0*$sign name=gate 
+SOLVE vstep=$Vdd/50*$sign vfinal=$Vdd*$sign name=gate 
+LOG off
+SAVE outfile=$'name'_$'type'_VD_IdVg_sat.str 
+
+GO internal
+
+EXTRACT init infile=$'name'_$'type'_VD_IdVg_lin.log
+EXTRACT name="vtgm" (xintercept(maxslope(curve(abs(v."gate"),abs(i."drain")))) - abs(ave(v."drain"))/2.0)
+EXTRACT name="Vtlin" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val = 1.0e-7/$Lgate
+EXTRACT name="Idlin" max(abs(i."drain"))*(1e6)
+
+EXTRACT init infile=$'name'_$'type'_VD_IdVg_sat.log
+EXTRACT name="Vtsat" x.val from curve(abs(v."gate"),abs(i."drain")) where y.val = 1.0e-7/$Lgate
+EXTRACT name="Idsat" max(abs(i."drain"))*(1e6)
+EXTRACT name="DIBL" ($Vtlin-$Vtsat)*1000
+EXTRACT name="Idoff" y.val from curve(abs(v."gate"),abs(i."drain")) where x.val = 0.0 
+
+####### DEVICE SIMULATION #######
+# -Output Characteristics: Breakdown Simulation and Voltage Extraction
+GO victorydevice simflag="-P 4 -80"
+
+if cond=($type="NMOS") 
+SET sign=1 
+SET WF=4.2
+if.end
+
+if cond=($type="PMOS") 
+SET sign=-1 
+SET WF=5.1 
+if.end
+
+SET Vdd = 30.0
+
+# Device Calibration Parameters:
+#### STRUCTURE SPECIFICATION ####
+MESH infile=$'name'_$'type'_VM_con.str width=1
+CONTACT name=gate workfunction=$WF 
+INTERFACE Qf=2.0e10
+
+#### MATERIAL/PHYSICAL MODELS #### 
+MATERIAL material=Silicon taun0=1.0e-7 taup0=1.0e-7
+MODELS fermi srh cvt fldmob print
+IMPACT selb 
+
+#### NUMERIAL METHODS ####
+METHOD newton maxtrap=10 climit=1e-4  
+OUTPUT con.band val.band band.param u.srh e.mobility h.mobility 
+
+#------------------------------------
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SOLVE previous
+
+LOG outfile=$'name'_$'type'_VD_BVds.log
+SOLVE vdrain=0.01*$sign
+SOLVE vdrain=0.02*$sign
+SOLVE vdrain=0.05*$sign vstep=0.1*$sign vfinal=1.0*$sign name=drain
+SOLVE vstep=0.2*$sign vfinal=3*$sign name=drain 
+SOLVE vstep=1.0*$sign vfinal=30*$sign name=drain 
+SOLVE vstep=0.5*$sign vfinal=60*$sign name=drain compl=1e-6*$sign cname=drain 
+LOG off
+
+SAVE outfile=$'name'_$'type'_VD_BVds.str 
+
+GO internal
+
+EXTRACT init infile="$'name'_$'type'_VD_BVds.log"
+EXTRACT name="BVds" x.val from curve(abs(v."drain"),abs(i."drain")) where y.val = 1e-6
+EXTRACT name="Idoff" y.val from curve(abs(v."drain"),abs(i."drain")) where x.val = 1.1*$Vdd
+
+victoryvisual \
+$'name'_$'type'_VM_con.str \
+$'name'_$'type'_VD_IdVg_lin.log:$'name'_IdVg.set+\
+$'name'_$'type'_VD_IdVg_sat.log:$'name'_IdVg.set \
+$'name'_$'type'_VD_BVds.log:$'name'_BV.set 
+
+QUIT
+ 

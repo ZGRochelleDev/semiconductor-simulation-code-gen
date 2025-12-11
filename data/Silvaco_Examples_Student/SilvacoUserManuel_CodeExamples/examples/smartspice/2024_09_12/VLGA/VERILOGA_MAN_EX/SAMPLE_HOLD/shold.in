@@ -1,0 +1,22 @@
+* Sample and Hold
+
+.verilog "sample_hold.va"
+
+* Input Waveform
+v01 in 0  sin(0 2.5 100k)
+v02 clk 0 pulse(0 5 0.2u 1n 1n 0.3u 0.6u)
+
+* Instance Sample and Hold
+YVLG_sample_amp in out clk sample_hold 
+
+* Output Loading
+RLoad out 0 1MEG
+
+* Analysis
+.tran 0.1u 10u
+
+* Plot Waveforms
+*.print v(in) v(clk) v(out)
+.iplot v(in) v(clk) v(out)
+
+.end

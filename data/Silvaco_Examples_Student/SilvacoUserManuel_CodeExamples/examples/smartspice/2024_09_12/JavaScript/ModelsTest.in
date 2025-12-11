@@ -1,0 +1,81 @@
+     DEMO EXAMPLE 1: INPUT FILE
+*
+VIN  1 0  DC 0  SIN(0 0.1 5MEG)  AC 1
+VCC  8 0  DC 10
+VEE  9 0  DC -12
+RS1  1 2  1K
+RS2  5 0  1K
+RC1  3 8  10K
+RC2  4 8  10K
+RBIAS  7 8  20K
+CLOAD  3 4  5PF
+Q1  3 2 6  QNL
+Q2  4 5 6  QNL
+Q3  6 7 9  QNL
+Q4  7 7 9  QNL
+.MODEL QNL NPN(BF=80 RB=100 CCS=2PF TF=0.3NS TR=6NS CJE=3PF CJC=2PF
++   VA=50)
+.TRAN 5NS 500NS  
+.DC VIN -0.25 0.25 0.025
+.AC DEC 10 10KHZ 10GHZ 
+.PRINT TRAN V(3) V(4)
+.PRINT DC V(1) V(3) V(4) 
+.PRINT AC VM(3) VP(3) 
+.ST QNL(BF) 80 100 10
+.OPTIONS ACCT RELTOL=0.001 NOMOD
+
+.JS_BEGIN
+
+
+function ModelTest(ci)
+{
+	println("Circuit: " + ci.name + " (" + ci.date + ")");
+	var models = ci.getModels();
+	for (var i = 0; i < models.length; i++)
+	{
+		var model = models[i];
+		println("\t" + model.name);
+		var params1 = model.getParameters();
+		println("\tmodel parameters:");
+		for (var j = 0; j < params1.length; j++)
+		{
+			var param = params1[j];
+			println("\t\t" + param.keyword + "," + param.unit + " (" + param.description + ")");
+		}
+
+		println("\tdevices:");
+		for (var device = model.devices; device; device = device.next)
+		{
+			println("\t\t" + device.name);
+			var params2 = device.getParameters();
+			println("\t\tdevice parameters:");
+			for (var k = 0; k < params2.length; k++)
+			{
+				var param = params2[k];
+				println("\t\t\t" + param.keyword + "," + param.unit + " (" + param.description + ")");
+			}
+		}
+	}
+}
+
+function ModelsTest()
+{
+	//ModelTest(simulator.activeCircuit);
+	//return;
+	for (var ci = simulator.circuits; ci; ci = ci.next)
+	{
+		ModelTest(ci);
+	}
+}
+
+ModelsTest();
+
+.JS_END
+
+.control
+run
+jsexec
+.endc
+
+
+.END

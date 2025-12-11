@@ -1,0 +1,25 @@
+source n4.var
+source n0c4.var
+GO victoryprocess simflags="-P 4"
+#vpm_title = VP_CT
+load name = n16_VP_SD 
+
+## ---------------------------------- ##
+## ----------- Contact Loop --------- ##
+## -----------------------------------##
+
+ETCH dry materials = "oxide,nitride" thickness = 0.011 
+DEPOSIT min material = aluminum thickness = 0.02 
+
+MIRROR mirror = "-x"
+
+ELECTRODE name = gate x = 0 z = -0.1
+ELECTRODE name = source x = -$Lgate/2-$Lsd/2 z = 0
+ELECTRODE name = drain x = $Lgate/2+$Lsd/2 z = 0
+ELECTRODE name = substrate substrate
+
+save name = n20_VP_sv conformalstr
+
+## ---------------------------------- ##
+## ------------ Re-meshing ---------- ##
+## -----------------------------------##

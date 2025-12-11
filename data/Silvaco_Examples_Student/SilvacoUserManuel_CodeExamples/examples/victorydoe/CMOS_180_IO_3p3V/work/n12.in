@@ -1,0 +1,42 @@
+source n4.var
+source n0c4.var
+GO victoryprocess simflags="-P 4"
+#vpm_title = VP_LDD
+load name = n8_VP_Poly 
+
+## ---------------------------------- ##
+## ------------ LDD Loop ------------ ##
+## -----------------------------------##
+
+# mesh Adjustment: 
+
+LINE x location = $Lgate/2-0.08 spacing = 0.01 
+LINE x location = $Lgate/2+0.1 spacing = 0.015 
+
+LINE z location = 0.04 spacing = 0.005 
+LINE z location = 0.10 spacing = 0.02 
+LINE z location = 0.25 spacing = 0.01 
+
+# Local Parameters: diffusion (may adjust for calibration purpose) 
+
+# offset spacer 
+DEPOSIT conformal material = oxide thickness = 0.005
+
+if cond = ($type = "NMOS") 
+# NLDD Implant 
+# Note for tilt IMPLANT: to use "dose = " for beam dose, to use "dose.wafer = " for wafer dose. 
+IMPLANT phosphorus energy = 40 dose.wafer = 5.0e13 tilt = 30 rotation = 45 n.rot = 4 reflective bca n.ion = 30000 traj.split plus.n
+if.end 
+
+if cond = ($type = "PMOS") 
+# PLDD Implant 
+# Note for tilt IMPLANT: to use "dose = " for beam dose, to use "dose.wafer = " for wafer dose. 
+IMPLANT bf2 energy = 50 dose.wafer = 5.0e13 tilt = 30 rotation = 45 n.rot = 4 reflective bca n.ion = 30000 traj.split plus.n
+if.end 
+
+# LDD RTA 
+DIFFUSE time = 10 seconds temperature = 600 t.final = 1000
+DIFFUSE time = 10 seconds temperature = 1000
+DIFFUSE time = 10 seconds temperature = 1000 t.final = 600
+
+save name = n12_VP_LDD conformalstr

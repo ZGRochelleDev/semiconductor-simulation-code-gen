@@ -1,0 +1,8 @@
+.vcc 12V
+.load 1K ohm
+.zd 5V6
+.r1 220 ohm
+.out 0
+.in 0
+.gnd 0
+.end

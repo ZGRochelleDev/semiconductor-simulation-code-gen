@@ -1,0 +1,126 @@
+# (c) Silvaco Inc., 2024
+
+# Multiple Ion Tracks
+
+# Required Modules
+#  Victory Process
+#   -3D Implantation and Diffusion
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Device Simulator
+#   -3D Single Event Effects
+
+# Example Name
+set name="Rad_Rel_ex01"
+
+####### PROCESS SIMULATION #######
+GO victoryprocess simflags="-P 4"
+
+### set up intial domain. Silicon substrate w/ p-type doping
+### using Victory Process Cell Mode.  To switch to  process mode add "meshdepth=2 resolution=0.1"
+INIT material=silicon dopant="boron" dopingvalue="2e15"  \
+	from="0,0" to="3,4" depth=16 gasheight=3
+
+## establish starting volume mesh
+LINE x loc=0 spac=0.2
+LINE x loc=3 spac=0.2
+
+LINE y loc=0 spac=0.2
+LINE y loc=4 spac=0.2
+
+LINE z loc=-3 spac=0.5
+LINE z loc=0 spac=0.02
+LINE z loc=6 spac=0.25
+
+### specify masks masks for N+ doping and metal electrode
+SPECIFYMASKPOLY maskname="nplus" rectangle LB="0.0, 0.0" SIZE="1.5, 2.0"
+SPECIFYMASKPOLY maskname="cathode" rectangle LB="0.0, 0.0" SIZE="1, 2" electrode=cathode
+
+## establish N+ doping using a mask. First, increase inserting volume mesh around junction perimiter
+CARTESIAN mask="nplus" spacing=0.03 deltacd=0.3
+LINE z loc=08 spac=0.03
+MASK "nplus" reverse
+DOPING DOPANT=As CONC=1e18 PEAK=0.0 SIGMA=0.2 LATERAL=0.2
+STRIP resist
+
+## deposit metal and electrodes
+DEPOSIT material=aluminum thickness=0.2 max
+ETCH material=aluminum max mask="cathode"
+ELECTRODE mask="cathode" material=aluminium
+ELECTRODE substrate name=anode
+
+SAVE name="$'name'_VP" conformalstr
+
+####### STRUCTURE REMESHING #######​
+GO victorymesh simflags="-P 4"
+## load VP data to start remesh  process
+LOAD in="$'name'_VP"
+
+## use delaunay meshing scheme
+REMESH delaunay
+
+## base refinement by material type
+REFINE region="material:aluminum"  max.size=0.1
+REFINE region="material:silicon" max.size=0.25
+
+## refine the pn junction
+REFINE max.junction.size=0.05 max.junction.distance=1.2 grading="quadratic" 
+
+SAVE out="$'name'_VM.str"
+
+####### DEVICE SIMULATION #######
+GO victorydevice simflags="-P 4"
+#### STRUCTURE SPECIFICATION #### ​
+MESH infile="$'name'_VM.str"
+
+#### MATERIAL/PHYSICAL MODELS #### ​
+MODELS bgn srh conmob fldmob 
+
+IMPACT selb
+
+#set up SEU strike. Entery/exit defined by variable. 
+#t0 is  peak generation rate, tc is characteristic roll off time
+set x1=1.5
+set y1=1.5
+set z1=-1.0 
+set x2=2.5
+set y2=3.0
+set z2=20.0
+set rad=0.04
+SINGLEEVENTUPSET entry="$x1,$y1,$z1" exit="$x2,$y2,$z2" radius=0.04 density=1.e21 \
+	t0=1.e-10 tc=2.e-11
+
+#### NUMERICAL METHODS #### ​
+METHOD newton pam.bicgst  lte.timestep seu.integrate seu.max.rad=0.2 seu.max.inc=1.0 seu.n.inc=30
+#
+#### SOLUTION SOLVING ####
+SOLVE init 
+
+## reverse bias the PN junction
+SOLVE vstep=1 vfinal=20.0 name=cathode
+
+## optional parameters that help  fill in curve with sufficent datapoints
+## without these options sim will take larger steps
+METHOD dt.min=1.e-12 constant.timestep pam.bicgst
+METHOD maxtraps=100 dt.min=1e-50 dt.max=10000 tol.time=1e6 \
+       climit=1e-6 
+LOG outf=$'name'_trans.log
+SOLVE tfinal=1.0e-11 tstep=1e-12
+SOLVE tfinal=6.5e-11 tstep=0.5e-11
+SOLVE tfinal=1.0e-9  tstep=0.25e-11
+SAVE outf=$'name'_peak_SEU.str
+
+SOLVE tfinal=2.0e-09 tstep=0.125e-10
+SOLVE tfinal=5.0e-09 tstep=0.5e-10
+SOLVE tfinal=6.0e-09 tstep=0.25e-11
+SOLVE tfinal=1.0e-08 tstep=0.5e-9
+SOLVE tfinal=1.0e-07 tstep=1e-08
+SOLVE tfinal=1.0e-06 tstep=1e-07
+LOG off
+#
+SAVE outf=$'name'_final_SEU.str
+#
+victoryvisual $'name'_trans.log:$'name'_trans.set
+
+QUIT

@@ -1,0 +1,137 @@
+# (c) Silvaco Inc., 2024
+
+# Negative Transconductance - Effect of Lattice Heating
+
+# Required Modules
+#  Victory Device
+#   -2D Simulator
+#   -2D Giga
+
+# Example Name
+SET name=“SOI_ex04” 
+
+# With LATTICE HEATING
+GO victoryd simflags="-P 4 "
+
+#### STRUCTURE SPECIFICATION ####
+# Mesh Definition
+MESH space.mult=1.0
+# 
+X.MESH location=0.00 spacing=0.250
+X.MESH location=1.15 spacing=0.02
+X.MESH location=1.5 spacing=0.1
+X.MESH location=1.85 spacing=0.02
+X.MESH location=3 spacing=0.25
+#
+Y.MESH location=-0.017 spacing=0.02
+Y.MESH location=0.00 spacing=0.005
+Y.MESH location=0.1 spacing=0.02
+Y.MESH location=0.2 spacing=0.01
+Y.MESH location=0.6 spacing=0.1
+#
+## Regions and electrodes
+REGION num=1 y.max=0 oxide 
+REGION num=2 y.min=0 y.max=0.2 silicon
+REGION num=3 y.min=0.2 oxide
+#
+ELECTRODE name=gate x.min=1 x.max=2 y.min=-0.017 y.max=-0.017
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.5 y.min=0 y.max=0
+ELECTRODE substrate
+#
+#Device doping
+#
+DOPING uniform conc=1e17 p.type reg=2
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.r=1.0 
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.l=2.0
+SAVE outf=$'name'_VD.str
+#
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.poly
+MODELS arora consrh auger bgn fldmob lat.temp
+IMPACT selb 
+THERMCONTACT number=1 y.min=0.6 ext.temper=300
+# 
+
+#### SOLUTION SOLVING #### 
+SOLVE init 
+SAVE outf=$'name'_VD_INIT.str
+METHOD block itlimit=15 trap dvmax=0.25 maxtraps=50
+SOLVE vgate=0.1
+SOLVE vgate=0.2
+SOLVE vgate=0.3
+SOLVE vgate=0.4
+SOLVE vgate=0.5
+SOLVE vgate=0.75
+SOLVE vgate=1 vstep=1 vfinal=10.0 name=gate
+#
+METHOD block itlimit=15 trap dvmax=0.25 maxtraps=50 
+#
+LOG outf=$'name'_VD_HEATING.log master
+SOLVE vstep=0.020 vfinal=0.1 name=drain
+SOLVE vstep=0.050 vfinal=1.2 name=drain 
+SOLVE vdrain=1.3 vstep=0.1 vfinal=3.5 name=drain
+SAVE outf=$'name'_VD_HEATING.str
+#
+#Without LATTICE HEATING
+GO victoryd simflags="-P 4 "
+
+MESH space.mult=1.0
+# 
+X.MESH location=0.00 spacing=0.250
+X.MESH location=1.15 spacing=0.02
+X.MESH location=1.5 spacing=0.1
+X.MESH location=1.85 spacing=0.02
+X.MESH location=3 spacing=0.25
+#
+Y.MESH location=-0.017 spacing=0.02
+Y.MESH location=0.00 spacing=0.005
+Y.MESH location=0.1 spacing=0.02
+Y.MESH location=0.2 spacing=0.01
+Y.MESH location=0.6 spacing=0.1
+#
+## Regions and electrodes
+REGION num=1 y.max=0 oxide 
+REGION num=2 y.min=0 y.max=0.2 silicon
+REGION num=3 y.min=0.2 oxide
+#
+ELECTRODE name=gate x.min=1 x.max=2 y.min=-0.017 y.max=-0.017
+ELECTRODE name=source x.max=0.5 y.min=0 y.max=0
+ELECTRODE name=drain x.min=2.5 y.min=0 y.max=0
+ELECTRODE substrate
+#
+#Device doping
+#
+DOPING uniform conc=1e17 p.type reg=2
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.r=1.0 
+DOPING gauss n.type conc=1e20 char=0.2 lat.char=0.05 reg=2 x.l=2.0
+#
+#### MATERIAL/PHYSICAL MODELS #### 
+CONTACT name=gate n.poly
+MODELS arora consrh auger bgn fldmob 
+IMPACT selb 
+# 
+#### SOLUTION SOLVING #### 
+SOLVE init 
+METHOD newton itlimit=15 trap dvmax=0.25 maxtraps=50 
+SOLVE vgate=0.1
+SOLVE vgate=0.2
+SOLVE vgate=0.3
+SOLVE vgate=0.4
+SOLVE vgate=0.5
+SOLVE vgate=0.75
+SOLVE vgate=1 vstep=1 vfinal=10.0 name=gate
+#
+METHOD newton itlimit=15 trap dvmax=0.25 maxtraps=50 
+#
+LOG outf=$'name'_VD_NO_HEATING.log master
+SOLVE vstep=0.020 vfinal=0.1 name=drain
+SOLVE vstep=0.050 vfinal=1.2 name=drain 
+SOLVE vdrain=1.3 vstep=0.1 vfinal=3.5 name=drain
+SAVE outf=$'name'_VD_NO_HEATING.str
+
+victoryvisual \
+$'name'_VD_HEATING.str:$'name'_VD_HEATING.set \
+$'name'_VD_HEATING.log+$'name'_VD_NO_HEATING.log
+
+QUIT

@@ -1,0 +1,208 @@
+# (c) Silvaco Inc., 2024
+
+# Pi-Gate p-GaN HEMT Process and Device Simulation
+
+# Required Modules
+#  Victory Process
+#   -2D Diffusion & Implantation
+#  Victory Mesh
+#   -2D Remeshing
+#  Victory Device
+#   -2D Simulator
+#   -2D MixedMode
+ 
+# Example Name
+
+SET name="GaN_power_ex11"
+
+################## PROCESS SIMULATION ###################################
+
+GO victoryprocess simflags="-P 4"
+
+INIT material=Gan  \
+     from=0 to=23 depth=4.2 at=0 gasheight=2 \
+     resolution="0.05,0.05" meshdepth=3 separate.layers
+
+#Deposit the device's material stack
+
+DEPOSIT material=GaN thickness=0.42 conformal
+DEPOSIT material=AlGaN thickness=0.015 x.comp=0.20 y.comp=0.80 conformal
+DEPOSIT material=GaN thickness=0.100 conformal dopants="Mg" dopingvalues=3e19
+
+# Creating masks using SPECIFYMASKPOLY
+
+SPECIFYMASKPOLY mask=sdmask     p1="1,-50" p2="1,50" p3="22,50" p4="22,-50" istransparent=false
+SPECIFYMASKPOLY mask=pgan       p1="3,-50" p2="3,50" p3="7,50" p4="7,-50" istransparent=false
+SPECIFYMASKPOLY mask=gatehead   p1="2.8,-50" p2="2.8,50" p3="7.2,50" p4="7.2,-50" istransparent=false
+SPECIFYMASKPOLY mask=gatestem1  p1="3,-50" p2="3,50" p3="4,50" p4="4,-50" istransparent=false
+SPECIFYMASKPOLY mask=gatestem2  p1="6,-50" p2="6,50" p3="7,50" p4="7,-50" istransparent=false
+SPECIFYMASKPOLY mask=sdwindow   p1="0.5,-50" p2="0.5,50" p3="22.5,50" p4="22.5,-50" istransparent=false
+SPECIFYMASKPOLY mask=test       p1="1,-50" p2="1,50" p3="3,50" p4="3,-50" istransparent=false
+SPECIFYMASKPOLY mask=test  add  p1="7,-50" p2="7,50" p3="22,50" p4="22,-50" istransparent=false
+SPECIFYMASKPOLY mask=test1      p1="2.5,-50" p2="2.5,50" p3="8.6,50" p4="8.6,-50" istransparent=false
+
+ETCH material=GaN thickness=0.100 dry mask=pgan angle=70 reverse
+ETCH thickness=0.017 dry mask=sdmask reverse
+DEPOSIT aluminum thickness=0.117 min mask=sdmask 
+DEPOSIT nitride thickness=0.200 conformal
+ETCH material=nitride thickness=0.100 max mask=test1 
+ETCH material=nitride thickness=0.100 dry mask=gatestem1 angle=60
+ETCH material=nitride thickness=0.100 dry mask=gatestem2 angle=60
+DEPOSIT material="gold" thickness=0.200 conformal mask=gatehead angle=110 reverse
+ETCH material=nitride thickness=0.200 dry mask=sdwindow angle=60 reverse
+
+ELECTRODES name=gate x=5.0 z=-0.7
+ELECTRODES name=source x=0.5 z=-0.5
+ELECTRODES name=drain x=22.5 z=-0.5
+ELECTRODES substrate
+
+#Save structure and using conformalstr for visualization
+SAVE name=$"name"_process conformalstr
+
+## ---------------------------------- ##
+## ------------ Re-Meshing ---------- ##
+## -----------------------------------##
+
+####### STRUCTURE REMESHING #######
+
+# Use VictoryMesh to prepare the structure for VictoryDevice simulation
+
+GO victorymesh simflags="-P 4"
+
+LOAD in=$"name"_process separate
+
+TAG point="5.0,-0.5" 	value="pGaN"
+TAG point="5.0,-0.4275" value="Barrier"
+TAG point="5.0,-0.25" 	value="Channel"
+TAG point="15,1"	value="GaNSub"
+
+LINE x location=0 spacing=0.20 
+LINE x location=1 spacing=0.20 
+LINE x location=3 spacing=0.1
+LINE x location=4 spacing=0.1
+LINE x location=5 spacing=0.1
+LINE x location=6 spacing=0.1
+LINE x location=7 spacing=0.20
+LINE x location=15 spacing=1.00
+LINE x location=22 spacing=0.20
+LINE x location=23 spacing=0.20
+
+LINE z location=-0.6350 spacing=0.05
+LINE z location=-0.5350 spacing=0.05
+LINE z location=-0.4350 spacing=0.01
+LINE z location=-0.4200 spacing=0.001
+LINE z location=0.0    spacing=0.1
+LINE z location=0.3 spacing=0.5
+LINE z location=4.20 spacing=0.5
+
+REMESH conformal
+
+SAVE out=$"name"_VM.str
+
+################## DEVICE SIMULATION ###################################
+
+# MixedMode simulation for modeling RDSon.
+
+GO victorydevice simflags="-160 -P 4"
+
+.begin
+
+#create a pulse with 10% duty cycle. Period = 100us, with 10us gate on, and 90 us gate off. Total cycles (set up .tran) = 14. Reduce final .tran time to reduce the number of cycles simulated.
+
+vd 2 0 0 pulse 1 200 1us 20ns 20ns 90us 100us
+vg 3 0 0 pulse 4 0 1us 20ns 20ns 90us 100us
+
+apGaN 2=drain 3=gate 0=source 0=substrate infile=$"name"_VM.str width=1e3
+
+.log outfile=$"name"_RDSon
+
+.tran 1e-12 1e-6 dtconstant
+.tran 1E-12 100e-6
+.tran 1E-10 200e-6
+.tran 1E-10 300e-6
+.tran 1e-10 400e-6
+.tran 1e-10 500e-6
+.tran 1e-10 600e-6
+.tran 1e-10 700e-6
+.tran 1e-10 800e-6 
+.tran 1e-10 1000e-6
+
+.save outfile=$"name"_structure
+
+.numeric imaxtr=100 tstep.ratio=2 dtmax=10000 
+
+.options m2ln.tr debug print relpot
+.end
+
+REGION device=apGaN modify name="GaNSub" material=gan substrate
+
+## Doping Definition ##
+DOPING device=apGaN name="pGaN" concentration=3e20 p.type uniform
+DOPING device=apGaN name="GaNSub" concentration=3e7 n.type uniform
+
+## Models ##
+MODELS device=apGaN consrh auger fermi print ni.fermi temp=300 
+
+MOBILITY device=apGaN material=GaN mun=2000
+MOBILITY device=apGaN name="pGaN" albrct.p bp.albrct=1e04 ap.albrct=1e04
+MODEL device=apGaN POLARIZATION psp.scale=0.6 piezo.scale=0.6 calc.strain 
+MODEL device=apGaN name="pGaN" pch.ins
+
+INTERFACE device=apGaN s.s thermionic
+
+## Contact Definition ##
+# Gate Definition - [Ohmic for p - GaN]
+CONTACT device=apGaN name=source workfunc=4.04
+CONTACT device=apGaN name=drain  workfunc=4.04
+
+## Trap Definition ##
+INTTRAP device=apGaN donor e.level=0.5 density=3e13 sign=1e-13 sigp=1e-13 degen=1 r1material=nitride r2material=GaN
+INTTRAP device=apGaN donor e.level=0.5 density=3e13 sign=1e-13 sigp=1e-13 degen=1 r1material=nitride r2material=AlGaN
+INTTRAP device=apGaN donor density=6.0e11 e.level=3.38 degen.fac=2 taun=0.4 taup=0.4 y.min=0.015 y.max=0.015
+
+#GaN Buffer traps
+
+TRAP device=apGaN name="Channel" acceptor e.level=0.5 density=5e13 sign=1e-12 sigp=1e-12 degen=2
+
+TRAP device=apGaN  acceptor e.level=2.85 density=1e17 sign=1e-12 sigp=1e-12 degen=4 name="Channel"
+TRAP device=apGaN  donor    e.level=0.5  density=2e17 sign=1e-12 sigp=1e-12 degen=2 name="Channel"
+
+#pGaN traps
+
+TRAP device=apGaN name="pGaN" acceptor e.level=0.85 density=4e16 taun=0.13 taup=1 degen=2
+TRAP device=apGaN name="pGaN" donor e.level=0.49 density=3.2e16 taun=0.13 taup=1 degen=2
+
+#Saving specific parameters to structure files (.str) for post simulation analysis
+OUTPUT device=apGaN band.param con.band val.band charge polar.charge qss traps traps.ft
+
+# Probing trap ionization in Channel region. This will be tracked with change in voltage/time. We can visualize this in .log files.
+
+PROBE device=apGaN name="ionized_donor_trapC" rname="Channel" integrated incomplete.donor
+PROBE device=apGaN name="ionized_acc_trapC" rname="Channel" integrated incomplete.acceptor
+
+METHOD device=apGaN newton
+
+GO victoryextract 
+
+#Extracting RDSon (Vg_on/Ids_on) first at T=9.5e-5 (inital RDSon) then at the end of all cycles, at T=1e-3 (Final RDSon). 
+# With repeated pulsed operation, the drain current reduces revealing and increase in the RDSon as traps fill with a 10%  duty cycle.
+
+LOAD in=$"name"_RDSon_tr.log
+
+#Extracting Id at inital and final pulse cycle
+CURVE name=Id_time x="Transient time" y=I[apGaN_drain]
+EXTRACT.CURVE name="Id_at_T1" expression="intercept(x=9.5e-5,curve.Id_time)"
+EXTRACT.CURVE name="Id_at_T2" expression="intercept(x=9.99e-4,curve.Id_time)"
+
+#Vd at Gate on = 1V
+#Therefore RDSon=Von/Ids = 1/IDS
+
+EXTRACT.VDOE name=RDSon_T1 expression="1/$Id_at_T1"
+EXTRACT.VDOE name=RDSon_T2 expression="1/$Id_at_T2"
+
+GO internal
+#Visualization
+victoryvisual $"name"_RDSon_tr.log
+victoryvisual $"name"_structure_apGaN.str
+
+QUIT

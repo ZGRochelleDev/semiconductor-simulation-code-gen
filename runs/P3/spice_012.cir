@@ -1,0 +1,9 @@
+plaintext
+// CMOS Inverter Transienst
+.in 0
+.vout 0
+.vin PULSE(1.6 0.003 0.004 0.007 0.012 0.015 0.02 0.025)
+.pmos1 out in vdd 1.8 PMOS1
+.nmos1 out in 0 1 nmos1
+.tran 1e-9 2e-9
+.print V(out)

@@ -1,0 +1,490 @@
+.lib FAST_MOS
+
+.MODEL cmosn NMOS (                                 LEVEL  = 3                  
++ TOX    = 1.3E-8          NSUB   = 1E17            GAMMA  = 0.5483559          
++ PHI    = 0.7             VTO    = 0.6640855       DELTA  = 3.0541177          
++ UO     = 662.6984452     ETA    = 3.162045E-6     THETA  = 0.1013999          
++ KP     = 1.259355E-4     VMAX   = 1.442228E5      KAPPA  = 0.3                
++ RSH    = 7.513418E-3     NFS    = 1E12            TPG    = 1                  
++ XJ     = 3E-7            LD     = 1E-13           WD     = 2.334779E-7        
++ CGDO   = 2.00E-10        CGSO   = 2.00E-10        CGBO   = 1E-10              
++ CJ     = 3.758447E-4     PB     = 0.9140376       MJ     = 0.435903           
++ CJSW   = 2.747465E-10    MJSW   = 0.1977689       )                           
+*                                                                               
+.MODEL cmosp PMOS (                                 LEVEL  = 3                  
++ TOX    = 1.3E-8          NSUB   = 1E17            GAMMA  = 0.6243261          
++ PHI    = 0.7             VTO    = -0.8444911      DELTA  = 0.1118368          
++ UO     = 250             ETA    = 0               THETA  = 0.1633973          
++ KP     = 3.924644E-5     VMAX   = 1E6             KAPPA  = 30.1015109         
++ RSH    = 33.9672594      NFS    = 1E12            TPG    = -1                 
++ XJ     = 2E-7            LD     = 5E-13           WD     = 4.11531E-7        
++ CGDO   = 2.14E-10        CGSO   = 2.14E-10        CGBO   = 1E-10              
++ CJ     = 6.785722E-4     PB     = 0.96443         MJ     = 0.5                
++ CJSW   = 2.555161E-10    MJSW   = 0.3184873       )            
+           
+.MODEL hvcmosn NMOS (                                 LEVEL  = 3                  
++ TOX    = 1.3E-7          NSUB   = 1E17            GAMMA  = 0.5483559          
++ PHI    = 0.7             VTO    = 1.6640855       DELTA  = 3.0541177          
++ UO     = 662.6984452     ETA    = 3.162045E-6     THETA  = 0.1013999          
++ KP     = 1.259355E-4     VMAX   = 1.442228E6      KAPPA  = 0.3                
++ RSH    = 7.513418E-3     NFS    = 1E12            TPG    = 1                  
++ XJ     = 3E-7            LD     = 1E-13           WD     = 2.334779E-7        
++ CGDO   = 2.00E-10        CGSO   = 2.00E-10        CGBO   = 1E-10              
++ CJ     = 3.758447E-4     PB     = 0.9140376       MJ     = 0.435903           
++ CJSW   = 2.747465E-10    MJSW   = 0.1977689       )                           
+*                                                                               
+.MODEL hvcmosp PMOS (                                 LEVEL  = 3                  
++ TOX    = 1.3E-7          NSUB   = 1E17            GAMMA  = 0.6243261          
++ PHI    = 0.7             VTO    = -1.8444911      DELTA  = 0.1118368          
++ UO     = 250             ETA    = 0               THETA  = 0.1633973          
++ KP     = 3.924644E-5     VMAX   = 1E6             KAPPA  = 30.1015109         
++ RSH    = 33.9672594      NFS    = 1E12            TPG    = -1                 
++ XJ     = 2E-7            LD     = 5E-13           WD     = 4.11531E-7        
++ CGDO   = 2.14E-10        CGSO   = 2.14E-10        CGBO   = 1E-10              
++ CJ     = 6.785722E-4     PB     = 0.96443         MJ     = 0.5                
++ CJSW   = 2.555161E-10    MJSW   = 0.3184873       ) 
+
+.subckt rfnmos2v d g s b lr=0.24u nr=8
+mcore n1 n2 n3 n4 rfn w=5u l=lr m=nr ad=0.0 as=0.0 pd=0.0 ps=0.0
+rd D n1 1e-5
+rg G n2 '(1.1588-7.68168/(nr*lr*1e6)+1.1509E+02/nr)*9.7952E-01'
+rs S n3 '2.5516E-01/(log10(nr/1.9899+1))+1.0789'
+rsub3 n4 B '(2.9984E+01+4838.5/nr)*9.4863E-01'
+rds n3 n5 '6.2534E+01-42.25/(nr*sqrt(lr*1e6))'
+ddb n4 n1 dn_rfn area='nr/2.1655*0.82u*5u'  pj='nr*(0.82u+5u)'
+dsb n4 n3 dn_rfn area='(nr/1.9291+1.0)*0.82u*5u' pj='(nr/2.1684+1.0)*(0.82u+5u)*1.8996'
+cds n1 n5 '(2.8463E+01+0.8243*nr/sqrt(lr*1.0e6))*1.0e-15'
+
+.MODEL rfn NMOS (
++LMIN	= 2.4e-07
++SFVTFLAG	= 0
++VFBFLAG	= 1
++LMAX	= 5e-07
++WMIN	= 1.2e-06
++WMAX	= 0.000101
++LEVEL	= 49
++TNOM	= 25
++XL	= 2.8464E-08
++NOIMOD	= 1
++EF	= 1.0110
++AF	= 9.6549E-01
++KF	= 5.4565E-28
++XW	= 9.7453E-07
++VERSION	= 3.2
++TOX	= 5.0049E-09
++XJ	= 9.8750E-08
++NCH	= 1.7040E+17
++LLN	= 1
++LWN	= 1
++WLN	= 1
++WWN	= 1
++LINT	= 2.0154E-08
++WINT	= 2.0054E-08
++MOBMOD	= 1
++BINUNIT	= 2.0889
++DWG	= 0
++DWB	= 0
++VTH0	= 5.3666E-01
++LVTH0	= -2.4265E-09
++WVTH0	= -7.6884E-08
++PVTH0	= 2.3500E-14
++K1	= 3.1793E-01
++LK1	= 1.7485E-08
++WK1	= -3.0205E-08
++PK1	= -3.8623E-16
++K2	= 3.2123E-02
++LK2	= -1.2755E-08
++WK2	= 1.6885E-09
++PK2	= 2.8338E-15
++K3	= 0
++DVT0	= 0
++DVT1	= 0
++DVT2	= 0
++DVT0W	= 0
++DVT1W	= 0
++DVT2W	= 0
++NLX	= 0
++W0	= 0
++K3B	= 0
++VSAT	= 1.1007E+05
++LVSAT	= -1.5263E-03
++WVSAT	= -3.7315E-03
++PVSAT	= 1.8521E-09
++UA	= -9.4150E-10
++LUA	= -1.0143E-16
++WUA	= 7.9169E-17
++PUA	= 1.8775E-23
++UB	= 1.7501E-18
++LUB	= 1.8179E-25
++WUB	= -8.9070E-26
++PUB	= -8.9730E-32
++UC	= 4.6336E-11
++LUC	= 8.1541E-18
++WUC	= -1.9794E-17
++PUC	= 7.5611E-25
++RDSW	= 1.8864E+02
++PRWB	= 0
++PRWG	= 0
++WR	= 1
++U0	= 3.1666E-02
++LU0	= -4.5589E-10
++WU0	= 6.0102E-10
++PU0	= -6.6414E-16
++A0	= 2.5550E-01
++LA0	= 1.2770E-07
++WA0	= 4.0066E-07
++PA0	= -2.3580E-13
++KETA	= -1.7018E-02
++LKETA	= 9.4231E-09
++WKETA	= 3.5650E-08
++PKETA	= -1.0956E-14
++A1	= 0
++A2	= 5.6648E-01
++LA2	= 2.3467E-08
++WA2	= 9.3786E-08
++PA2	= -2.7296E-14
++AGS	= 2.7195E-02
++LAGS	= -8.9499E-09
++B0	= 0
++B1	= 0
++VOFF	= -1.3203E-01
++LVOFF	= -6.9493E-09
++WVOFF	= 8.3394E-09
++PVOFF	= 5.3463E-15
++NFACTOR	= 1
++CIT	= 1.0132E-03
++CDSC	= 0
++CDSCB	= 0
++CDSCD	= 0
++ETA0	= -9.5119E-04
++LETA0	= 1.4021E-09
++WETA0	= -2.9075E-10
++PETA0	= -2.1184E-16
++ETAB	= 7.3938E-04
++LETAB	= -6.4652E-10
++WETAB	= -6.3826E-10
++PETAB	= 3.5346E-16
++DSUB	= 0
++PCLM	= 1.5701
++LPCLM	= 2.0029E-07
++WPCLM	= 3.0487E-07
++PPCLM	= -4.2155E-14
++PDIBLC1	= 9.8212E-06
++PDIBLC2	= -9.0684E-04
++LPDIBLC2	= 1.3765E-09
++WPDIBLC2	= 2.4227E-09
++PPDIBLC2	= -5.7556E-16
++PDIBLCB	= 1.0507E-02
++DROUT	= 0
++PSCBE1	= 3.6427E+08
++LPSCBE1	= 6.7336
++WPSCBE1	= -5.5321
++PPSCBE1	= 4.6914E-06
++PSCBE2	= 9.5714E-07
++PVAG	= 0
++DELTA	= 9.6395E-03
++ALPHA0	= 0
++BETA0	= 2.0766E+01
++KT1	= -3.3418E-01
++LKT1	= 2.4483E-08
++WKT1	= 5.8605E-08
++PKT1	= -2.5670E-14
++KT2	= -3.4755E-02
++LKT2	= 5.1225E-10
++WKT2	= -5.7073E-09
++PKT2	= 3.1902E-15
++AT	= 3.6128E+04
++UTE	= -1.6593
++LUTE	= 9.9993E-08
++WUTE	= 2.2112E-07
++PUTE	= -9.4815E-14
++UA1	= 1.0019E-10
++UB1	= 0
++UC1	= -6.0113E-11
++LUC1	= 1.2174E-17
++WUC1	= 1.6356E-16
++PUC1	= -4.5525E-23
++KT1L	= 0
++PRT	= 0
++CJ	= 1.8451E-03
++MJ	= 4.6060E-01
++PB	= 9.7579E-01
++CJSW	= 4.4854E-10
++MJSW	= 3.6300E-01
++PBSW	= 9.3247E-01
++CJSWG	= 3.1527E-10
++MJSWG	= 3.8140E-01
++PBSWG	= 9.7849E-01
++TCJ	= 7.1290E-04
++TCJSW	= 8.5610E-04
++TPB	= 1.2947E-03
++TPBSW	= 1.1920E-03
++JS	= 1.8627E-06
++JSW	= 5.1443E-10
++CGDO	= 0
++CGSO	= 0
++CAPMOD	= 2.8490
++NQSMOD	= 0
++XPART	= 1
++CF	= 0
++TLEV	= 1
++TLEVC	= 1
++XTI	= 2.8523
++N	= 1
++HDIF	= 2.5821E-07
++LDIF	= 1.2414E-07
++RSH	= 4.5459
++RS	= 0
++RD	= 0
++DLC	= 3.5226E-09
++DWC	= 5.3757E-10
++CLC	= 3.9312E-08
++CLE	= 6.8181E-01
++ACDE	= 3.9021E-01
++MOIN	= 1.0162E+01
++NOFF	= 1.4701
++VOFFCV	= -7.1294E-02
++CKAPPA	= 2.6870
++CGDL	= 0
++CGSL	= 0
++CGBO	= 1.0218E-13
++TOXM	= 5.3590E-09
++TCJSWG	= 8.7848E-04
++TPBSWG	= 1.2617E-03
++ALPHA1	= 1.7223E+01)
+
+
+.MODEL dn_rfn D (
++ 
++CJ	= 1.7957E-03
++PB	= 8.7823E-01
++MJ	= 5.1314E-01
++CJSW	= 1.5754E-10
++PHP	= 9.6529E-01
++MJSW	= 3.8196E-01)    
+.ends rfnmos2v
+
+*****************************************************************
+.subckt rfnmos3v d g s b lr=0.35u  nr=8
+
+mcore n1 n2 n3 n4 rfn3 w=5u l=lr m=nr ad=0.0 as=0.0 pd=0.0 ps=0.0
+rd D n1 1e-5
+rg G n2 '(1.6698E-01+173.8/nr-9.7581/(nr*lr*1e6))*9.9718E-01'
+rs S n3 '1.4024/(log10(nr/1.9433+1.0))+1.2799'
+rsub1 n6 n4 '(9.4569E+01/nr-1.2175E-01)*1.0575'
+rsub2 n5 n4 '(9.3183E+01/nr-1.1092E-01)*9.8035E-01'
+rsub3 n4 B '(-4.2653E+01+5469.1/nr)*1.0124'
+rds n7 n3 '3.6885E+02-34.76/(nr*sqrt(lr*1e6))'
+ddb n6 n1 dn_rfn3 area='nr/2.0232*0.82u*5u'       pj='nr*(0.82u+5u)'
+dsb n5 n3 dn_rfn3 area='(nr/1.8533+1.0)*0.82u*5u' pj='(nr/1.8860+1.0)*(0.82u+5u)*2.0888'
+cds n1 n7 '(-8.0759+0.873*nr/sqrt(lr*1.0e6))*1.0e-15'
+
+.MODEL rfn3 NMOS (
++LMIN	= 3.5e-07
++SFVTFLAG	= 0
++VFBFLAG	= 1
++LMAX	= 6.1e-07
++WMIN	= 1.2e-06
++WMAX	= 0.000101
++NOIMOD	= 1
++EF	= 9.4553E-01
++AF	= 7.9095E-01
++KF	= 4.8957E-28
++LEVEL	= 49
++TNOM	= 25
++XL	= 3.1338E-08
++XW	= 1.0578E-06
++VERSION	= 3.2
++TOX	= 7.0297E-09
++XJ	= 9.6609E-08
++NCH	= 1.9604E+17
++LLN	= 1
++LWN	= 1
++WLN	= 1
++WWN	= 1
++LINT	= 1.4934E-08
++WINT	= 1.4485E-08
++MOBMOD	= 1
++BINUNIT	= 2.0661
++DWG	= 0
++DWB	= 0
++VTH0	= 5.5970E-01
++LVTH0	= -6.6417E-09
++WVTH0	= -1.4703E-09
++PVTH0	= 1.0936E-15
++K1	= 5.1421E-01
++LK1	= -1.1877E-08
++WK1	= -5.3855E-09
++PK1	= -2.8877E-15
++K2	= 4.1687E-02
++LK2	= -2.0197E-08
++WK2	= -8.0191E-10
++PK2	= 1.6958E-15
++K3	= 0
++DVT0	= 0
++DVT1	= 0
++DVT2	= 0
++DVT0W	= 0
++DVT1W	= 0
++DVT2W	= 0
++NLX	= 0
++W0	= 0
++K3B	= 0
++VSAT	= 1.0922E+05
++LVSAT	= 1.3638E-02
++WVSAT	= 4.0377E-02
++PVSAT	= -1.6185E-08
++UA	= -1.8528E-09
++LUA	= 7.4755E-16
++WUA	= 6.4916E-16
++PUA	= -5.0656E-22
++UB	= 2.5841E-18
++LUB	= -3.5900E-25
++WUB	= -8.3276E-25
++PUB	= 2.3249E-31
++UC	= 8.1952E-11
++LUC	= -6.3469E-18
++WUC	= -5.5472E-17
++PUC	= 5.2784E-24
++RDSW	= 4.8234E+02
++PRWB	= 0
++PRWG	= 0
++WR	= 1
++U0	= 3.1443E-02
++LU0	= 1.3641E-09
++WU0	= 2.5950E-09
++PU0	= -4.1706E-16
++A0	= 4.9978E-01
++LA0	= -1.0374E-07
++WA0	= 8.3768E-07
++PA0	= -2.5766E-13
++KETA	= -2.1158E-02
++LKETA	= 7.1646E-10
++WKETA	= 3.7589E-08
++PKETA	= -1.9295E-15
++A1	= 0
++A2	= 5.1476E-01
++LA2	= -2.6574E-08
++WA2	= -8.1872E-08
++PA2	= 3.2818E-14
++AGS	= -4.1171E-02
++LAGS	= 1.8153E-08
++WAGS	= 3.6679E-08
++PAGS	= -2.1268E-14
++B0	= 0
++B1	= 0
++VOFF	= -1.0560E-01
++LVOFF	= 3.1836E-10
++WVOFF	= -1.1833E-08
++PVOFF	= 5.6117E-15
++NFACTOR	= 1
++CIT	= 6.4402E-04
++LCIT	= 9.2946E-11
++WCIT	= 5.5069E-11
++PCIT	= -1.1707E-16
++CDSC	= 0
++CDSCB	= 0
++CDSCD	= 0
++ETA0	= -8.7938E-04
++LETA0	= 9.8408E-10
++WETA0	= -3.3214E-09
++PETA0	= 2.0247E-15
++ETAB	= 7.6169E-04
++LETAB	= -7.8604E-10
++WETAB	= -3.7303E-10
++PETAB	= 2.3903E-16
++DSUB	= 0
++PCLM	= 1.0703
++LPCLM	= 2.0824E-07
++WPCLM	= 7.5875E-07
++PPCLM	= -6.4417E-14
++PDIBLC1	= 9.8584E-06
++PDIBLC2	= -5.9512E-04
++LPDIBLC2	= 5.9686E-10
++WPDIBLC2	= 1.8715E-09
++PPDIBLC2	= -6.0739E-16
++PDIBLCB	= 9.9943E-03
++DROUT	= 0
++PSCBE1	= 3.0915E+08
++LPSCBE1	= 1.0479E+01
++WPSCBE1	= -1.0736E+01
++PPSCBE1	= 1.3737E-05
++PSCBE2	= 9.5513E-07
++PVAG	= 0
++DELTA	= 9.8019E-03
++ALPHA0	= 0
++BETA0	= 2.5535E+01
++KT1	= -2.4857E-01
++LKT1	= -4.7936E-09
++WKT1	= -8.2470E-08
++PKT1	= 2.4018E-14
++KT2	= -1.7158E-02
++LKT2	= -1.7049E-09
++WKT2	= -5.0627E-09
++PKT2	= 4.2386E-15
++AT	= 7.4639E+04
++WAT	= -3.9565E-02
++UTE	= -1.9342
++LUTE	= 2.1980E-07
++WUTE	= -2.4180E-07
++PUTE	= -1.0399E-13
++UA1	= 1.8021E-10
++LUA1	= -4.5697E-17
++WUA1	= -7.7202E-16
++PUA1	= 4.4660E-22
++UB1	= -1.0378E-20
++LUB1	= 3.9107E-27
++WUB1	= 1.0361E-25
++PUB1	= -3.4902E-32
++UC1	= -7.9328E-12
++LUC1	= 2.0323E-18
++WUC1	= 7.5545E-17
++PUC1	= -2.0835E-23
++KT1L	= 0
++PRT	= 0
++CJ	= 1.1665E-03
++MJ	= 3.5242E-01
++PB	= 9.4259E-01
++CJSW	= 2.5568E-10
++MJSW	= 1.2322E-01
++PBSW	= 9.6298E-01
++CJSWG	= 1.6270E-10
++MJSWG	= 1.3077E-01
++PBSWG	= 9.0360E-01
++TCJ	= 8.9225E-04
++TCJSW	= 3.4422E-04
++TPB	= 1.8284E-03
++TPBSW	= 1.9802E-03
++JS	= 2.0616E-06
++JSW	= 8.0674E-11
++CGDO	= 0
++CGSO	= 2.5404E-10
++CAPMOD	= 0
++NQSMOD	= 0
++XPART	= 1
++CF	= 0
++TLEV	= 1
++TLEVC	= 1
++XTI	= 3.0187
++N	= 1
++HDIF	= 2.6142E-07
++LDIF	= 1.1785E-07
++RSH	= 4.5583
++RS	= 0
++RD	= 0
++TCJSWG	= 3.4417E-04
++TPBSWG	= 1.8327E-03
++ALPHA1	= 2.3120E+01)
+
+.MODEL dn_rfn3 D (
++ 
++CJ	= 1.2589E-03
++PB	= 9.2312E-01
++MJ	= 3.3020E-01
++CJSW	= 1.6459E-10
++PHP	= 8.7854E-01
++MJSW	= 1.3404E-01)      
+
+.ends rfnmos3v
+
+.endl FAST_MOS

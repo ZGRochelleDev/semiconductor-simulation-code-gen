@@ -1,0 +1,266 @@
+# (c) Silvaco Inc., 2024
+
+# 3D PD-SOI MOSFET Analysis for RF CMOS Applications
+
+# Required Modules
+#  Victory Process
+#   -3D Implantation
+#  Victory Mesh
+#   -3D Meshing
+#  Victory Device
+#   -3D Simulator
+
+# Example Name
+Set name=“SOI_ex10” 
+
+####### PROCESS SIMULATION ####### 
+
+GO victoryprocess simflags="-P 4"
+
+# Upper boundary of the layout area used:
+set Ymax=0.63
+
+INIT material=silicon mask=$'name'.lay depth=2 gasheight=1 \
+   dopants=boron dopingvalues=1e15 from="0, 0" to="1.26, $Ymax"
+
+LINE x location=0  spacing=0.09
+LINE x location=0.09 spacing=0.09
+LINE x location=0.27 spacing=0.09
+LINE x location=0.54 spacing=0.01
+LINE x location=0.63 spacing=0.02
+LINE x location=0.72 spacing=0.01
+LINE x location=0.99 spacing=0.09
+LINE x location=1.17 spacing=0.09
+LINE x location=1.26 spacing=0.09
+
+LINE y location=0  spacing=0.09
+LINE y location=0.18 spacing=0.09
+LINE y location=0.27 spacing=0.09
+LINE y location=0.36 spacing=0.09
+LINE y location=0.54 spacing=0.09
+LINE y location=0.72 spacing=0.09
+LINE y location=0.9 spacing=0.09
+LINE y location=1.08 spacing=0.09
+LINE y location=1.26 spacing=0.09
+
+LINE z location=-0.4038 spacing=0.01
+LINE z location=-0.3838 spacing=0.01
+LINE z location=-0.2938 spacing=0.02
+LINE z location=-0.2038 spacing=0.00095
+LINE z location=-0.2  spacing=0.00095
+LINE z location=-0.15  spacing=0.02
+LINE z location=-0.1  spacing=0.01
+LINE z location=-0.05  spacing=0.02
+LINE z location=0    spacing=0.01
+LINE z location=0.2   spacing=0.05
+LINE z location=2    spacing=0.5
+
+# Create Buried Oxide
+DEPOSIT material=oxide thickness=0.1 max
+
+# Create Active Silicon Film
+DEPOSIT material=silicon thickness=0.1 max
+
+# Trench Etch
+ETCH material=silicon thickness=0.15 max mask=ACTIVE
+ETCH material=oxide  thickness=0.15 max mask=ACTIVE
+ETCH material=silicon thickness=0.2 dry mask=ACTIVE angle=86 deltacd=0.0002
+
+# Grow Oxide and Trench Fill - No point in doing real oxidation
+DEPOSIT material=oxide thickness=0.0038 max
+#export structure=deposited_oxide.str
+
+# Vt Adjust Implant
+set vt_dose=2.6e12
+set vt_ions=1e5
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=27 bca n.ion=$vt_ions
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=117 bca n.ion=$vt_ions
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=207 bca n.ion=$vt_ions
+IMPLANT boron energy=15 dose=$vt_dose tilt=7 rotation=297 bca n.ion=$vt_ions
+DIFFUSE time=2 temperature=1000 
+
+# Poly Gate
+DEPOSIT material=polysilicon thickness=0.09 max
+ETCH material=polysilicon thickness=0.1 max mask=GATE
+
+export 2D structure=2Dcut.str y=$Ymax
+extract init infile="2Dcut.str"
+extract name="Vt-adjust IMPLANT dose (x4) [1/cm2] " $vt_dose
+extract name="Vt IMPLANT n.ions " $vt_ions
+
+# LDD Implant
+IMPLANT arsenic energy=10 dose=2.6e12 tilt=7 rotation=27 bca n.ion=1e5
+IMPLANT arsenic energy=10 dose=2.6e12 tilt=7 rotation=117 bca n.ion=1e5
+IMPLANT arsenic energy=10 dose=2.6e12 tilt=7 rotation=207 bca n.ion=1e5
+IMPLANT arsenic energy=10 dose=2.6e12 tilt=7 rotation=297 bca n.ion=1e5
+DIFFUSE time=2 temperature=1000
+
+# Spacer around Poly Gate
+DEPOSIT material=nitride thick=0.09 conformal curved
+ETCH material=nitride thickness=0.1 max mask=GATE deltacd=0.09
+ETCH material=nitride thickness=0.1 max mask=GATE reverse
+DEPOSIT material=polysilicon thickness=0 max
+ETCH material=polysilicon mask=GATE thick=0.3 max
+
+# SD Implant
+IMPLANT arsenic energy=20 dose=1e15 tilt=0 rotation=0 bca n.ion=4e5
+DIFFUSE time=2 temperature=1000
+
+# ETCH Polysilicon
+ETCH material=polysilicon thickness=0.3 max mask=P_PLUS
+ETCH material=nitride thickness=0.3 max mask=P_PLUS
+
+# P well Contact Implant
+MASK mask=P_PLUS deltacd=0.09
+IMPLANT boron energy=5 dose=1e14 tilt=0 rotation=0 bca n.ion=4000000
+STRIP material=barrier
+DIFFUSE time=0.417 temperature=1000
+
+# Contact Etch
+MASK mask=CONT reverse
+ETCH material=oxide thickness=0.0538 min
+DEPOSIT material=aluminum thickness=0.2038 min
+STRIP material=barrier
+ELECTRODES mask=CONT material=aluminum
+
+# SAVE simulation status for remeshing before electrical simulation
+SAVE name=$'name'_VP_sv
+
+####### STRUCTURE REMESHING ####### 
+GO victorymesh simflags="-P 4"
+
+# Load simulation status
+LOAD in=$'name'_VP_sv
+
+REMESH conformal
+
+SAVE out=$'name'_VMesh.str
+
+####### DEVICE SIMULATION #######
+
+###################################################################
+
+GO victorydevice simflags="-P 4"
+
+# Current Scaling to account for the actual Gate Width (192um)
+set CurrScal = 192/0.27
+
+MESH infile=$'name'_VMesh.str
+
+ELECTRODE name=substrate z.min=1.9 z.max=2.1
+
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+
+MODELS fermi
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+
+METHOD pas norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000
+
+SOLVE init
+SOLVE previous
+
+SAVE outfile=$'name'_VD_0V.str
+
+####################### Id-Vg Characteristics ##################
+
+# Unsaturated Id-Vg: at Vd=50mV
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05
+
+LOG outfile=$'name'_Vd50mV.log
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=2 name=gate
+extract name="Vt_@_Vd=50mV " \
+    (xintercept(maxslope(curve(abs(v."gate"),abs(i."drain")))) \
+    - abs(ave(v."drain"))/2)
+extract name="Id_lin " $CurrScal*max(abs(i."drain"))
+extract name="Vt_lin " x.val from curve ((v."gate"), abs(i."drain")) where y.val=1e-7
+extract name="Ron_@_Vd50mV [ohm] " 0.05/($CurrScal*max(abs(i."drain")))
+LOG off
+
+# Saturated Id-Vg: at Vd=2.0V
+SOLVE init
+SOLVE previous
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+SOLVE vdrain=0.05 vstep=0.05 vfinal=2 name=drain
+
+LOG outfile=$'name'_Vd2V.log
+SOLVE vgate=0.001
+SOLVE vgate=0.01
+SOLVE vgate=0.05 vstep=0.05 vfinal=2 name=gate
+extract name="Id_sat " $CurrScal*max(abs(i."drain"))
+extract name="Vt_sat " x.val from curve ((v."gate"), abs(i."drain")) where y.val=1e-7
+extract name="Ron_@_Vd2V [ohm] " 2.0/($CurrScal*max(abs(i."drain")))
+LOG off
+
+#####################################################################
+####
+#### Small-signal (AC) Analysis for Capacitance-Voltage (C-V) Char.
+#### 
+################ CAPACITANCES to determine C_off  ##################
+ 
+SOLVE init
+SOLVE previous
+
+LOG outfile=$'name'_CV.log 
+SOLVE vgate=0 vstep=0.05 vfinal=0.4 name=gate AC freq=1e6 aname=drain
+
+extract name="Cds " $CurrScal*y.val from curve(abs(v."gate"),(c."drain""source")) where x.val=0
+extract name="Cgs " $CurrScal*y.val from curve(abs(v."gate"),(c."gate""source")) where x.val=0
+extract name="Cgd " $CurrScal*y.val from curve(abs(v."gate"),(c."gate""drain")) where x.val=0
+extract name="Cgsub " $CurrScal*y.val from curve(abs(v."gate"),(c."gate""substrate")) where x.val=0
+extract name="Cdsub " $CurrScal*y.val from curve(abs(v."gate"),(c."drain""substrate")) where x.val=0
+LOG off
+
+
+####################### BREAKDOWN Id-Vd #####################
+
+GO victorydevice simflags="-80 -P 4"
+
+# Current Scaling to account for the actual Gate Width (192um)
+set CurrScal = 192/0.27
+
+LOAD infile=$'name'_VD_0V.str master
+ 
+MATERIAL material=polysilicon taun0=1e-9 taup0=1e-9
+
+MODELS fermi
+MODELS material=polysilicon srh
+MODELS material=silicon consrh shi fldmob
+
+IMPACT selb
+
+METHOD pas norm.scaling.local dvmax=0.05 climit=1e-4 linear.max.iterations=1000
+
+SOLVE init
+SOLVE previous
+
+SOLVE vdrain=0.0001
+SOLVE vdrain=0.001
+SOLVE vdrain=0.01
+
+LOG outfile=$'name'_BV.log
+SOLVE vdrain=0.1
+SOLVE vdrain=0.25
+SOLVE name=drain vstep=0.25 vfinal=100 compl=1e-9 cname=drain
+CONTACT name=drain current
+SOLVE previous
+SOLVE istep=1.25 ifinal=1e-5 imult name=drain
+SAVE outfile=$'name'_3D_BV.str
+
+extract name="BV [V] " max(abs(v."drain"))
+LOG off
+
+victoryvisual \
+ $'name'_Vd50mV.log+$'name'_Vd2V.log \
+ $'name'_CV.log:$'name'_CV.set \
+ $'name'_BV.log:$'name'_BV.set \
+ $'name'_3D_BV.str:$'name'_3D_BV.set
+
+QUIT
