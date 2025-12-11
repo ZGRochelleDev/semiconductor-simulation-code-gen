@@ -12,8 +12,8 @@ Step 2: Setup your environment
     ## setup instructions - linux:
         # pyenv install 3.12.3
         # pyenv shell 3.12.3
-        # python -m venv gen-ai-final-proj
-        # source gen-ai-final-proj/bin/activate
+        # python -m venv project-4
+        # source project-4/bin/activate
 
         First try installing:
             # pip install -U "transformers>=4.51.0" accelerate safetensors
@@ -21,9 +21,9 @@ Step 2: Setup your environment
             # pip install -r requirements.txt
 
     ## setup instructions - windows:
-        # python -m venv gen-ai-final-proj
+        # python -m venv project-4
         # Set-ExecutionPolicy RemoteSigned -Scope Process
-        # .\gen-ai-final-proj\Scripts\activate
+        # .\project-4\Scripts\activate
 
         First try installing:
             # pip install -U "transformers>=4.51.0" accelerate safetensors
@@ -50,3 +50,32 @@ Step 3: Run the code
 
 Step 4: Examine results
     Results are stored in the results folder
+
+
+
+
+## implementation ##
+    Role Prompting - doesn't seem to difficult
+        We start from the P2 few-shot prompt and iteratively refine the wording of the instructions based on observed error patterns.
+
+        Issues:
+            Netlists missing output directives (.print, .plot, .meas).
+            The model sometimes renames things (VIN ↔ V1, etc.).
+            Device cases (diodes/MOSFETs) sometimes omit .model lines.
+            Subcircuit cases can miss .ends or mis-name the subcircuit.
+
+        Result:
+            I refined the instructions to discourage renaming, enforce output directives, and require .model/.ends lines where relevant. This increased coverage from X to Y and exact-match from A to B.
+            ** (add a small table: P2 vs P4 (syntax_pass_rate, coverage, exact_match)) **
+
+            Instruction Refinement (P4) did not noticeably change performance compared to the original few-shot prompt (P2).
+
+            This suggests that:
+                The extra rules I added were either redundant with what the few-shot examples already taught, or
+                They weren’t specific enough to change the model’s behavior on the hard cases (MOSFET, subcircuit, etc.).
+                I tried to refine the instructions, and it didn’t help.
+
+
+    Instruction Refinement - iterative prompt polishing
+    Output Format Control - stronger structure
+
