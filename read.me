@@ -10,19 +10,25 @@ Step 1: download the data
 Step 2: Setup your environment
 
     ## setup instructions - linux:
+        # pyenv install 3.12.3
+        # pyenv shell 3.12.3
         # python -m venv gen-ai-final-proj
         # source gen-ai-final-proj/bin/activate
-        # pip install -r requirements.txt
+
+        First try installing:
+            # pip install -U "transformers>=4.51.0" accelerate safetensors
+        If that doesn't work:
+            # pip install -r requirements.txt
 
     ## setup instructions - windows:
         # python -m venv gen-ai-final-proj
         # Set-ExecutionPolicy RemoteSigned -Scope Process
         # .\gen-ai-final-proj\Scripts\activate
-        # pip install -r requirements.txt
 
-    ## if having issues installing the modules, try only installing this:
-        # pip install -U "transformers>=4.51.0" accelerate safetensors
-
+        First try installing:
+            # pip install -U "transformers>=4.51.0" accelerate safetensors
+        If that doesn't work:
+            # pip install -r requirements.txt
 
 Step 3: Run the code
 
