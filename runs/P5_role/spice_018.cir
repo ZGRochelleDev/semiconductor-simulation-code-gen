@@ -1,0 +1,7 @@
+divider_netlist
+V1 in 5 sin(0 1k)
+D1 in out 1u
+C1 out 10k 1u
+.transient 10ms 1us
+.print trans V(out)
+.end

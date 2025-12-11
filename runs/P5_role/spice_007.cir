@@ -1,0 +1,22 @@
+plaintext
+# Half-Wave Rectifier Netlist using NGSPICE
+
+# Define the input voltage
+V1 in 10 sin 60
+
+# Connect the diode to the input voltage
+D1 in out
+
+# Set up the load resistor
+Rload out 0 1K
+
+# Define the diode model
+DIODE1 in out
+
+# Perform a transient analysis for 0.1 seconds with a step of 10 microseconds
+.transient 0.1 10 us
+
+# Print the output voltage
+.print trans V(out)
+
+.end

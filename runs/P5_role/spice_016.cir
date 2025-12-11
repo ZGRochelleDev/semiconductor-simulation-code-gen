@@ -1,0 +1,6 @@
+plaintext
+divider_op
+V1 in DC 1
+E1 out 0 in DC 10
+.R1 out 0 0 10k
+.end

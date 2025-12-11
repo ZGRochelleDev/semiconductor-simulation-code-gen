@@ -1,0 +1,9 @@
+*MosMirror
+vdd in 0 5V
+M1 in out 0 0 0 10k
+M2 in out 0 1 0 1000
+.Rref in bias 10k
+.Rload in out 10000
+.op
+.meas I(Rload)
+.end

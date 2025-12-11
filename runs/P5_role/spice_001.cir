@@ -1,0 +1,7 @@
+* dc_divider
+V1 in 10 DC 0
+R1 in out -2k
+R2 out -1k
+.operatoinpoint
+.dc V(out)
+.end

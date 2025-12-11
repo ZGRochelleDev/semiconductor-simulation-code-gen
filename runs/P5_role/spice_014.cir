@@ -1,0 +1,9 @@
+* div_subckt
+DIV in out gnd
+.R1 in out 1K
+.R2 out gnd 1K
+.subckt DIV in out gND
+.VIN in 0 DC 10
+.X1 vin vOUT
+.DIV in OUT GND
+.end

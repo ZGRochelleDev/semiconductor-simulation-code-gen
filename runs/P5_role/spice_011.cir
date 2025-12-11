@@ -1,0 +1,16 @@
+plaintext
+/* Small-Signal BJT Amplifier Netlist */
+/* VCC = 12V */
+
+/* Biasing Network */
+vcc in 0 DC 12
+rb1 in rb2 100k 18k
+rb2 out 0 0
+
+/* Transistor Parameters */
+rbs in rbe 470 2200
+re in re 470 0
+rc in rc 2200 0
+
+/* Signal Source */
+vin in 0 AC 0 1

@@ -1,0 +1,8 @@
+plaintext
+* rc_lowpass_ac
+V1 in -1 AC 1
+R2 in 1k
+C1 out -1 100n
+.ac dec -10 10 999999
+.plot ac mag(Vout)
+.end

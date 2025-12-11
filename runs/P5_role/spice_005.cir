@@ -1,0 +1,22 @@
+plaintext
+# High-Pass Filter Netlist
+# Created by Expert Analog Circuit Designer
+# Version: 1.0
+# Date: [Insert Date]
+
+# Define the input voltage
+V1 in 1 AC 1
+
+# Define the capacitor
+C1 in 0 10 n
+
+# Define the resistor
+R1 out 0 9 k
+
+# Perform AC analysis
+.ac dec 100 10 600 mhz
+
+# Print the output voltage
+.print ac V(out)
+
+.end

@@ -1,0 +1,9 @@
+*Dclipper_netlist
+V1 in 2 1k
+D1 out 0 0
+D2 0 out
+.R1 in out 1
+.DCLIP out 0
+.transient 5ms 1us
+.print trans V(out)
+.end

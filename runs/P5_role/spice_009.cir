@@ -1,0 +1,8 @@
+*zener_regulator
+V1 in 12
+R1 in out
+ZD5V6 out 0
+Rload out 0 1
+.op
+.print Vout
+.end
