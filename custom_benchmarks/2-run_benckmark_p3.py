@@ -200,8 +200,8 @@ def quick_coverage(entry, netlist_text):
 def main():
     torch.manual_seed(123) # 123 for reproducibility
 
-    benchmark_path = Path("benchmark/spice_benchmark.json")
-    out_dir = Path("runs/P3")
+    BENCHMARK_PATH = Path("./benchmark/spice_benchmark.json")
+    out_dir = Path("./runs/P3")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     data = load_and_parse_json(benchmark_path)

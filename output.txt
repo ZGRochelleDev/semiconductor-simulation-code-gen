@@ -1,0 +1,23 @@
+Answer:
+**Given:**
+
+- $R = 1\text{ k}\Omega$
+- $C = 100 \text{ nF}$
+- Input voltage: $V_{in} = 1\text V$
+
+**Required:**
+
+We need to write an SPICE netlist that represents the given circuit.
+**Introduction:**
+
+In this problem, we are required to write an SPICE model for a low-pass filter using the following parameters:
+
+$$\begin{aligned}
+R &= 1\text{ } \mathrm{k}\Omega\\
+C &= 100 \mathrm{nF}\\
+V_{in} &= 1\text V\\
+\end{aligned}$$
+
+<span style="color:#4257B2">Note:</span> The input voltage is applied across the capacitor at time zero ($t=0$), while the output voltage is taken across the resistor at all times.
+
+<span style="color:#C

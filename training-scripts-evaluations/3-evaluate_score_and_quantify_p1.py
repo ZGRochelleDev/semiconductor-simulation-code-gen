@@ -6,9 +6,9 @@ import json
 import re
 from pathlib import Path
 
-BENCHMARK_PATH = Path("benchmark/spice_benchmark.json")
-RUNS_DIR = Path("runs/P1")
-RESULTS_DIR = Path("results")
+BENCHMARK_PATH = Path("./benchmark/spice_benchmark.json")
+RUNS_DIR = Path("./runs/P1")
+RESULTS_DIR = Path("./results")
 
 CSV_OUT = RESULTS_DIR / "P1_results.csv"
 SUMMARY_OUT = RESULTS_DIR / "P1_summary.json"

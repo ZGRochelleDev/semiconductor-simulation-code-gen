@@ -97,6 +97,6 @@ netlist_text = text
 
 ## output results ##
 print("Complete")
-with open('output.txt', 'w') as file:
+with open('baseline-output.txt', 'w') as file:
     file.write(netlist_text)
-print("Content written to output.txt")
+print("Content written to baseline-output.txt")

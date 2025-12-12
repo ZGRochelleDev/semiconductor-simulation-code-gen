@@ -148,8 +148,8 @@ def extract_netlist_from_tags(text: str) -> str:
 def main():
     torch.manual_seed(123) # 123 for reproducibility
 
-    benchmark_path = Path("benchmark/spice_benchmark.json")
-    out_dir = Path("runs/P6_format")
+    BENCHMARK_PATH = Path("./benchmark/spice_benchmark.json")
+    out_dir = Path("./runs/P6_format")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     data = load_and_parse_json(benchmark_path)

@@ -135,8 +135,8 @@ def decode_completion_only(out_ids, prompt_input_ids, tokenizer):
 def main():
     torch.manual_seed(123) # 123 for reproducibility
 
-    benchmark_path = Path("benchmark/spice_benchmark.json")
-    out_dir = Path("runs/P5_role")
+    BENCHMARK_PATH = Path("./benchmark/spice_benchmark.json")
+    out_dir = Path("./runs/P5_role")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     data = load_and_parse_json(benchmark_path)
