@@ -1,0 +1,10 @@
+[NETLIST]
+V1 in 0 SIN(0 51k)
+D1 in out DENV
+C1 out 1u
+R1 out 10k
+
+.tran 10ms 1us
+.print tran V(out)
+
+.end

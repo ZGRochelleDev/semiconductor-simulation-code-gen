@@ -1,0 +1,8 @@
+[NETLIST]
+V1 in 0 SIN(0 1 60)
+D1 in out
+Rload out 0 1K
+DIODE1 out 0
+.transient 0.1 10e-6
+.print trans V(out)
+.end

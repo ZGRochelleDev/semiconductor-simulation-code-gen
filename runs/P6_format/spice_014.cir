@@ -1,0 +1,5 @@
+[NETLIST]
+.subckt DIV in out gND
+    R1 in out 1K
+    R2 out gND 1K
+.end

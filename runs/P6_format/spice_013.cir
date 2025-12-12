@@ -1,0 +1,7 @@
+[NETLIST]
+.vin in 0 DC 0
+.vout out 0
+.nmos1 in out 0 0 0 5
+.dc vin 0 5 0.1
+.print dc V(out)
+.end

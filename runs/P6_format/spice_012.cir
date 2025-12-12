@@ -1,0 +1,8 @@
+[NETLIST]
+.vin in 0 PULSE(.0 1.8 .0 1n 0 1n .5 1n .75 1n .9 1n .95 1n .1 1n .2 1n .4 1n .6 1n .8 1n .9 .0 1n .0 1n)
+.pmos1 in out 1pF 10k 1.8v
+.nmos1 out 0 0 10k 0
+.tran 1ns 200ns
+.print tran V(out)
+
+.end

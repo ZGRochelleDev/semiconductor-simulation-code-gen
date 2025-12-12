@@ -1,0 +1,8 @@
+[NETLIST]
+V1 in 0 SIN(0 2)
+D1 out 0 0
+D2 0 out
+R1 in out
+TRN 5ms 1us
+.meas V(out)
+.end

@@ -1,0 +1,7 @@
+[NETLIST]
+V1 in 0 PULSE(.0 5 0 1ns 1ns 100ns 200ns)
+R1 in out .1k
+C1 out .1n
+.TRAN 1us 1ns
+.PRINT tran V(out)
+.END

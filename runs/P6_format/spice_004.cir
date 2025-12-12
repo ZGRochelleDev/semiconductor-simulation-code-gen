@@ -1,0 +1,7 @@
+[NETLIST]
+V1 in 0 Ac 1
+R1 out 1k
+C1 out -100n
+.ac dec -10 10 999999
+.print ac Magnitude(V(out))
+.end

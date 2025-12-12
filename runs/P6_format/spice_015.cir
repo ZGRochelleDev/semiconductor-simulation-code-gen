@@ -1,0 +1,4 @@
+[NETLIST]
+I1 in 0 DC -2mA
+R1 in out -1k
+.end

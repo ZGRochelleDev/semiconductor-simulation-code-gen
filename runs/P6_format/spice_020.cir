@@ -1,0 +1,10 @@
+[NETLIST]
+.vdd 5 0
+M1 in 0 0 0 10k 10k
+M2 in 0 0 -10k 0 10000
+.Rref 10k 0
+.Rload 10k 5
+.M1 bias 0 0 5
+.M2 bias 0 0 -5
+.I(Rload) 10k
+.end

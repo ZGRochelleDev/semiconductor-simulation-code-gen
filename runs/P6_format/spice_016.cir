@@ -1,0 +1,7 @@
+[NETLIST]
+V1 in 0 dc 1
+E1 out 0 in out 10
+.R load 10k
+.op
+.print vout
+.end

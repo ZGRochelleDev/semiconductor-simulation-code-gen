@@ -1,0 +1,8 @@
+[NETLIST]
+V1 in 0
+R1 in out
+C1 out 10n
+.AC dec 100 1000000
+.print ac V(out)
+
+.END

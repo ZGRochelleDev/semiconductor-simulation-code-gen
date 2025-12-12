@@ -1,0 +1,5 @@
+[NETLIST]
+V1 in 0 dc 12
+R1 in out -220
+ZD5V6 out 0 load 1k
+.end

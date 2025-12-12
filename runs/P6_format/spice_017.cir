@@ -1,0 +1,7 @@
+[NETLIST]
+V1 in 0 PULSE (0 5 0 n 1n n u 2u)
+R1 in out -10
+L1 out 0 0.0001
+.tran 1 5
+.meas i(L1)
+.end

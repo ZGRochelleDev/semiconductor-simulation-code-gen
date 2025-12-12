@@ -1,0 +1,10 @@
+[NETLIST]
+.vcc 0 DC 12
+.Rc 0 out 4.7k
+.Re 0 emit 1k
+.Rb1 0 base 100k 
+.Rb2 0 base 20k
+.Q1 emit base out npn1
+.op
+.print V(base), V(out)
+.end

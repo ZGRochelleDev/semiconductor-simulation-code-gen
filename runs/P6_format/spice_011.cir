@@ -1,0 +1,14 @@
+[NETLIST]
+.vin in 0 AC 0
+vcc in 0 DC 12
+rbc in 0 100K
+rb2 in 0 18K
+rc in 0 2.2K
+re in 0 470
+c1 in 0 1u
+.cin in 0 1
+.dc 0 10Hz 1MHz
+.ac 100
+.print ac V(out)
+
+.END

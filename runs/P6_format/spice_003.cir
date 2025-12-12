@@ -1,0 +1,8 @@
+[NETLIST]
+V1 in 0 SIN(0 11000)
+R1 in n1 10
+L1 n1 n2
+C1 n2 0 1e-6
+.transient 10 1e-3
+.print trans V(n2)
+.end
