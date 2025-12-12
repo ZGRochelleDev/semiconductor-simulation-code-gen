@@ -1,0 +1,22 @@
+
+## Project: Semiconductor Simulation Code Generation
+
+Project Repo: [semiconductor-simulation-code-gen](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/tree/main)
+
+## Links to deliverables
+
+1. Trained Model: I used a pretrained model: Qwen/Qwen3-0.6B-Base and kept the model weights completely frozen
+2. Custom Benchmark: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/tree/main/custom_benchmarks)
+3. Code (training & evaluations): [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/tree/main/training-scripts-evaluations)
+4. Technical Report: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/blob/main/technical-report.pdf)
+5. Presentation: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/blob/main/prompt_engineering%20-%20presentation.pdf)
+6. README: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/blob/main/READ.me)
+7. prompt_engineering_report: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/blob/main/prompt_engineering_report.pdf)
+
+## Results
+- Benchmarking results: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/tree/main/results)
+- Training results: [Link](https://github.com/ZGRochelleDev/semiconductor-simulation-code-gen/tree/main/runs)
+
+
+
+
