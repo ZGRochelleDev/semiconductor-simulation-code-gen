@@ -110,7 +110,7 @@ def main():
     out_dir = Path("./runs/P1")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    data = read_json(benchmark_path)
+    data = read_json(BENCHMARK_PATH)
     if not isinstance(data, list):
         raise ValueError("Benchmark JSON must be a list of test case objects.")
 

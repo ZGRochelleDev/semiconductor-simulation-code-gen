@@ -1,6 +1,4 @@
-node 0 = ground;
-node 1 = 10VDC;
-node 2 = 1KΩ;
-node 3 = 2KΩ;
-
-vout = v(2);
+v1 = 10V
+r1 = 1K ohm
+r2 = 2K ohm
+gnd = 0

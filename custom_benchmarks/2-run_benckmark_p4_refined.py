@@ -139,7 +139,7 @@ def main():
     out_dir = Path("./runs/P4_refined")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    data = load_and_parse_json(benchmark_path)
+    data = load_and_parse_json(BENCHMARK_PATH)
     if not isinstance(data, list):
         raise ValueError("Benchmark JSON must be a list of test case objects.")
 
