@@ -1,6 +1,5 @@
-# Prompt Engineering Experiments — Step 4 (Evaluate P4)
+# Prompt Engineering Experiments — Step 3 (Evaluate P2)
 # SPICE Netlist Metrics: syntax_validity, coverage_score, exact_match_score
-# Instruction Refinement
 
 import csv
 import json
@@ -8,11 +7,11 @@ import re
 from pathlib import Path
 
 BENCHMARK_PATH = Path("benchmark/spice_benchmark.json")
-RUNS_DIR = Path("runs/P4")
+RUNS_DIR = Path("runs/P2")
 RESULTS_DIR = Path("results")
 
-CSV_OUT = RESULTS_DIR / "P4_results.csv"
-SUMMARY_OUT = RESULTS_DIR / "P4_summary.json"
+CSV_OUT = RESULTS_DIR / "P2_results.csv"
+SUMMARY_OUT = RESULTS_DIR / "P2_summary.json"
 
 def load_and_parse_json(file_path):
     # load a json file and parse it into objects
@@ -128,7 +127,6 @@ def save_csv(path, rows):
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
-
 
 def save_json(path, obj):
     path.write_text(json.dumps(obj, indent=2), encoding="utf-8")

@@ -1,4 +1,4 @@
-# Prompt Engineering Experiments — Step 3 (Evaluate P2_role)
+# Prompt Engineering Experiments — Step 3 (Evaluate P2_role for Role Prompting)
 # SPICE Netlist Metrics: syntax_validity, coverage_score, exact_match_score
 
 import csv

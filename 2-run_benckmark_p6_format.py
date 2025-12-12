@@ -1,6 +1,5 @@
 # Prompt Engineering Experiments — Step 2 (P2 Runner)
 # P2: Few-shot prompting (3 curated examples)
-# Role Prompting
 
 import json
 from pathlib import Path
@@ -68,22 +67,21 @@ def few_shot_block():
         ".end\n\n"
     )
 
-# for the Role Prompting phase
-ROLE_PROMPT = (
-    "You are an expert analog circuit designer and ngspice power user.\n"
-    "Your job is to translate natural-language circuit descriptions into\n"
-    "ngspice-compatible netlists that run without errors.\n"
-    "You strictly follow ngspice syntax, keep node and source names\n"
-    "consistent, and always end with .end.\n\n"
-)
-
-def build_prompt_role(entry):
+def build_prompt_format_control(entry):
     return (
-        ROLE_PROMPT
-        + few_shot_block()  # existing examples
-        + "### New Task\n"
-        + f"Request: {entry['spec']}\n"
-        + "Netlist:\n"
+        few_shot_block()
+        +
+        "### Output Format Rules\n"
+        "Wrap the final ngspice netlist between the tags [NETLIST] and [/NETLIST].\n"
+        "Inside [NETLIST]...[/NETLIST], write ONLY valid ngspice lines:\n"
+        "- No explanations, comments, or markdown.\n"
+        "- Use node 0 as ground when appropriate.\n"
+        "- Always include any required analysis and at least one .print/.plot/.meas.\n"
+        "- Always end the netlist with a single .end line.\n\n"
+        "Anything outside [NETLIST]...[/NETLIST] will be ignored.\n\n"
+        "### New Task\n"
+        f"Request: {entry['spec']}\n"
+        "Answer:\n"
     )
 
 def build_prompt(entry):
@@ -131,12 +129,27 @@ def decode_completion_only(out_ids, prompt_input_ids, tokenizer):
     gen_only = out_ids[0][prompt_input_ids.shape[1]:]
     return tokenizer.decode(gen_only, skip_special_tokens=True).strip()
 
+def extract_netlist_from_tags(text: str) -> str:
+    start_tag = "[NETLIST]"
+    end_tag = "[/NETLIST]"
+
+    start_idx = text.find(start_tag)
+    end_idx = text.find(end_tag)
+
+    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+        body = text[start_idx + len(start_tag):end_idx]
+        return body.strip()
+    else:
+        # Fallback: if tags are missing, just use the whole text
+        # (so the evaluation still runs, even if badly).
+        return text.strip()
+
 ## main runner loop (Step 2)
 def main():
     torch.manual_seed(123) # 123 for reproducibility
 
     benchmark_path = Path("benchmark/spice_benchmark.json")
-    out_dir = Path("runs/P5_role")
+    out_dir = Path("runs/P6_format")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     data = load_and_parse_json(benchmark_path)
@@ -159,14 +172,18 @@ def main():
     for i, entry in enumerate(data, start=1):
         case_id = entry.get("id", f"case_{i:03d}")
 
-        input_text = build_prompt_role(entry)
+        input_text = build_prompt_format_control(entry)
         input_ids, attention_mask = text_to_token_ids(input_text, tokenizer, device)
 
         try:
             with torch.inference_mode():
                 out_ids = generate(model, input_ids, attention_mask, GEN_CONFIG, tokenizer)
             completion = decode_completion_only(out_ids, input_ids, tokenizer)
-            netlist_text = extract_netlist(completion)
+            # first, strip [NETLIST]...[/NETLIST] if present
+            netlist_raw = extract_netlist_from_tags(completion)
+            # then optionally trim at the first .end (reuse your old helper)
+            netlist_text = extract_netlist(netlist_raw)
+
         except Exception as e:
             netlist_text = f" - Error generating netlist for {case_id}: {e}\n.end"
 

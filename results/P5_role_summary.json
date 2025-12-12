@@ -1,0 +1,6 @@
+{
+  "num_cases": 20,
+  "syntax_pass_rate": 0.65,
+  "avg_coverage_score": 0.337797619047619,
+  "avg_exact_match_score": 0.13416666666666666
+}

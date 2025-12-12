@@ -1,5 +1,5 @@
 # Prompt Engineering Experiments — Step 2 (P4 Runner)
-# P4:  Role Prompting
+# P4: Instruction Refinement
 
 import json
 from pathlib import Path
