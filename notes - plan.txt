@@ -88,3 +88,42 @@ Prepare stuff to submit i.e. deliverables
     * Slides: method, benchmark, metrics, results
     * Report: concise writeup + plots/tables
     * README: how to run + reproduce experiments
+
+
+## Assignment 4 - implementation ##
+
+    Instruction Refinement - iterative prompt polishing
+
+        We start from the P2 few-shot prompt and iteratively refine the wording of the instructions based on observed error patterns.
+
+        Issues:
+            Netlists missing output directives (.print, .plot, .meas).
+            The model sometimes renames things (VIN ↔ V1, etc.).
+            Device cases (diodes/MOSFETs) sometimes omit .model lines.
+            Subcircuit cases can miss .ends or mis-name the subcircuit.
+
+        Result:
+            I refined the instructions to discourage renaming, enforce output directives, and require .model/.ends lines where relevant. This increased coverage from X to Y and exact-match from A to B.
+            ** add a small table: P2 vs P4 (syntax_pass_rate, coverage, exact_match) **
+
+            Role Prompting (P4) did not noticeably change performance compared to the original few-shot prompt (P2).
+
+            This suggests that:
+                The extra rules I added were either redundant with what the few-shot examples already taught, or
+                They weren’t specific enough to change the model’s behavior on the hard cases (MOSFET, subcircuit, etc.).
+                I tried to refine the instructions, and it didn’t help.
+
+    Role Prompting - doesn't seem to difficult
+        Issues:
+        Result:
+            P5 (Role Prompting) is roughly:
+                - Better than P2 on all three metrics
+                - Slightly better than P3 on syntax (+0.05) and exact-match (+0.004)
+                - Slightly worse than P3 on coverage (0.3378 vs 0.3521)
+
+            We expect this subtle effect: the role prompt nudges the model toward “acting like an ngspice expert,” which seems to help it produce syntactically valid netlists and match key lines more often, without completely changing coverage.
+
+    Output Format Control - stronger structure
+        Exactly the same as the original P2 few-shot prompt. This configuration didn’t change performance at all on the benchmark.
+        This particular format constraint didn’t meaningfully affect the underlying netlist quality.
+

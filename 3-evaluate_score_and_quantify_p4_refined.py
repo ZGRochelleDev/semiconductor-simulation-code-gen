@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 BENCHMARK_PATH = Path("benchmark/spice_benchmark.json")
-RUNS_DIR = Path("runs/P4")
+RUNS_DIR = Path("runs/P4_refined")
 RESULTS_DIR = Path("results")
 
 CSV_OUT = RESULTS_DIR / "P4_results.csv"
