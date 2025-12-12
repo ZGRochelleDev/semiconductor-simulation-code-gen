@@ -1,4 +1,4 @@
-V1 = pulse(0 5 1e-9 1e-6 1e-6)
+V1 = pulse(0 5 1e6 1e6 0)
 R1 = 10 ohms
 L1 = 1 mH
-I(L1) = tran(1e-9 5e-6)
+I1 = current through L1

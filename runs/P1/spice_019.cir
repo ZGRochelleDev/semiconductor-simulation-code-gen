@@ -1,13 +1,5 @@
-*NETLIST:
 R1 = 1k ohm
 C1 = 100nF
 R2 = 1k ohms
 C2 = 100pF
-V1 = 1V
 GND = 0
-out = 0
-n1 = 0
-stage1 = stage2
-AC = 100Hz - 1MHz
-PRINT V(out)
-.END

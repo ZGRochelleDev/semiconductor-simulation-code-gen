@@ -1,1 +1,3 @@
-** TODO: Add a note about the resistor value RD
+M1: NMOS1 0 1 0 0 0 1 1 1 0 1
+VIN: DC 0 5
+OUT: DC 0 0

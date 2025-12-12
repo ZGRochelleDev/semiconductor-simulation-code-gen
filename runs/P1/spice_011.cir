@@ -6,6 +6,4 @@ Re     Base
 |   |       |
 B1      B2
 |   |       -
-Cin    Vin
-|   |
-GND    Ground
+Cin    Ground

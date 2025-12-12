@@ -1,4 +1,3 @@
-V1 DC 1V
-E1 OUT 0 IN 0 10
-RLOAD 10K
-.END
+source 0 10v
+vout 0 10k
+v1 0 10

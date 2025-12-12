@@ -1,19 +1,13 @@
 COMPONENTS
-    V1 DC 1.2V
-    R1 220 ohms
-    ZD5V6 5.6V
-    RLOAD 1K ohms
+    IN 0
+    OUT 0
+    LOAD 1K
+    ZENER 5.6V 5.6V
 END COMPONENTS
 
-INITIAL CONDITIONS
-    V1 = 1.2V, R1 = 220 ohm, ZD5V6 = 5.6V, RLOAD = 1K ohm
-END INITIAL CONDITIONS
-
-ANALYSIS
-    .OP
-    .AC 1MHz
-    .DC 1kHz
-    .TRAN 1s
-    .PRINT VOUT
-    .MEAS VOUT
-.END
+SOURCE
+    IN 0 12V
+    OUT 0 0
+    LOAD ON
+    ZENER ON
+END SOURCE

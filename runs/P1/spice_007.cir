@@ -1,3 +1,1 @@
-V1 = sin(0 10)
-D1 = diode(DIODE1)
-Rload = 1k
+**NOTE:** This is a very simple circuit so I don't need to worry about anything else besides this one.

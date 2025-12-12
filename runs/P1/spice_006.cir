@@ -1,6 +1,6 @@
 R1 = 50 ohms
 L1 = 10 mH
 C1 = 10 nF
-V1 = 1 volt
-n1 = 0
-out = 0
+in -> n1
+n1 -> out
+out -> 0

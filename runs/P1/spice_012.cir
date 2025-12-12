@@ -1,8 +1,4 @@
-vdd = 1.8V;
-in = 0V;
-out = 0V;
+M1: pmos 0 1.8 n 0 1n
+NMOS1: nmos 0 0 p 0 1n
 
-M1 = PMOS1(0 1.6 0 1.8);
-NMOS1 = NMOS1(0 0 0 0);
-
-.vin = PULSE(0 0 1.6 -100ns 100ns 50ns 1ns);
+vout = vin + m1.vin - m2.vin

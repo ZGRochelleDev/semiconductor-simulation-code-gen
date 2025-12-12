@@ -1,4 +1,6 @@
+**TITLE: Voltage Divider Subcircuit**
+**NETLIST:**
 .subckt DIV in out g nd
-    R1 = 1k ohm
-    R2 = 1k oh m
+R1 = 1k ohm from in to out
+R2 = 1k oh m f rom out to g nd
 .end

@@ -1,16 +1,3 @@
-COMPONENTS
-    V1 1V DC
-    C1 10n DC
-    R1 1k DC
-END COMPONENTS
-
-SOURCE
-    V1 = 1V
-    C1 = 10n
-    R1 = 1k
-END SOURCE
-
-ANALYSIS
-    .AC DEC 100 1MHz
-    .PRINT VOUT
-.END
+C1 = 10e-9 // Capacitance of C1 in farads
+R1 = 1e3 // Resistance of R1 in ohms
+V1 = 1 // Input voltage in volts
